@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Gamepad2, Plus, Store, Wallet } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { ProtectedNotice } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { mockWallet } from "@/data/mock/wallet";
+import { useWallet } from "@/hooks/useAccount";
+
 import { mockOrders } from "@/data/mock/orders";
 import { mockGames } from "@/data/mock/games";
 import { mockProducts } from "@/data/mock/products";
