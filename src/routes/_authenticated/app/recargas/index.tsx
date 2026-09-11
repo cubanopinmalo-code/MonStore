@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/states";
+import { GameCover } from "@/components/common/GameCover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listCatalogGames } from "@/lib/catalog.functions";
