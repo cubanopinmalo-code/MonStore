@@ -21,6 +21,9 @@ import { Route as AppPedidosIndexRouteImport } from './routes/app/pedidos/index'
 import { Route as AppPedidosIdRouteImport } from './routes/app/pedidos/$id'
 import { Route as AppRecargasIndexRouteImport } from './routes/app/recargas/index'
 import { Route as AppRecargasSlugRouteImport } from './routes/app/recargas/$slug'
+import { Route as AppWalletIndexRouteImport } from './routes/app/wallet/index'
+import { Route as AppWalletDepositarRouteImport } from './routes/app/wallet/depositar'
+import { Route as AppWalletRetirarRouteImport } from './routes/app/wallet/retirar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +85,21 @@ const AppRecargasSlugRoute = AppRecargasSlugRouteImport.update({
   path: '/app/recargas/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppWalletIndexRoute = AppWalletIndexRouteImport.update({
+  id: '/app/wallet/',
+  path: '/app/wallet/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppWalletDepositarRoute = AppWalletDepositarRouteImport.update({
+  id: '/app/wallet/depositar',
+  path: '/app/wallet/depositar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppWalletRetirarRoute = AppWalletRetirarRouteImport.update({
+  id: '/app/wallet/retirar',
+  path: '/app/wallet/retirar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,8 +112,11 @@ export interface FileRoutesByFullPath {
   '/juegos/': typeof JuegosIndexRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
+  '/app/wallet/depositar': typeof AppWalletDepositarRoute
+  '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/pedidos/': typeof AppPedidosIndexRoute
   '/app/recargas/': typeof AppRecargasIndexRoute
+  '/app/wallet/': typeof AppWalletIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,8 +129,11 @@ export interface FileRoutesByTo {
   '/juegos': typeof JuegosIndexRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
+  '/app/wallet/depositar': typeof AppWalletDepositarRoute
+  '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/pedidos': typeof AppPedidosIndexRoute
   '/app/recargas': typeof AppRecargasIndexRoute
+  '/app/wallet': typeof AppWalletIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,8 +147,11 @@ export interface FileRoutesById {
   '/juegos/': typeof JuegosIndexRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
+  '/app/wallet/depositar': typeof AppWalletDepositarRoute
+  '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/pedidos/': typeof AppPedidosIndexRoute
   '/app/recargas/': typeof AppRecargasIndexRoute
+  '/app/wallet/': typeof AppWalletIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,8 +166,11 @@ export interface FileRouteTypes {
     | '/juegos/'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
+    | '/app/wallet/depositar'
+    | '/app/wallet/retirar'
     | '/app/pedidos/'
     | '/app/recargas/'
+    | '/app/wallet/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,8 +183,11 @@ export interface FileRouteTypes {
     | '/juegos'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
+    | '/app/wallet/depositar'
+    | '/app/wallet/retirar'
     | '/app/pedidos'
     | '/app/recargas'
+    | '/app/wallet'
   id:
     | '__root__'
     | '/'
@@ -167,8 +200,11 @@ export interface FileRouteTypes {
     | '/juegos/'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
+    | '/app/wallet/depositar'
+    | '/app/wallet/retirar'
     | '/app/pedidos/'
     | '/app/recargas/'
+    | '/app/wallet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,8 +218,11 @@ export interface RootRouteChildren {
   JuegosIndexRoute: typeof JuegosIndexRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppRecargasSlugRoute: typeof AppRecargasSlugRoute
+  AppWalletDepositarRoute: typeof AppWalletDepositarRoute
+  AppWalletRetirarRoute: typeof AppWalletRetirarRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
   AppRecargasIndexRoute: typeof AppRecargasIndexRoute
+  AppWalletIndexRoute: typeof AppWalletIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +311,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRecargasSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/wallet/': {
+      id: '/app/wallet/'
+      path: '/app/wallet'
+      fullPath: '/app/wallet/'
+      preLoaderRoute: typeof AppWalletIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/wallet/depositar': {
+      id: '/app/wallet/depositar'
+      path: '/app/wallet/depositar'
+      fullPath: '/app/wallet/depositar'
+      preLoaderRoute: typeof AppWalletDepositarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/wallet/retirar': {
+      id: '/app/wallet/retirar'
+      path: '/app/wallet/retirar'
+      fullPath: '/app/wallet/retirar'
+      preLoaderRoute: typeof AppWalletRetirarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -286,8 +346,11 @@ const rootRouteChildren: RootRouteChildren = {
   JuegosIndexRoute: JuegosIndexRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
   AppRecargasSlugRoute: AppRecargasSlugRoute,
+  AppWalletDepositarRoute: AppWalletDepositarRoute,
+  AppWalletRetirarRoute: AppWalletRetirarRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
   AppRecargasIndexRoute: AppRecargasIndexRoute,
+  AppWalletIndexRoute: AppWalletIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
