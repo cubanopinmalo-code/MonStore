@@ -100,10 +100,11 @@ function EventDetail({ event }: { event: GameEvent }) {
   );
   const [paid, setPaid] = useState(existing?.payment_status === "paid");
   const [processing, setProcessing] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(() => entrySecondsLeft(event));
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (event.status !== "sala_activa") return;
+    setSecondsLeft(entrySecondsLeft(event));
     const timer = setInterval(() => setSecondsLeft(entrySecondsLeft(event)), 1000);
     return () => clearInterval(timer);
   }, [event]);
@@ -111,7 +112,7 @@ function EventDetail({ event }: { event: GameEvent }) {
   const participants = `${event.participants_count}/${event.min_participants}`;
   const balance = mockWallet.balance;
   const enoughBalance = balance >= event.entry_price;
-  const windowOpen = secondsLeft > 0;
+  const windowOpen = secondsLeft === null || secondsLeft > 0;
 
   function handleSubscribe() {
     const value = accountId.trim();
@@ -200,7 +201,11 @@ function EventDetail({ event }: { event: GameEvent }) {
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold">Sala activa</h2>
               <span className="text-sm font-semibold text-primary">
-                ⏱️ {windowOpen ? formatCountdown(secondsLeft) : "Tiempo agotado"}
+                ⏱️ {secondsLeft === null
+                  ? "--:--"
+                  : windowOpen
+                    ? formatCountdown(secondsLeft)
+                    : "Tiempo agotado"}
               </span>
             </div>
 
