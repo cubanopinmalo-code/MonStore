@@ -30,6 +30,32 @@ function ProfilePage() {
     .join("")
     .slice(0, 2);
 
+  const referralLink = `https://monstore.cu/?ref=${mockProfile.referral_code}`;
+  const invited = mockReferrals.length;
+  const progress = Math.min((invited / REFERRAL_GOAL) * 100, 100);
+  const remaining = Math.max(REFERRAL_GOAL - invited, 0);
+
+  async function copyLink() {
+    await navigator.clipboard?.writeText(referralLink);
+    toast.success("Enlace de referidos copiado");
+  }
+
+  async function shareLink() {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({
+          title: "MONSTORE",
+          text: "Recarga tus juegos con MONSTORE",
+          url: referralLink,
+        });
+        return;
+      } catch {
+        // el usuario canceló: seguimos con la copia
+      }
+    }
+    await copyLink();
+  }
+
   return (
     <UserShell>
       <div className="mx-auto max-w-xl space-y-5">
