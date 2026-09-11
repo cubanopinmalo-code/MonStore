@@ -44,6 +44,57 @@ function ProfilePage() {
   const { data: referrals } = useReferrals();
   const [saving, setSaving] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const avatarPath = profile?.avatar ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!avatarPath) {
+      setAvatarUrl(null);
+      return;
+    }
+    void supabase.storage
+      .from("avatars")
+      .createSignedUrl(avatarPath, 3600)
+      .then(({ data }) => {
+        if (!cancelled) setAvatarUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarPath]);
+
+  async function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !profile) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecciona una imagen válida");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) {
+      setUploading(false);
+      toast.error("No pudimos subir la foto", { description: uploadError.message });
+      return;
+    }
+    const { error } = await supabase.from("profiles").update({ avatar: path }).eq("id", profile.id);
+    setUploading(false);
+    if (error) {
+      toast.error("No pudimos guardar la foto");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    toast.success("Foto de perfil actualizada");
+  }
 
   const name = profile?.name || "Mi cuenta";
   const initials = name
