@@ -12,6 +12,7 @@ import { CardListSkeleton } from "@/components/common/states";
 import {
   getProviderStatus,
   listGamesAdmin,
+  syncMissingGameOffers,
   syncProviderCatalog,
 } from "@/lib/catalog.functions";
 
