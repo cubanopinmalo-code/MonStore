@@ -6,7 +6,14 @@ import { RouteLoading } from "./components/common/RouteLoading";
 export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { staleTime: 30_000, refetchOnWindowFocus: false },
+      queries: {
+        staleTime: 5 * 60_000,
+        gcTime: 30 * 60_000,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        retry: 1,
+      },
     },
   });
 
@@ -14,11 +21,12 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-    defaultStaleTime: 30_000,
+    defaultStaleTime: 5 * 60_000,
+    defaultGcTime: 30 * 60_000,
+    defaultPreloadStaleTime: 60_000,
     defaultPendingComponent: RouteLoading,
-    defaultPendingMs: 400,
-    defaultPendingMinMs: 300,
+    defaultPendingMs: 1200,
+    defaultPendingMinMs: 200,
   });
 
   return router;
