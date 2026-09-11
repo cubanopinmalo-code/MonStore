@@ -100,7 +100,7 @@ function PublishListingPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="plataforma">Plataforma de acceso</Label>
-            <Select key={gameId} defaultValue={platforms[0]}>
+            <Select key={gameId} defaultValue={platforms[0] ?? "Android"}>
               <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {platforms.map((platform) => (
