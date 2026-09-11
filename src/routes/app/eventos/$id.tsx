@@ -186,7 +186,7 @@ function EventDetail({ event }: { event: GameEvent }) {
             <StatusBadge status={EVENT_STATUS_LABEL[event.status]} />
           </div>
           <p className="text-sm text-muted-foreground">{event.description}</p>
-          <Button variant="outline" size="sm" onClick={handleShare}>
+          <Button variant="outline" size="sm" onClick={() => void handleShare()}>
             <Share2 className="size-4" aria-hidden="true" />
             Compartir evento
           </Button>
