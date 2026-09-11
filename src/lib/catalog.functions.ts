@@ -92,6 +92,37 @@ export const getUsdRate = createServerFn({ method: "GET" }).handler(async (): Pr
   return readPricing(publishableClient());
 });
 
+export const DEFAULT_SALDO_RATE = 2.8;
+
+/** Base de conversión: cada peso de saldo móvil equivale a este valor en CUP de wallet. */
+export const getSaldoRate = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ rate: number }> => {
+    const { data } = await publishableClient()
+      .from("platform_settings")
+      .select("saldo_conversion_rate")
+      .maybeSingle();
+    const rate = Number(data?.saldo_conversion_rate ?? DEFAULT_SALDO_RATE);
+    return { rate: Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_SALDO_RATE };
+  },
+);
+
+export const setSaldoRate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { rate: number }) => {
+    const rate = Number(data?.rate);
+    if (!Number.isFinite(rate) || rate <= 0) throw new Error("La base de conversión no es válida.");
+    if (rate > 1000) throw new Error("Esa base de conversión es demasiado alta.");
+    return { rate: Math.round(rate * 100) / 100 };
+  })
+  .handler(async ({ data, context }): Promise<{ rate: number }> => {
+    await requireAdmin(context);
+    const { error } = await context.supabase
+      .from("platform_settings")
+      .upsert({ id: true, saldo_conversion_rate: data.rate });
+    if (error) throw new Error("No se pudo guardar la base de conversión.");
+    return { rate: data.rate };
+  });
+
 export const setUsdRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { rate: number; margin: number }) => {
