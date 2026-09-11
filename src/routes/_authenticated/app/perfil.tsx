@@ -24,7 +24,13 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
       { name: "description", content: "Datos personales y configuración de tu cuenta." },
     ],
   }),
-  loader: () => getUsdRate(),
+  loader: async () => {
+    try {
+      return await getUsdRate();
+    } catch {
+      return { rate: DEFAULT_USD_RATE, margin: DEFAULT_USD_MARGIN };
+    }
+  },
   component: ProfilePage,
 });
 
