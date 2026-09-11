@@ -46,8 +46,9 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
 
 function EventsPage() {
   const [tab, setTab] = useState("todos");
-  const active = TABS.find((item) => item.value === tab) ?? TABS[0];
-  const events = mockEvents.filter((event) => active.statuses.includes(event.status));
+  const active = TABS.find((item) => item.value === tab);
+  const statuses = active?.statuses ?? [];
+  const events = mockEvents.filter((event) => statuses.includes(event.status));
 
   return (
     <UserShell>
