@@ -3,7 +3,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Check,
   ChevronLeft,
+  ChevronRight,
   Coins,
   Copy,
   CreditCard,
@@ -57,6 +59,52 @@ function neededFor(method: PaymentMethodInfo, needed: number, saldoRate: number)
   return Math.ceil(needed / (1 + method.deposit_bonus_pct / 100));
 }
 
+/** Texto corto que acompaña al método: «cada peso × 2.8» o «+5% al depositar». */
+function methodHint(method: PaymentMethodInfo, saldoRate: number) {
+  if (method.payment_method === "saldo_movil") {
+    return `Cada peso de saldo vale ${saldoRate} CUP`;
+  }
+  return method.deposit_bonus_pct > 0
+    ? `+${method.deposit_bonus_pct}% al depositar`
+    : "Sin bonificación";
+}
+
+function StepBadge({ step }: { step: 1 | 2 }) {
+  const steps = [
+    { id: 1, label: "Método" },
+    { id: 2, label: "Importe" },
+  ];
+  return (
+    <ol className="flex items-center gap-1.5 text-[11px] font-medium">
+      {steps.map((item, index) => (
+        <li key={item.id} className="flex items-center gap-1.5">
+          {index > 0 ? (
+            <span className="h-px w-3 bg-border" aria-hidden="true" />
+          ) : null}
+          <span
+            className={`flex items-center gap-1 rounded-full border px-2 py-0.5 ${
+              item.id === step
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border bg-muted/30 text-muted-foreground"
+            }`}
+          >
+            <span
+              className={`grid size-4 place-items-center rounded-full text-[10px] font-bold ${
+                item.id === step
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {item.id}
+            </span>
+            {item.label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
   validateSearch: (search: Record<string, unknown>): DepositSearch => {
     const needed = Number(search["necesario"]);
@@ -90,13 +138,15 @@ function DepositPage() {
   const { necesario, metodo } = Route.useSearch();
   const { saldo: saldoRate, methods } = Route.useLoaderData();
 
-  const initialMethod =
-    methods.find((item) => item.payment_method === metodo) ?? methods[0];
-  const [selected, setSelected] = useState(initialMethod?.payment_method ?? "");
-  const current = methods.find((item) => item.payment_method === selected) ?? initialMethod;
+  // Si llegamos desde «me falta saldo» el método ya viene elegido: vamos al paso 2.
+  const preselected = methods.find((item) => item.payment_method === metodo) ?? null;
+  const [selected, setSelected] = useState<string | null>(
+    preselected?.payment_method ?? null,
+  );
+  const current = methods.find((item) => item.payment_method === selected) ?? null;
   const [amount, setAmount] = useState(() =>
-    necesario && initialMethod
-      ? String(neededFor(initialMethod, necesario, saldoRate))
+    necesario && preselected
+      ? String(neededFor(preselected, necesario, saldoRate))
       : "2000",
   );
   const [proof, setProof] = useState<File | null>(null);
@@ -118,7 +168,16 @@ function DepositPage() {
     setSelected(method.payment_method);
     setProof(null);
     setAttempts(0);
-    if (necesario) setAmount(String(neededFor(method, necesario, saldoRate)));
+    setAmount((previous) =>
+      necesario
+        ? String(neededFor(method, necesario, saldoRate))
+        : previous.trim() === ""
+          ? "2000"
+          : previous,
+    );
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   function copy(value: string) {
@@ -179,7 +238,19 @@ function DepositPage() {
     );
   }
 
-  if (!current) {
+  function ShortageNotice() {
+    if (!necesario) return null;
+    return (
+      <div className="surface-card border-primary/40 p-4">
+        <p className="text-sm">
+          Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span>{" "}
+          para completar tu compra. Ya pusimos el importe justo a pagar.
+        </p>
+      </div>
+    );
+  }
+
+  if (methods.length === 0) {
     return (
       <UserShell>
         <div className="surface-card p-5 text-sm text-muted-foreground">
@@ -190,57 +261,111 @@ function DepositPage() {
     );
   }
 
+  // ── Paso 1: elegir el método de pago ───────────────────────────────────────
+  if (!current) {
+    return (
+      <UserShell>
+        <div className="mx-auto max-w-xl space-y-5">
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="icon">
+              <Link to="/app/wallet" aria-label="Volver al wallet">
+                <ChevronLeft className="size-5" aria-hidden="true" />
+              </Link>
+            </Button>
+            <h1 className="text-xl font-bold">Agregar fondos</h1>
+          </div>
+
+          <PaymentHoursNotice />
+          <ShortageNotice />
+
+          <section className="surface-card space-y-4 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base font-semibold">Método de pago a usar</h2>
+              <StepBadge step={1} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Elige cómo vas a enviar el dinero y después verás el importe y los datos para
+              transferir.
+            </p>
+
+            <div className="space-y-2">
+              {methods.map((method) => {
+                const Icon = methodIcon(method.payment_method);
+                return (
+                  <button
+                    key={method.payment_method}
+                    type="button"
+                    onClick={() => chooseMethod(method)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {method.label}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {methodHint(method, saldoRate)}
+                      </span>
+                    </span>
+                    <ChevronRight
+                      className="size-4 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <p className="text-xs text-muted-foreground">
+            Las solicitudes quedan en estado pendiente hasta que el equipo verifica el pago.
+          </p>
+        </div>
+      </UserShell>
+    );
+  }
+
+  const CurrentIcon = methodIcon(current.payment_method);
+
+  // ── Paso 2: importe a depositar + datos para transferir ────────────────────
   return (
     <UserShell>
       <div className="mx-auto max-w-xl space-y-5">
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon">
-            <Link to="/app/wallet" aria-label="Volver al wallet">
-              <ChevronLeft className="size-5" aria-hidden="true" />
-            </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSelected(null)}
+            aria-label="Volver a elegir el método de pago"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
           </Button>
           <h1 className="text-xl font-bold">Agregar fondos</h1>
         </div>
 
         <PaymentHoursNotice />
+        <ShortageNotice />
 
-        {necesario ? (
-          <div className="surface-card border-primary/40 p-4">
-            <p className="text-sm">
-              Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span>{" "}
-              para completar tu compra. Ya pusimos el importe justo a pagar.
-            </p>
-          </div>
-        ) : null}
-
-        <section className="surface-card space-y-3 p-5">
-          <h2 className="text-base font-semibold">Métodos de pago</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {methods.map((method) => {
-              const Icon = methodIcon(method.payment_method);
-              const isActive = method.payment_method === current.payment_method;
-              return (
-                <button
-                  key={method.payment_method}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => chooseMethod(method)}
-                  className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors ${
-                    isActive
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
-                  }`}
-                >
-                  <Icon className="size-5" aria-hidden="true" />
-                  {method.label}
-                </button>
-              );
-            })}
-          </div>
+        <section className="surface-card flex items-center gap-3 p-4">
+          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+            <CurrentIcon className="size-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs text-muted-foreground">Método seleccionado</span>
+            <span className="block truncate text-sm font-semibold">{current.label}</span>
+          </span>
+          <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>
+            Cambiar
+          </Button>
         </section>
 
         <div className="surface-card space-y-1.5 p-5">
-          <Label htmlFor="monto">Importe a depositar (CUP)</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label htmlFor="monto">Importe a depositar (CUP)</Label>
+            <StepBadge step={2} />
+          </div>
           <Input
             id="monto"
             inputMode="numeric"
@@ -339,6 +464,7 @@ function DepositPage() {
         </section>
 
         <p className="text-xs text-muted-foreground">
+          <Check className="mr-1 inline size-3 text-primary" aria-hidden="true" />
           Las solicitudes quedan en estado pendiente hasta que el equipo verifica el pago.
         </p>
       </div>
