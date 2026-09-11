@@ -4,13 +4,11 @@ import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { GameCover } from "@/components/common/GameCover";
 import { Button } from "@/components/ui/button";
-import { useWallet } from "@/hooks/useAccount";
+import { useOrders, useWallet } from "@/hooks/useAccount";
+import { EmptyState } from "@/components/common/states";
 import { listCatalogGames } from "@/lib/catalog.functions";
 import { giftCardImage, isGiftCard } from "@/lib/giftcards";
 
-import { mockOrders } from "@/data/mock/orders";
-import { mockGames } from "@/data/mock/games";
-import { mockProducts } from "@/data/mock/products";
 import { mockEvents } from "@/data/mock/events";
 import { EventCard } from "@/components/events/EventCard";
 import { formatCUP, formatDate } from "@/lib/format";
@@ -37,7 +35,8 @@ function UserHome() {
   const { data: wallet } = useWallet();
   const catalog = Route.useLoaderData();
   const giftCards = catalog.filter((game) => isGiftCard(game)).slice(0, 6);
-  const orders = mockOrders.filter((order) => order.user_id === "us_001").slice(0, 3);
+  const { data: ordersData } = useOrders(5);
+  const orders = ordersData ?? [];
   const currentEvents = mockEvents
     .filter((event) => event.status !== "finalizado" && event.status !== "cancelado")
     .slice(0, 3);
