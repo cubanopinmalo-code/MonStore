@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   Clock,
@@ -14,7 +15,8 @@ import {
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { EmptyState } from "@/components/common/states";
+import { GameCover } from "@/components/common/GameCover";
+import { EmptyState, CardListSkeleton } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,21 +29,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { mockEvents, mockEventSubscriptions } from "@/data/mock/events";
-import { mockGames } from "@/data/mock/games";
-import { mockProfile } from "@/data/mock/account";
-import { mockWallet } from "@/data/mock/wallet";
-import {
-  EVENT_STATUS_LABEL,
-  formatCountdown,
-  formatEventDate,
-  buildEventShareUrl,
-  goalProgress,
-  isFull,
-  isSubscriptionOpen,
-} from "@/lib/events";
+import { supabase } from "@/integrations/supabase/client";
+import { useEvent, useMySubscription, type EventRow } from "@/hooks/useEvents";
+import { useProfile, useWallet } from "@/hooks/useAccount";
+import { EVENT_STATUS_LABEL, formatCountdown, formatEventDate, buildEventShareUrl } from "@/lib/events";
 import { formatCUP } from "@/lib/format";
-import type { GameEvent } from "@/types";
+import type { EventStatus } from "@/types";
 
 export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
   head: () => ({
@@ -64,11 +57,17 @@ export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
   component: EventDetailPage,
 });
 
-const CURRENT_USER_ID = "us_001";
-
 function EventDetailPage() {
   const { id } = Route.useParams();
-  const event = mockEvents.find((item) => item.id === id);
+  const { data: event, isLoading } = useEvent(id);
+
+  if (isLoading) {
+    return (
+      <UserShell>
+        <CardListSkeleton items={3} />
+      </UserShell>
+    );
+  }
 
   if (!event) {
     return (
@@ -89,41 +88,86 @@ function EventDetailPage() {
   return <EventDetail event={event} />;
 }
 
-function EventDetail({ event }: { event: GameEvent }) {
-  const game = mockGames.find((item) => item.id === event.game_id);
-  const existing = mockEventSubscriptions.find(
-    (item) => item.event_id === event.id && item.user_id === CURRENT_USER_ID,
-  );
+function EventDetail({ event }: { event: EventRow }) {
+  const queryClient = useQueryClient();
+  const { data: subscription } = useMySubscription(event.id);
+  const { data: wallet } = useWallet();
+  const { data: profile } = useProfile();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [accountId, setAccountId] = useState("");
-  const [subscribedId, setSubscribedId] = useState<string | null>(
-    existing?.game_account_id ?? null,
-  );
-  const [paid, setPaid] = useState(existing?.payment_status === "paid");
-  const [processing, setProcessing] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [room, setRoom] = useState<{ id: string | null; password: string | null } | null>(null);
+
+  const balance = Number(wallet?.balance ?? 0);
+  const paid = subscription?.payment_status === "pagado";
+  const enoughBalance = balance >= event.entry_price;
+  const full = event.participants >= event.max_participants;
+  const open =
+    (event.status === "inscripciones_abiertas" || event.status === "meta_alcanzada") && !full;
 
   useEffect(() => {
-    if (event.status !== "sala_activa") return;
-    // Prototipo: la ventana de entrada se cuenta desde que se abre la pantalla.
-    const total = event.entry_window_minutes * 60;
-    const start = Date.now();
-    setSecondsLeft(total);
-    const timer = setInterval(() => {
-      const left = total - Math.floor((Date.now() - start) / 1000);
-      setSecondsLeft(left > 0 ? left : 0);
-    }, 1000);
+    if (event.status !== "sala_activa" || !event.room_activated_at) {
+      setSecondsLeft(null);
+      return;
+    }
+    const end =
+      new Date(event.room_activated_at).getTime() + event.entry_window_minutes * 60 * 1000;
+    const tick = () => setSecondsLeft(Math.max(0, Math.floor((end - Date.now()) / 1000)));
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [event]);
+  }, [event.status, event.room_activated_at, event.entry_window_minutes]);
 
-  const participants = `${event.participants_count}/${event.min_participants}`;
-  const balance = mockWallet.balance;
-  const enoughBalance = balance >= event.entry_price;
+  const subscribe = useMutation({
+    mutationFn: async (value: string) => {
+      const { data, error } = await supabase.rpc("subscribe_event", {
+        p_event: event.id,
+        p_game_account_id: value,
+      });
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      setDialogOpen(false);
+      setAccountId("");
+      toast.success("Te inscribiste en el evento.");
+      void queryClient.invalidateQueries({ queryKey: ["event", event.id] });
+      void queryClient.invalidateQueries({ queryKey: ["event-subscription", event.id] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const enterRoom = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("enter_event_room", { p_event: event.id });
+      if (error) throw new Error(error.message);
+      return data as { room_id: string | null; room_password: string | null; charged: boolean };
+    },
+    onSuccess: (data) => {
+      setRoom({ id: data.room_id, password: data.room_password });
+      toast.success(
+        data.charged
+          ? `Entrada confirmada. Se descontaron ${formatCUP(event.entry_price)}.`
+          : "Ya tenías la entrada pagada.",
+      );
+      void queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      void queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      void queryClient.invalidateQueries({ queryKey: ["event-subscription", event.id] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const windowOpen = secondsLeft === null || secondsLeft > 0;
+  const progress = Math.min(
+    100,
+    Math.round((event.participants / Math.max(event.min_participants, 1)) * 100),
+  );
 
   async function handleShare() {
-    const url = buildEventShareUrl(event.id, mockProfile.referral_code);
+    const url = buildEventShareUrl(event.id, profile?.referral_code ?? "");
     const text = `Participa conmigo en ${event.name} · Premio: ${event.prize}`;
     if (navigator.share) {
       try {
@@ -147,47 +191,27 @@ function EventDetail({ event }: { event: GameEvent }) {
       toast.error("Introduce un ID de cuenta de juego válido (solo números).");
       return;
     }
-    setSubscribedId(value);
-    setDialogOpen(false);
-    setAccountId("");
-    toast.success("Te has suscrito correctamente al evento.", {
-      description: `${event.name} · ${formatEventDate(event.event_date)} ${event.event_time} · ID ${value}`,
-    });
+    subscribe.mutate(value);
   }
 
-  function handleEnterRoom() {
-    if (paid || processing) return;
-    if (!enoughBalance) {
-      toast.error("Saldo insuficiente para entrar a la sala.");
-      return;
-    }
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      setPaid(true);
-      toast.success(`Entrada confirmada. Se descontarían ${formatCUP(event.entry_price)}.`, {
-        description: "Prototipo: el saldo real se descontará en la Fase 2.",
-      });
-    }, 700);
-  }
+  const roomId = room?.id ?? (paid ? event.room_id : null);
+  const roomPassword = room?.password ?? (paid ? event.room_password : null);
 
   return (
     <UserShell>
       <div className="mx-auto max-w-3xl space-y-5">
-        {game ? (
-          <img
-            src={game.image_url}
-            alt={`Banner del evento ${event.name}`}
-            width={1280}
-            height={720}
-            className="aspect-video w-full rounded-xl object-cover"
-          />
-        ) : null}
+        <GameCover
+          src={event.banner_url ?? event.games?.image_url ?? null}
+          name={event.games?.name ?? event.name}
+          className="aspect-video w-full rounded-xl"
+        />
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-bold">{event.name}</h1>
-            <StatusBadge status={EVENT_STATUS_LABEL[event.status]} />
+            <StatusBadge
+              status={EVENT_STATUS_LABEL[event.status as EventStatus] ?? event.status}
+            />
           </div>
           <p className="text-sm text-muted-foreground">{event.description}</p>
           <Button variant="outline" className="w-full sm:w-auto" onClick={handleShare}>
@@ -207,12 +231,12 @@ function EventDetail({ event }: { event: GameEvent }) {
           <Detail
             icon={<CalendarDays className="size-4" />}
             label="Fecha y hora"
-            value={`${formatEventDate(event.event_date)} · ${event.event_time}`}
+            value={`${event.event_date ? formatEventDate(event.event_date) : "Por confirmar"} · ${event.event_time}`}
           />
           <Detail
             icon={<Users className="size-4" />}
             label="Participantes"
-            value={`${participants} (capacidad ${event.max_participants})`}
+            value={`${event.participants}/${event.min_participants} (capacidad ${event.max_participants})`}
           />
           <Detail
             icon={<Clock className="size-4" />}
@@ -220,7 +244,7 @@ function EventDetail({ event }: { event: GameEvent }) {
             value="Sala personalizada"
           />
           <div className="sm:col-span-2">
-            <Progress value={goalProgress(event)} />
+            <Progress value={progress} />
             <p className="mt-1 text-xs text-muted-foreground">
               Meta mínima: {event.min_participants} participantes.
             </p>
@@ -232,7 +256,8 @@ function EventDetail({ event }: { event: GameEvent }) {
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold">Sala activa</h2>
               <span className="text-sm font-semibold text-primary">
-                ⏱️ {secondsLeft === null
+                ⏱️{" "}
+                {secondsLeft === null
                   ? "--:--"
                   : windowOpen
                     ? formatCountdown(secondsLeft)
@@ -240,16 +265,16 @@ function EventDetail({ event }: { event: GameEvent }) {
               </span>
             </div>
 
-            {!subscribedId ? (
+            {!subscription ? (
               <p className="text-sm text-muted-foreground">
-                Solo los usuarios suscritos pueden entrar a esta sala.
+                Solo las personas inscritas pueden entrar a esta sala.
               </p>
-            ) : paid ? (
+            ) : roomId || roomPassword ? (
               <div className="space-y-2">
-                <RoomField label="ID de sala" value={event.room_id ?? "—"} />
-                <RoomField label="Contraseña" value={event.room_password ?? "—"} />
+                <RoomField label="ID de sala" value={roomId ?? "—"} />
+                <RoomField label="Contraseña" value={roomPassword ?? "—"} />
                 <p className="text-xs text-muted-foreground">
-                  Estado: participando · Pago registrado ({formatCUP(event.entry_price)}).
+                  Entrada pagada ({formatCUP(event.entry_price)}).
                 </p>
               </div>
             ) : (
@@ -260,8 +285,8 @@ function EventDetail({ event }: { event: GameEvent }) {
                 </p>
                 <Button
                   className="w-full"
-                  disabled={!windowOpen || processing || !enoughBalance}
-                  onClick={handleEnterRoom}
+                  disabled={!windowOpen || enterRoom.isPending || !enoughBalance}
+                  onClick={() => enterRoom.mutate()}
                 >
                   <Lock className="size-4" aria-hidden="true" />
                   Entrar a la sala — {formatCUP(event.entry_price)}
@@ -280,23 +305,24 @@ function EventDetail({ event }: { event: GameEvent }) {
         ) : null}
 
         <section className="surface-card space-y-3 p-5">
-          {subscribedId ? (
+          {subscription ? (
             <>
               <p className="text-sm font-semibold text-success">✅ Ya estás inscrito</p>
               <p className="text-sm text-muted-foreground">
-                ID de participación: <span className="font-mono">{subscribedId}</span>
+                ID de participación:{" "}
+                <span className="font-mono">{subscription.game_account_id}</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                Solo esta cuenta tendrá derecho al premio. Para cambiarla necesitas
-                autorización del administrador.
+                Solo esta cuenta tendrá derecho al premio. Para cambiarla necesitas autorización
+                del administrador.
               </p>
             </>
-          ) : isFull(event) ? (
+          ) : full ? (
             <p className="text-sm font-semibold text-destructive">🔴 Evento completo</p>
-          ) : isSubscriptionOpen(event) ? (
+          ) : open ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Suscribirte no descuenta dinero. El pago ocurre solo al entrar a la sala.
+                Inscribirte no descuenta dinero. El pago ocurre solo al entrar a la sala.
               </p>
               <Button className="w-full" onClick={() => setDialogOpen(true)}>
                 Suscribirme al evento
@@ -319,7 +345,7 @@ function EventDetail({ event }: { event: GameEvent }) {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
-              <Label htmlFor="account-id">ID de cuenta ({game?.name})</Label>
+              <Label htmlFor="account-id">ID de cuenta ({event.games?.name ?? "juego"})</Label>
               <Input
                 id="account-id"
                 inputMode="numeric"
@@ -328,15 +354,16 @@ function EventDetail({ event }: { event: GameEvent }) {
                 onChange={(fieldEvent) => setAccountId(fieldEvent.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                El nombre de la cuenta se verificará con el proveedor desde el servidor en la
-                Fase 2.
+                Este identificador queda bloqueado y no puede repetirse en el mismo evento.
               </p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSubscribe}>Confirmar inscripción</Button>
+              <Button onClick={handleSubscribe} disabled={subscribe.isPending}>
+                Confirmar inscripción
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
