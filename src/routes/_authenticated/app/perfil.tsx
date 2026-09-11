@@ -162,8 +162,8 @@ function ProfilePage() {
             <Progress value={progress} aria-label="Progreso hacia la recompensa" />
             <p className="text-xs text-muted-foreground">
               {remaining > 0
-                ? `Te faltan ${remaining} invitados para tu compra de 1 USD gratis.`
-                : "¡Recompensa desbloqueada! Tienes una compra de 1 USD gratis."}
+                ? `Te faltan ${remaining} invitados para ganar (valor de la base actual = ${rewardCup} CUP) Gratis.`
+                : `¡Recompensa desbloqueada! Tienes ${rewardCup} CUP gratis.`}
             </p>
           </div>
 
@@ -176,7 +176,7 @@ function ProfilePage() {
             {claiming
               ? "Entregando premio…"
               : canClaim
-                ? "Obtener premio (1 USD en tu wallet)"
+                ? `Obtener premio (${rewardCup} CUP en tu wallet)`
                 : "Premio disponible al llegar a 10 invitados"}
           </Button>
 
