@@ -2,10 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileStack, Plus, Store } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
-import { mockGameAccounts } from "@/data/mock/marketplace";
-import { mockGames } from "@/data/mock/games";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/common/states";
 import { formatCUP } from "@/lib/format";
+import { usePublicListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
 
 function getInitials(name: string) {
   return name
@@ -30,8 +30,74 @@ export const Route = createFileRoute("/_authenticated/app/comercio/")({
   component: UserMarketplacePage,
 });
 
+type Listing = ReturnType<typeof usePublicListings>["data"] extends (infer T)[] | undefined
+  ? T
+  : never;
+
+function ListingCard({ listing }: { listing: Listing }) {
+  const images = useSignedImages(listing.images as string[]);
+  const cover = images[0];
+  const remaining = remainingLabel(listing.expires_at);
+
+  return (
+    <article className="surface-card overflow-hidden">
+      <Link
+        to="/app/comercio/$id"
+        params={{ id: listing.id }}
+        aria-label={`Ver fotos de ${listing.title}`}
+        className="group relative block overflow-hidden"
+      >
+        {cover ? (
+          <img
+            src={cover}
+            alt={`Foto principal de ${listing.title}`}
+            loading="lazy"
+            width={768}
+            height={1024}
+            className="aspect-4/3 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="aspect-4/3 w-full bg-muted" aria-hidden="true" />
+        )}
+        <span className="absolute bottom-2 right-2 rounded-md bg-background/85 px-2 py-1 text-xs font-medium backdrop-blur">
+          {listing.images.length} fotos
+        </span>
+      </Link>
+      <div className="space-y-3 p-4">
+        <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+          <div className="col-span-2">
+            <dt className="text-muted-foreground">Vendedor</dt>
+            <dd className="mt-1 flex items-center gap-2">
+              <Avatar className="size-8 border border-border">
+                <AvatarFallback className="text-[10px] font-semibold">
+                  {getInitials(listing.seller_name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate font-medium">{listing.seller_name}</span>
+            </dd>
+          </div>
+          <div><dt className="text-muted-foreground">Juego</dt><dd className="font-medium">{listing.games?.name}</dd></div>
+          <div><dt className="text-muted-foreground">Región</dt><dd className="font-medium">{listing.region}</dd></div>
+          <div><dt className="text-muted-foreground">Plataforma</dt><dd className="font-medium">{listing.platform}</dd></div>
+        </dl>
+        {remaining ? <p className="text-xs text-muted-foreground">{remaining}</p> : null}
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Precio</p>
+            <p className="font-display text-base font-bold text-primary">{formatCUP(listing.price)}</p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/app/comercio/$id" params={{ id: listing.id }}>Comprar</Link>
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function UserMarketplacePage() {
-  const listings = mockGameAccounts.filter((item) => item.status === "aprobada");
+  const { data, isLoading } = usePublicListings();
+  const listings = data ?? [];
   const total = listings.length;
 
   return (
@@ -85,64 +151,18 @@ function UserMarketplacePage() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((listing) => {
-            const game = mockGames.find((item) => item.id === listing.game_id);
-            return (
-              <article key={listing.id} className="surface-card overflow-hidden">
-                <Link
-                  to="/app/comercio/$id"
-                  params={{ id: listing.id }}
-                  aria-label={`Ver fotos de ${listing.title}`}
-                  className="group relative block overflow-hidden"
-                >
-                  <img
-                    src={listing.images[0]}
-                    alt={`Foto principal de ${listing.title}`}
-                    loading="lazy"
-                    width={768}
-                    height={1024}
-                    className="aspect-4/3 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <span className="absolute bottom-2 right-2 rounded-md bg-background/85 px-2 py-1 text-xs font-medium backdrop-blur">
-                    {listing.images.length} fotos
-                  </span>
-                </Link>
-                <div className="space-y-3 p-4">
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                    <div className="col-span-2">
-                      <dt className="text-muted-foreground">Vendedor</dt>
-                      <dd className="mt-1 flex items-center gap-2">
-                        <Avatar className="size-8 border border-border">
-                          <AvatarImage
-                            src={listing.seller_avatar_url ?? undefined}
-                            alt={`Foto de perfil de ${listing.seller_name}`}
-                          />
-                          <AvatarFallback className="text-[10px] font-semibold">
-                            {getInitials(listing.seller_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="truncate font-medium">{listing.seller_name}</span>
-                      </dd>
-                    </div>
-                    <div><dt className="text-muted-foreground">Juego</dt><dd className="font-medium">{game?.name}</dd></div>
-                    <div><dt className="text-muted-foreground">Región</dt><dd className="font-medium">{listing.region}</dd></div>
-                    <div><dt className="text-muted-foreground">Plataforma</dt><dd className="font-medium">{listing.platform}</dd></div>
-                  </dl>
-                  <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Precio</p>
-                      <p className="font-display text-base font-bold text-primary">{formatCUP(listing.price)}</p>
-                    </div>
-                    <Button asChild size="sm">
-                      <Link to="/app/comercio/$id" params={{ id: listing.id }}>Comprar</Link>
-                    </Button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        {!isLoading && total === 0 ? (
+          <EmptyState
+            title="Todavía no hay cuentas publicadas"
+            description="Publica la tuya y aparecerá aquí cuando el equipo la apruebe."
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
       </div>
     </UserShell>
   );
