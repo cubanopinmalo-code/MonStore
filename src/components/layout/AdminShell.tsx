@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowUpFromLine,
   CreditCard,
