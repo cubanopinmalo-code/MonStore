@@ -37,6 +37,7 @@ import { Route as AppComercioIndexRouteImport } from './routes/app/comercio/inde
 import { Route as AppComercioIdRouteImport } from './routes/app/comercio/$id'
 import { Route as AppComercioMisPublicacionesRouteImport } from './routes/app/comercio/mis-publicaciones'
 import { Route as AppComercioPublicarRouteImport } from './routes/app/comercio/publicar'
+import { Route as AppEventosIndexRouteImport } from './routes/app/eventos/index'
 import { Route as AppPedidosIndexRouteImport } from './routes/app/pedidos/index'
 import { Route as AppPedidosIdRouteImport } from './routes/app/pedidos/$id'
 import { Route as AppRecargasIndexRouteImport } from './routes/app/recargas/index'
@@ -186,6 +187,11 @@ const AppComercioPublicarRoute = AppComercioPublicarRouteImport.update({
   path: '/app/comercio/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEventosIndexRoute = AppEventosIndexRouteImport.update({
+  id: '/app/eventos/',
+  path: '/app/eventos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   id: '/app/pedidos/',
   path: '/app/pedidos/',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
   '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/comercio/': typeof AppComercioIndexRoute
+  '/app/eventos/': typeof AppEventosIndexRoute
   '/app/pedidos/': typeof AppPedidosIndexRoute
   '/app/recargas/': typeof AppRecargasIndexRoute
   '/app/wallet/': typeof AppWalletIndexRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
   '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/comercio': typeof AppComercioIndexRoute
+  '/app/eventos': typeof AppEventosIndexRoute
   '/app/pedidos': typeof AppPedidosIndexRoute
   '/app/recargas': typeof AppRecargasIndexRoute
   '/app/wallet': typeof AppWalletIndexRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
   '/app/wallet/retirar': typeof AppWalletRetirarRoute
   '/app/comercio/': typeof AppComercioIndexRoute
+  '/app/eventos/': typeof AppEventosIndexRoute
   '/app/pedidos/': typeof AppPedidosIndexRoute
   '/app/recargas/': typeof AppRecargasIndexRoute
   '/app/wallet/': typeof AppWalletIndexRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/app/wallet/depositar'
     | '/app/wallet/retirar'
     | '/app/comercio/'
+    | '/app/eventos/'
     | '/app/pedidos/'
     | '/app/recargas/'
     | '/app/wallet/'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/app/wallet/depositar'
     | '/app/wallet/retirar'
     | '/app/comercio'
+    | '/app/eventos'
     | '/app/pedidos'
     | '/app/recargas'
     | '/app/wallet'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/app/wallet/depositar'
     | '/app/wallet/retirar'
     | '/app/comercio/'
+    | '/app/eventos/'
     | '/app/pedidos/'
     | '/app/recargas/'
     | '/app/wallet/'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   AppWalletDepositarRoute: typeof AppWalletDepositarRoute
   AppWalletRetirarRoute: typeof AppWalletRetirarRoute
   AppComercioIndexRoute: typeof AppComercioIndexRoute
+  AppEventosIndexRoute: typeof AppEventosIndexRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
   AppRecargasIndexRoute: typeof AppRecargasIndexRoute
   AppWalletIndexRoute: typeof AppWalletIndexRoute
@@ -684,6 +697,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComercioPublicarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/eventos/': {
+      id: '/app/eventos/'
+      path: '/app/eventos'
+      fullPath: '/app/eventos/'
+      preLoaderRoute: typeof AppEventosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/pedidos/': {
       id: '/app/pedidos/'
       path: '/app/pedidos'
@@ -769,6 +789,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppWalletDepositarRoute: AppWalletDepositarRoute,
   AppWalletRetirarRoute: AppWalletRetirarRoute,
   AppComercioIndexRoute: AppComercioIndexRoute,
+  AppEventosIndexRoute: AppEventosIndexRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
   AppRecargasIndexRoute: AppRecargasIndexRoute,
   AppWalletIndexRoute: AppWalletIndexRoute,
