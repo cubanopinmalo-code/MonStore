@@ -339,7 +339,6 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
 
 function AdminSettingsPage() {
   const { methods } = Route.useLoaderData();
-  const [limitsSaved, setLimitsSaved] = useState(false);
 
   return (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
