@@ -4,6 +4,7 @@ import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/common/states";
+import { ShareListingButton } from "@/components/common/ShareListingButton";
 import { formatCUP } from "@/lib/format";
 import { usePublicListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
 
@@ -86,9 +87,12 @@ function ListingCard({ listing }: { listing: Listing }) {
             <p className="text-xs text-muted-foreground">Precio</p>
             <p className="font-display text-base font-bold text-primary">{formatCUP(listing.price)}</p>
           </div>
-          <Button asChild size="sm">
-            <Link to="/app/comercio/$id" params={{ id: listing.id }}>Comprar</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareListingButton listingId={listing.id} title={listing.title} withLabel={false} size="icon" />
+            <Button asChild size="sm">
+              <Link to="/app/comercio/$id" params={{ id: listing.id }}>Comprar</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </article>

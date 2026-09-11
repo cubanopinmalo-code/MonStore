@@ -4,6 +4,7 @@ import { ChevronLeft, Clock, Images, MapPin, Monitor, ShieldCheck, UserRound } f
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
+import { ShareListingButton } from "@/components/common/ShareListingButton";
 import { useWallet } from "@/hooks/useAccount";
 import { usePublicListing, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
 import { formatCUP } from "@/lib/format";
@@ -98,6 +99,7 @@ function ListingDetailPage() {
                 <p className="font-display text-3xl font-bold text-primary">{formatCUP(listing.price)}</p>
               </div>
               <Button className="w-full" disabled={!canAfford} onClick={() => toast.success("Compra iniciada (simulación)", { description: "No se descontó saldo ni se realizó una compra real." })}>Comprar</Button>
+              <ShareListingButton listingId={listing.id} title={listing.title} className="w-full" size="default" />
               {!canAfford ? <p className="text-center text-xs text-destructive">Saldo insuficiente. Agrega fondos para continuar.</p> : null}
             </div>
             <div className="flex gap-2 rounded-md border border-success/30 bg-success/10 p-3 text-xs text-muted-foreground">
