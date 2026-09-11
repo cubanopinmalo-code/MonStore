@@ -3,7 +3,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Calculator,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -22,8 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { getSaldoRate } from "@/lib/catalog.functions";
-import { formatBaseCUP, formatCUP, formatSaldo } from "@/lib/format";
-import { useMoneyDisplay } from "@/hooks/useCurrency";
+import { formatCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import {
@@ -70,25 +68,6 @@ function methodHint(method: PaymentMethodInfo, saldoRate: number) {
   return method.deposit_bonus_pct > 0
     ? `+${method.deposit_bonus_pct}% al depositar`
     : "Sin bonificación";
-}
-
-/**
- * Aviso de conversión: solo aparece cuando el cliente eligió ver los precios en
- * saldo móvil. Explica que la cifra en saldo sale de dividir el CUP entre la base.
- */
-function SaldoDisplayNotice({ rate, inSaldo }: { rate: number; inSaldo: boolean }) {
-  if (!inSaldo) return null;
-  return (
-    <div className="surface-card flex items-start gap-3 border-primary/40 p-4">
-      <Calculator className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-      <p className="text-sm">
-        Estás viendo los precios en{" "}
-        <span className="font-semibold text-primary">saldo móvil</span>: cada peso por tarjeta CUP
-        se divide entre <span className="font-semibold text-primary">{rate}</span>. El dinero lo
-        envías en CUP y abajo te dejamos la cifra exacta que debes transferir.
-      </p>
-    </div>
-  );
 }
 
 function StepBadge({ step }: { step: 1 | 2 }) {
@@ -158,9 +137,6 @@ function DepositPage() {
   const send = useServerFn(requestDeposit);
   const { necesario, metodo } = Route.useSearch();
   const { saldo: saldoRate, methods } = Route.useLoaderData();
-  // Moneda elegida con el selector: CUP o saldo móvil (el CUP sigue siendo la base).
-  const { currency } = useMoneyDisplay();
-  const inSaldo = currency === "SALDO";
 
   // Si llegamos desde «me falta saldo» el método ya viene elegido: vamos al paso 2.
   const preselected = methods.find((item) => item.payment_method === metodo) ?? null;
@@ -183,12 +159,10 @@ function DepositPage() {
   const parsed = Number(amount) || 0;
   const isSaldo = current?.payment_method === "saldo_movil";
   const bonusPct = current?.deposit_bonus_pct ?? 0;
-  /** Importes en CUP (moneda base) para poder convertirlos al mostrarlos. */
-  const sentBaseCup = isSaldo ? Math.round(parsed * saldoRate) : parsed;
-  const creditedBaseCup = isSaldo
-    ? sentBaseCup
+  const credited = isSaldo
+    ? Math.round(parsed * saldoRate)
     : Math.round(parsed * (1 + bonusPct / 100));
-  const bonusCup = Math.max(creditedBaseCup - sentBaseCup, 0);
+  const bonus = credited - parsed;
   const transferFields = (current?.transfer_fields ?? []).filter(
     (field) => field.value.trim().length > 0,
   );
@@ -291,8 +265,8 @@ function DepositPage() {
     return (
       <div className="surface-card border-primary/40 p-4">
         <p className="text-sm">
-          Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span> para
-          completar tu compra. Ya pusimos el importe justo a pagar.
+          Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span>{" "}
+          para completar tu compra. Ya pusimos el importe justo a pagar.
         </p>
       </div>
     );
@@ -324,7 +298,6 @@ function DepositPage() {
           </div>
 
           <PaymentHoursNotice />
-          <SaldoDisplayNotice rate={saldoRate} inSaldo={inSaldo} />
           <ShortageNotice />
 
           <section className="surface-card space-y-4 p-5">
@@ -393,7 +366,6 @@ function DepositPage() {
         </div>
 
         <PaymentHoursNotice />
-        <SaldoDisplayNotice rate={saldoRate} inSaldo={inSaldo} />
         <ShortageNotice />
 
         <section className="surface-card flex items-center gap-3 p-4">
@@ -412,9 +384,7 @@ function DepositPage() {
         <div className="surface-card space-y-3 p-5">
           <StepBadge step={2} />
           <div className="space-y-1.5">
-            <Label htmlFor="monto">
-              {isSaldo ? "Importe a enviar (saldo móvil)" : "Importe a depositar (CUP)"}
-            </Label>
+            <Label htmlFor="monto">Importe a depositar (CUP)</Label>
             <Input
               id="monto"
               inputMode="numeric"
@@ -425,30 +395,24 @@ function DepositPage() {
           <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Envías</span>
-              <span>{isSaldo ? formatSaldo(parsed) : formatCUP(parsed)}</span>
+              <span>{formatCUP(bonus < 0 ? 0 : parsed)}</span>
             </div>
-            {isSaldo && !inSaldo ? (
+            {isSaldo ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Conversión (cada peso de saldo × {saldoRate})
                 </span>
-                <span>+ {formatCUP(Math.max(creditedBaseCup - parsed, 0))}</span>
+                <span>+ {formatCUP(bonus)}</span>
               </div>
-            ) : !isSaldo && bonusPct > 0 ? (
+            ) : bonusPct > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Conversión (+{bonusPct}%)</span>
-                <span>+ {formatCUP(bonusCup)}</span>
-              </div>
-            ) : null}
-            {inSaldo && !isSaldo ? (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Transfieres exactamente</span>
-                <span>{formatBaseCUP(sentBaseCup)}</span>
+                <span>+ {formatCUP(bonus)}</span>
               </div>
             ) : null}
             <div className="flex justify-between border-t border-border pt-2 font-semibold">
               <span>Acreditaremos</span>
-              <span className="text-primary">{formatCUP(creditedBaseCup)}</span>
+              <span className="text-primary">{formatCUP(credited)}</span>
             </div>
           </div>
         </div>

@@ -61,27 +61,6 @@ export type Database = {
           },
         ]
       }
-      currency_switch_log: {
-        Row: {
-          created_at: string
-          currency: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          currency: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          currency?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       deposits: {
         Row: {
           amount: number
@@ -789,27 +768,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_currency_prefs: {
-        Row: {
-          created_at: string
-          currency: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          currency?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          currency?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_favorite_games: {
         Row: {
           created_at: string
@@ -1059,7 +1017,6 @@ export type Database = {
         Args: { p_approve: boolean; p_listing: string; p_reason: string }
         Returns: Json
       }
-      set_display_currency: { Args: { p_currency: string }; Returns: Json }
       top_recharged_games: {
         Args: { _limit?: number }
         Returns: {

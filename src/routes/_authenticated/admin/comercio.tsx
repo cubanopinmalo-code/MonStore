@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
-import { formatBaseCUP, formatDateTime } from "@/lib/format";
+import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/comercio")({
   head: () => ({
@@ -80,13 +80,13 @@ function AdminListingCard({ listing }: { listing: Listing }) {
           <p className="text-xs text-muted-foreground">{formatDateTime(listing.created_at)}</p>
           <p className="text-xs text-muted-foreground">
             Contrató {listing.duration_days} día(s) ({listing.duration_days * 24} h) ·{" "}
-            {formatBaseCUP(listing.publish_fee)} cobrados
+            {formatCUP(listing.publish_fee)} cobrados
           </p>
           {listing.status === "aprobada" ? (
             <p className="text-xs font-medium text-primary">{remainingLabel(listing.expires_at)}</p>
           ) : null}
           <p className="font-display text-base font-bold text-primary">
-            {formatBaseCUP(listing.price)}
+            {formatCUP(listing.price)}
           </p>
         </div>
       </div>

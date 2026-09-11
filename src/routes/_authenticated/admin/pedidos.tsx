@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { formatBaseCUP, formatDateTime } from "@/lib/format";
+import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   head: () => ({
@@ -132,7 +132,7 @@ function AdminOrdersPage() {
                   <TableCell className="font-medium">#{order.code}</TableCell>
                   <TableCell>{order.user_name}</TableCell>
                   <TableCell>{order.products?.name ?? order.games?.name ?? "—"}</TableCell>
-                  <TableCell>{formatBaseCUP(Number(order.total_amount))}</TableCell>
+                  <TableCell>{formatCUP(Number(order.total_amount))}</TableCell>
                   <TableCell>
                     <StatusBadge status={order.status} />
                   </TableCell>

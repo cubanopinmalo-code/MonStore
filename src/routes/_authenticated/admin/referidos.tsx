@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { mockReferrals, mockUsers } from "@/data/mock/account";
-import { formatBaseCUP, formatDate } from "@/lib/format";
+import { formatCUP, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/referidos")({
   head: () => ({
@@ -34,7 +34,7 @@ function AdminReferralsPage() {
           label="Activos"
           value={String(mockReferrals.filter((item) => item.status === "activo").length)}
         />
-        <StatCard label="Recompensas pagadas" value={formatBaseCUP(rewards)} />
+        <StatCard label="Recompensas pagadas" value={formatCUP(rewards)} />
       </div>
 
       <div className="surface-card overflow-x-auto">
@@ -58,7 +58,7 @@ function AdminReferralsPage() {
                   <TableCell>
                     <StatusBadge status={referral.status} />
                   </TableCell>
-                  <TableCell>{formatBaseCUP(referral.reward_amount)}</TableCell>
+                  <TableCell>{formatCUP(referral.reward_amount)}</TableCell>
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                     {formatDate(referral.created_at)}
                   </TableCell>

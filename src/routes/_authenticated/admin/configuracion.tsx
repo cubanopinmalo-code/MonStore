@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
-import { formatBaseCUP } from "@/lib/format";
+import { formatCUP } from "@/lib/format";
 import {
   listPaymentMethods,
   savePaymentMethod,
@@ -90,7 +90,7 @@ function UsdRateCard() {
         <div className="space-y-1.5">
           <Label>Ejemplo</Label>
           <p className="rounded-md border border-border/60 px-3 py-2 text-sm">
-            Una oferta de 1 USD se vende en {formatBaseCUP(preview)}
+            Una oferta de 1 USD se vende en {formatCUP(preview)}
           </p>
         </div>
       </div>
@@ -148,7 +148,7 @@ function SaldoRateCard() {
         <div className="space-y-1.5">
           <Label>Ejemplo</Label>
           <p className="rounded-md border border-border/60 px-3 py-2 text-sm">
-            1000 CUP de saldo acreditan {formatBaseCUP(Math.round(1000 * rate))}
+            1000 CUP de saldo acreditan {formatCUP(Math.round(1000 * rate))}
           </p>
         </div>
       </div>

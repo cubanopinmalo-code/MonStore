@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { mockWithdrawals } from "@/data/mock/admin";
-import { formatBaseCUP, formatDateTime } from "@/lib/format";
+import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/retiros")({
   head: () => ({
@@ -45,11 +45,11 @@ function AdminWithdrawalsPage() {
             {mockWithdrawals.map((withdrawal) => (
               <TableRow key={withdrawal.id}>
                 <TableCell className="font-medium">{withdrawal.user_name}</TableCell>
-                <TableCell>{formatBaseCUP(withdrawal.amount)}</TableCell>
+                <TableCell>{formatCUP(withdrawal.amount)}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatBaseCUP(withdrawal.fee)}
+                  {formatCUP(withdrawal.fee)}
                 </TableCell>
-                <TableCell>{formatBaseCUP(withdrawal.net_amount)}</TableCell>
+                <TableCell>{formatCUP(withdrawal.net_amount)}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {withdrawal.payment_destination}
                 </TableCell>
