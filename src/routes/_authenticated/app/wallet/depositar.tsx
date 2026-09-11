@@ -261,11 +261,21 @@ function DepositPage() {
                   className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground"
                 >
                   <Upload className="size-4" aria-hidden="true" />
-                  Sube una foto de la transferencia
+                  {cardProof ? cardProof.name : "Sube una foto de la transferencia"}
                 </label>
-                <Input id="comprobante" type="file" accept="image/*" className="sr-only" />
+                <Input
+                  id="comprobante"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => setCardProof(event.target.files?.[0] ?? null)}
+                />
               </div>
-              <Button className="w-full" onClick={() => submit("Tarjeta CUP")}>
+              <Button
+                className="w-full"
+                disabled={sending}
+                onClick={() => void submit("tarjeta_cup", Boolean(cardProof))}
+              >
                 Enviar solicitud
               </Button>
             </div>
