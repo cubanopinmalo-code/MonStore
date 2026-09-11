@@ -34,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
 });
 
 function DepositPage() {
+  const navigate = useNavigate();
   const { necesario, metodo } = Route.useSearch();
   const { rate: saldoRate } = Route.useLoaderData();
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
