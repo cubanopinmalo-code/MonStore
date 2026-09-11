@@ -19,6 +19,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
 import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminActividadRouteImport } from './routes/_authenticated/admin/actividad'
 import { Route as AuthenticatedAdminComercioRouteImport } from './routes/_authenticated/admin/comercio'
 import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin/configuracion'
 import { Route as AuthenticatedAdminDepositosRouteImport } from './routes/_authenticated/admin/depositos'
@@ -100,6 +101,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminActividadRoute =
+  AuthenticatedAdminActividadRouteImport.update({
+    id: '/actividad',
+    path: '/actividad',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminComercioRoute =
   AuthenticatedAdminComercioRouteImport.update({
     id: '/comercio',
@@ -293,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
@@ -334,6 +342,7 @@ export interface FileRoutesByTo {
   '/registro': typeof RegistroRoute
   '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos': typeof JuegosIndexRoute
+  '/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
@@ -378,6 +387,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/_authenticated/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/_authenticated/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
   '/_authenticated/admin/depositos': typeof AuthenticatedAdminDepositosRoute
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/juegos/$slug'
     | '/juegos/'
+    | '/admin/actividad'
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/juegos/$slug'
     | '/juegos'
+    | '/admin/actividad'
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
@@ -506,6 +518,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/juegos/$slug'
     | '/juegos/'
+    | '/_authenticated/admin/actividad'
     | '/_authenticated/admin/comercio'
     | '/_authenticated/admin/configuracion'
     | '/_authenticated/admin/depositos'
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/actividad': {
+      id: '/_authenticated/admin/actividad'
+      path: '/actividad'
+      fullPath: '/admin/actividad'
+      preLoaderRoute: typeof AuthenticatedAdminActividadRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/comercio': {
@@ -844,6 +864,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminActividadRoute: typeof AuthenticatedAdminActividadRoute
   AuthenticatedAdminComercioRoute: typeof AuthenticatedAdminComercioRoute
   AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
   AuthenticatedAdminDepositosRoute: typeof AuthenticatedAdminDepositosRoute
@@ -862,6 +883,7 @@ interface AuthenticatedAdminRouteRouteChildren {
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminActividadRoute: AuthenticatedAdminActividadRoute,
     AuthenticatedAdminComercioRoute: AuthenticatedAdminComercioRoute,
     AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
     AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,

@@ -31,6 +31,7 @@ import {
 
 const ADMIN_NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/actividad", label: "Actividad global", icon: Activity, exact: false },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, exact: false },
   { to: "/admin/usuarios", label: "Usuarios", icon: Users, exact: false },
   { to: "/admin/juegos", label: "Juegos", icon: Gamepad2, exact: false },
