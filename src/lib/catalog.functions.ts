@@ -121,12 +121,10 @@ function chunked<T>(items: T[], size = CHUNK): T[][] {
 async function withOffers(
   client: SupabaseClient<Database>,
   games: GameRow[],
-  onlyActive: boolean,
 ): Promise<CatalogGame[]> {
   const counts = new Map<string, number>();
   if (games.length > 0) {
-    let query = client.from("products").select("game_id");
-    const { data } = await query.in(
+    const { data } = await client.from("products").select("game_id").in(
       "game_id",
       games.map((game) => game.id),
     );
@@ -152,7 +150,7 @@ export const listCatalogGames = createServerFn({ method: "GET" }).handler(
       .select("*")
       .order("name");
     if (error) throw new Error("No se pudo cargar el catálogo de juegos.");
-    return withOffers(supabase, data ?? [], true);
+    return withOffers(supabase, data ?? []);
   },
 );
 
@@ -239,7 +237,7 @@ export const listGamesAdmin = createServerFn({ method: "GET" })
     await requireAdmin(context);
     const { data, error } = await context.supabase.from("games").select("*").order("name");
     if (error) throw new Error("No se pudieron cargar los juegos.");
-    return withOffers(context.supabase, data ?? [], false);
+    return withOffers(context.supabase, data ?? []);
   });
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
