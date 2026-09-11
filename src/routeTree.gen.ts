@@ -14,8 +14,10 @@ import { Route as ComercioRouteImport } from './routes/comercio'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
 import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
+import { Route as AppRecargasIndexRouteImport } from './routes/app/recargas/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,6 +44,11 @@ const RegistroRoute = RegistroRouteImport.update({
   path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JuegosIndexRoute = JuegosIndexRouteImport.update({
   id: '/juegos/',
   path: '/juegos/',
@@ -52,6 +59,11 @@ const JuegosSlugRoute = JuegosSlugRouteImport.update({
   path: '/juegos/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRecargasIndexRoute = AppRecargasIndexRouteImport.update({
+  id: '/app/recargas/',
+  path: '/app/recargas/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,7 +72,9 @@ export interface FileRoutesByFullPath {
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/app/recargas/': typeof AppRecargasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +83,9 @@ export interface FileRoutesByTo {
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/app': typeof AppIndexRoute
   '/juegos': typeof JuegosIndexRoute
+  '/app/recargas': typeof AppRecargasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +95,9 @@ export interface FileRoutesById {
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/app/recargas/': typeof AppRecargasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,7 +108,9 @@ export interface FileRouteTypes {
     | '/recargas'
     | '/registro'
     | '/juegos/$slug'
+    | '/app/'
     | '/juegos/'
+    | '/app/recargas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,7 +119,9 @@ export interface FileRouteTypes {
     | '/recargas'
     | '/registro'
     | '/juegos/$slug'
+    | '/app'
     | '/juegos'
+    | '/app/recargas'
   id:
     | '__root__'
     | '/'
@@ -108,7 +130,9 @@ export interface FileRouteTypes {
     | '/recargas'
     | '/registro'
     | '/juegos/$slug'
+    | '/app/'
     | '/juegos/'
+    | '/app/recargas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +142,9 @@ export interface RootRouteChildren {
   RecargasRoute: typeof RecargasRoute
   RegistroRoute: typeof RegistroRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
+  AppIndexRoute: typeof AppIndexRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
+  AppRecargasIndexRoute: typeof AppRecargasIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -158,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegistroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/juegos/': {
       id: '/juegos/'
       path: '/juegos'
@@ -172,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JuegosSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/recargas/': {
+      id: '/app/recargas/'
+      path: '/app/recargas'
+      fullPath: '/app/recargas/'
+      preLoaderRoute: typeof AppRecargasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,7 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   RecargasRoute: RecargasRoute,
   RegistroRoute: RegistroRoute,
   JuegosSlugRoute: JuegosSlugRoute,
+  AppIndexRoute: AppIndexRoute,
   JuegosIndexRoute: JuegosIndexRoute,
+  AppRecargasIndexRoute: AppRecargasIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
