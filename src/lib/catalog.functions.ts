@@ -488,7 +488,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<SyncResult> => {
     await requireAdmin(context);
-    const rate = await readUsdRate(context.supabase);
+    const rate = await readPricing(context.supabase);
 
 
     const [categories, providerProducts, topUpGames] = await Promise.all([
@@ -646,7 +646,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<SyncResult> => {
     await requireAdmin(context);
-    const rate = await readUsdRate(context.supabase);
+    const rate = await readPricing(context.supabase);
     const { data: game } = await context.supabase
       .from("games")
       .select("id,name,g2bulk_id")
