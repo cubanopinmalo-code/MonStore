@@ -481,6 +481,8 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<SyncResult> => {
     await requireAdmin(context);
+    const rate = await readUsdRate(context.supabase);
+
 
     const [categories, providerProducts, topUpGames] = await Promise.all([
       listCategories(),
