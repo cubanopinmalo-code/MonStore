@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { Button } from "@/components/ui/button";
@@ -8,20 +9,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { mockPaymentSettings } from "@/data/mock/admin";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import {
+  listPaymentMethods,
+  savePaymentMethod,
+  type PaymentMethodInfo,
+  type TransferField,
+} from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
     meta: [
       { title: "Configuración — Panel MONSTORE" },
-      { name: "description", content: "Métodos de pago, comisiones y ajustes generales." },
+      {
+        name: "description",
+        content:
+          "Métodos de pago (saldo móvil, tarjeta CUP, USDT, Zelle), comisiones y ajustes generales.",
+      },
     ],
   }),
   loader: async () => {
-    const [pricing, saldo] = await Promise.all([getUsdRate(), getSaldoRate()]);
-    return { pricing, saldo };
+    const [pricing, saldo, methods] = await Promise.all([
+      getUsdRate(),
+      getSaldoRate(),
+      listPaymentMethods(),
+    ]);
+    return { pricing, saldo, methods };
   },
   errorComponent: () => (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
@@ -160,64 +174,180 @@ function SaldoRateCard() {
   );
 }
 
+/** Ficha de un método de pago: datos de transferencia, instrucciones y porcentajes. */
+function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
+  const router = useRouter();
+  const save = useServerFn(savePaymentMethod);
+  const [label, setLabel] = useState(method.label);
+  const [active, setActive] = useState(method.active);
+  const [instructions, setInstructions] = useState(method.instructions);
+  const [fields, setFields] = useState<TransferField[]>(
+    method.transfer_fields.length > 0
+      ? method.transfer_fields
+      : [{ label: "", value: "" }],
+  );
+  const [bonus, setBonus] = useState(String(method.deposit_bonus_pct));
+  const [fee, setFee] = useState(String(method.withdrawal_fee_pct));
+  const [conversion, setConversion] = useState(String(method.withdrawal_conversion_pct));
+  const [saving, setSaving] = useState(false);
+
+  function updateField(index: number, key: keyof TransferField, value: string) {
+    setFields((current) =>
+      current.map((field, position) =>
+        position === index ? { ...field, [key]: value } : field,
+      ),
+    );
+  }
+
+  async function submit() {
+    setSaving(true);
+    try {
+      await save({
+        data: {
+          payment_method: method.payment_method,
+          label,
+          instructions,
+          active,
+          deposit_bonus_pct: Number(bonus) || 0,
+          withdrawal_fee_pct: Number(fee) || 0,
+          withdrawal_conversion_pct: Number(conversion) || 0,
+          transfer_fields: fields,
+        },
+      });
+      toast.success(`${label || method.label} guardado.`);
+      await router.invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold">{method.label}</h2>
+          <p className="text-xs text-muted-foreground">
+            {active ? "Visible para los clientes" : "Oculto para los clientes"}
+          </p>
+        </div>
+        <Switch
+          checked={active}
+          onCheckedChange={setActive}
+          aria-label={`Activar ${method.label}`}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={`label-${method.payment_method}`}>Nombre del método</Label>
+        <Input
+          id={`label-${method.payment_method}`}
+          value={label}
+          onChange={(event) => setLabel(event.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Datos de transferencia</p>
+        {fields.map((field, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <Input
+              value={field.label}
+              onChange={(event) => updateField(index, "label", event.target.value)}
+              placeholder="Nombre (ej. Dirección USDT)"
+              aria-label={`Nombre del dato ${index + 1}`}
+              className="flex-1"
+            />
+            <Input
+              value={field.value}
+              onChange={(event) => updateField(index, "value", event.target.value)}
+              placeholder="Valor (ej. TXk…)"
+              aria-label={`Valor del dato ${index + 1}`}
+              className="flex-[2]"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setFields((current) => current.filter((_, position) => position !== index))}
+              aria-label={`Quitar dato ${index + 1}`}
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+        ))}
+        {fields.length < 8 ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setFields((current) => [...current, { label: "", value: "" }])}
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            Agregar dato
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={`inst-${method.payment_method}`}>Instrucciones para el usuario</Label>
+        <Textarea
+          id={`inst-${method.payment_method}`}
+          rows={3}
+          value={instructions}
+          onChange={(event) => setInstructions(event.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-1.5">
+          <Label htmlFor={`bonus-${method.payment_method}`}>Conversión al depositar (%)</Label>
+          <Input
+            id={`bonus-${method.payment_method}`}
+            inputMode="numeric"
+            value={bonus}
+            onChange={(event) => setBonus(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor={`fee-${method.payment_method}`}>Comisión al retirar (%)</Label>
+          <Input
+            id={`fee-${method.payment_method}`}
+            inputMode="numeric"
+            value={fee}
+            onChange={(event) => setFee(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor={`conv-${method.payment_method}`}>Conversión al retirar (%)</Label>
+          <Input
+            id={`conv-${method.payment_method}`}
+            inputMode="numeric"
+            value={conversion}
+            onChange={(event) => setConversion(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <Button type="button" disabled={saving} onClick={() => void submit()}>
+        {saving ? "Guardando…" : "Guardar método de pago"}
+      </Button>
+    </section>
+  );
+}
+
 function AdminSettingsPage() {
+  const { methods } = Route.useLoaderData();
+
   return (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
-      <form
-        className="grid gap-4 lg:grid-cols-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          toast.success("Configuración guardada (simulado)");
-        }}
-      >
+      <div className="grid gap-4 lg:grid-cols-2">
         <UsdRateCard />
         <SaldoRateCard />
 
-        {mockPaymentSettings.map((setting) => (
-          <section key={setting.id} className="surface-card space-y-4 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">{setting.label}</h2>
-              <Switch defaultChecked={setting.active} aria-label={`Activar ${setting.label}`} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`dest-${setting.id}`}>Destino de cobro</Label>
-              <Input id={`dest-${setting.id}`} defaultValue={setting.destination_number} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`tel-${setting.id}`}>Teléfono de contacto</Label>
-              <Input id={`tel-${setting.id}`} defaultValue={setting.phone_number ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`inst-${setting.id}`}>Instrucciones para el usuario</Label>
-              <Textarea id={`inst-${setting.id}`} rows={3} defaultValue={setting.instructions} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`bonus-${setting.id}`}>Conversión al depositar (%)</Label>
-                <Input
-                  id={`bonus-${setting.id}`}
-                  inputMode="numeric"
-                  defaultValue={String(setting.deposit_bonus_pct)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`fee-${setting.id}`}>Comisión al retirar (%)</Label>
-                <Input
-                  id={`fee-${setting.id}`}
-                  inputMode="numeric"
-                  defaultValue={String(setting.withdrawal_fee_pct)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`conv-${setting.id}`}>Conversión al retirar (%)</Label>
-                <Input
-                  id={`conv-${setting.id}`}
-                  inputMode="numeric"
-                  defaultValue={String(setting.withdrawal_conversion_pct)}
-                />
-              </div>
-            </div>
-          </section>
+        {methods.map((method) => (
+          <PaymentMethodCard key={method.payment_method} method={method} />
         ))}
 
         <section className="surface-card space-y-4 p-5">
@@ -270,9 +400,18 @@ function AdminSettingsPage() {
         </section>
 
         <div className="lg:col-span-2">
-          <Button type="submit">Guardar cambios</Button>
+          <Button
+            type="button"
+            onClick={() =>
+              toast.info(
+                "Los límites y el estado de la plataforma aún no se guardan en el servidor.",
+              )
+            }
+          >
+            Guardar cambios
+          </Button>
         </div>
-      </form>
+      </div>
     </AdminShell>
   );
 }

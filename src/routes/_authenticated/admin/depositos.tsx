@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
+import { listPaymentMethods, reviewDeposit } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
@@ -57,17 +59,26 @@ function useDeposits() {
 
 function AdminDepositsPage() {
   const queryClient = useQueryClient();
+  const reviewFn = useServerFn(reviewDeposit);
   const { data, isLoading } = useDeposits();
+  const methods = useQuery({
+    queryKey: ["payment-methods"],
+    queryFn: () => listPaymentMethods(),
+    staleTime: 5 * 60 * 1000,
+  });
   const deposits = data ?? [];
+  const labelFor = (method: string) =>
+    methods.data?.find((item) => item.payment_method === method)?.label ?? method;
 
   const review = useMutation({
     mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
-      const { error } = await supabase.rpc("review_deposit", {
-        p_deposit: id,
-        p_approve: approve,
-        p_reason: approve ? "" : "No se pudo verificar el pago.",
+      await reviewFn({
+        data: {
+          depositId: id,
+          approve,
+          reason: approve ? "" : "No se pudo verificar el pago.",
+        },
       });
-      if (error) throw error;
     },
     onSuccess: async (_result, variables) => {
       toast.success(variables.approve ? "Depósito aprobado" : "Depósito rechazado");
@@ -113,9 +124,7 @@ function AdminDepositsPage() {
                   <TableCell className="text-primary">
                     {formatCUP(deposit.credited_amount)}
                   </TableCell>
-                  <TableCell className="text-xs">
-                    {deposit.payment_method === "saldo_movil" ? "Saldo móvil" : "Tarjeta CUP"}
-                  </TableCell>
+                  <TableCell className="text-xs">{labelFor(deposit.payment_method)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {deposit.payment_reference}
                   </TableCell>

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Copy, Gift, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
+import { claimReferralReward } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
 
@@ -109,22 +111,27 @@ function ProfilePage() {
   const remaining = Math.max(REFERRAL_GOAL - invited, 0);
   const canClaim = invited >= REFERRAL_GOAL;
 
+  const claimRewardFn = useServerFn(claimReferralReward);
+
   async function claimReward() {
     setClaiming(true);
-    const { data, error } = await supabase.rpc("claim_referral_reward");
-    setClaiming(false);
-    if (error) {
-      toast.error("No pudimos entregar el premio", { description: error.message });
-      return;
+    try {
+      const result = await claimRewardFn();
+      const amount = Number(result?.amount ?? 0);
+      await queryClient.invalidateQueries({ queryKey: ["referrals"] });
+      await queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      await queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("¡Premio agregado a tu wallet!", {
+        description: `Sumamos ${amount.toLocaleString("es-CU")} CUP (1 USD) a tu saldo.`,
+      });
+    } catch (error) {
+      toast.error("No pudimos entregar el premio", {
+        description: error instanceof Error ? error.message : "Inténtalo de nuevo.",
+      });
+    } finally {
+      setClaiming(false);
     }
-    const amount = Number((data as { amount?: number } | null)?.amount ?? 0);
-    await queryClient.invalidateQueries({ queryKey: ["referrals"] });
-    await queryClient.invalidateQueries({ queryKey: ["wallet"] });
-    await queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
-    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    toast.success("¡Premio agregado a tu wallet!", {
-      description: `Sumamos ${amount.toLocaleString("es-CU")} CUP (1 USD) a tu saldo.`,
-    });
   }
 
   async function copyLink() {

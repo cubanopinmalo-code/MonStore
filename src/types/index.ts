@@ -25,7 +25,12 @@ export type ListingStatus =
   | "vendida"
   | "desactivada";
 
-export type PaymentMethod = "wallet" | "saldo_movil" | "tarjeta_cup";
+export type PaymentMethod =
+  | "wallet"
+  | "saldo_movil"
+  | "tarjeta_cup"
+  | "usdt"
+  | "zelle";
 
 export interface Profile {
   id: string;
@@ -254,6 +259,10 @@ export interface PaymentSetting {
   withdrawal_fee_pct: number;
   /** % de descuento por conversión al retirar por este método. */
   withdrawal_conversion_pct: number;
+  /** Datos de transferencia escritos por el administrador (nombre + valor). */
+  transfer_fields: { label: string; value: string }[];
+  /** Orden de muestra en «Métodos de pago». */
+  position: number;
   updated_at: string;
 }
 
