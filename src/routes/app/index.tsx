@@ -32,7 +32,7 @@ function UserHome() {
   return (
     <UserShell>
       <div className="space-y-6">
-        <h1 className="sr-only">Panel de {mockProfile.name} en MONSTORE</h1>
+        <h1 className="sr-only">Tu panel en MONSTORE</h1>
         <ProtectedNotice area="el área de usuario" />
 
 

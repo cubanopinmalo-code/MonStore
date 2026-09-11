@@ -23,6 +23,8 @@ function WalletPage() {
   return (
     <UserShell>
       <div className="space-y-6">
+        <h1 className="sr-only">Mi wallet</h1>
+
         <section className="surface-card relative overflow-hidden p-6 glow-ring">
           <div
             className="pointer-events-none absolute inset-0 opacity-60"
