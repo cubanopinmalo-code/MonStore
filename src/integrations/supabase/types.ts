@@ -236,11 +236,40 @@ export type Database = {
           },
         ]
       }
-      game_accounts: {
+      game_account_secrets: {
         Row: {
           account_email: string
+          account_id: string
           account_password: string
           admin_access_notes: string
+          created_at: string
+        }
+        Insert: {
+          account_email?: string
+          account_id: string
+          account_password?: string
+          admin_access_notes?: string
+          created_at?: string
+        }
+        Update: {
+          account_email?: string
+          account_id?: string
+          account_password?: string
+          admin_access_notes?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_account_secrets_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "game_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_accounts: {
+        Row: {
           created_at: string
           currency: string
           description: string
@@ -252,14 +281,12 @@ export type Database = {
           region: string
           rejection_reason: string | null
           seller_id: string
+          seller_name: string
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
         }
         Insert: {
-          account_email?: string
-          account_password?: string
-          admin_access_notes?: string
           created_at?: string
           currency?: string
           description?: string
@@ -271,14 +298,12 @@ export type Database = {
           region?: string
           rejection_reason?: string | null
           seller_id: string
+          seller_name?: string
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
         }
         Update: {
-          account_email?: string
-          account_password?: string
-          admin_access_notes?: string
           created_at?: string
           currency?: string
           description?: string
@@ -290,6 +315,7 @@ export type Database = {
           region?: string
           rejection_reason?: string | null
           seller_id?: string
+          seller_name?: string
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
@@ -845,31 +871,7 @@ export type Database = {
       }
     }
     Views: {
-      game_accounts_public: {
-        Row: {
-          created_at: string | null
-          currency: string | null
-          description: string | null
-          game_id: string | null
-          id: string | null
-          images: string[] | null
-          platform: string | null
-          price: number | null
-          region: string | null
-          seller_name: string | null
-          status: Database["public"]["Enums"]["listing_status"] | null
-          title: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "game_accounts_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
