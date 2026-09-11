@@ -579,6 +579,7 @@ export type Database = {
         Row: {
           created_at: string
           id: boolean
+          saldo_conversion_rate: number
           updated_at: string
           usd_margin_cup: number
           usd_to_cup: number
@@ -586,6 +587,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: boolean
+          saldo_conversion_rate?: number
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
@@ -593,6 +595,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: boolean
+          saldo_conversion_rate?: number
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
