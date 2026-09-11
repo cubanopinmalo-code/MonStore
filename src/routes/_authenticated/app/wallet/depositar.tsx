@@ -151,6 +151,8 @@ function DepositPage() {
   const [proof, setProof] = useState<File | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [sending, setSending] = useState(false);
+  // Número desde el que el cliente hará la transferencia de saldo móvil.
+  const [fromNumber, setFromNumber] = useState("");
 
   const parsed = Number(amount) || 0;
   const isSaldo = current?.payment_method === "saldo_movil";
@@ -190,6 +192,13 @@ function DepositPage() {
       toast.error("Escribe un importe válido.");
       return;
     }
+    const sender = fromNumber.replace(/\D/g, "");
+    if (isSaldo && sender.length < 8) {
+      toast.error("Falta el número desde donde vas a transferir", {
+        description: "Escribe el número de tu saldo móvil (al menos 8 dígitos).",
+      });
+      return;
+    }
     if (sending) return;
     setSending(true);
     try {
@@ -197,7 +206,7 @@ function DepositPage() {
         data: {
           amount: parsed,
           method: current.payment_method,
-          reference: "",
+          reference: isSaldo ? sender : "",
           hasProof,
         },
       });
@@ -218,6 +227,13 @@ function DepositPage() {
   }
 
   function submitPaid() {
+    const sender = fromNumber.replace(/\D/g, "");
+    if (isSaldo && sender.length < 8) {
+      toast.error("Falta el número desde donde vas a transferir", {
+        description: "Escribe el número de tu saldo móvil (al menos 8 dígitos).",
+      });
+      return;
+    }
     if (proof) {
       setAttempts(0);
       void submit(true);
@@ -423,6 +439,27 @@ function DepositPage() {
               administrador para completarlos.
             </p>
           )}
+
+          {isSaldo ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="numero-origen">
+                ¿Desde qué número vas a transferir el saldo móvil?
+              </Label>
+              <Input
+                id="numero-origen"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="Escribe tu número, ej. 53000000"
+                value={fromNumber}
+                onChange={(event) =>
+                  setFromNumber(event.target.value.replace(/[^\d]/g, "").slice(0, 11))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Con ese número ubicamos rápido tu transferencia.
+              </p>
+            </div>
+          ) : null}
 
           {current.instructions ? (
             <p className="text-sm text-muted-foreground">{current.instructions}</p>
