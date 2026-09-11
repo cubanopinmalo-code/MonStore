@@ -63,6 +63,55 @@ function slugify(value: string, used: Set<string>): string {
   return slug;
 }
 
+export const DEFAULT_USD_RATE = 1150;
+
+/** Precio de venta en CUP a partir del costo en USD del proveedor. */
+export function priceFromCost(costUsd: number, rate: number): number {
+  return Math.round(Number(costUsd ?? 0) * rate * 100) / 100;
+}
+
+async function readUsdRate(client: SupabaseClient<Database>): Promise<number> {
+  const { data } = await client.from("platform_settings").select("usd_to_cup").maybeSingle();
+  const rate = Number(data?.usd_to_cup ?? DEFAULT_USD_RATE);
+  return Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_USD_RATE;
+}
+
+export const getUsdRate = createServerFn({ method: "GET" }).handler(async (): Promise<number> => {
+  return readUsdRate(publishableClient());
+});
+
+export const setUsdRate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { rate: number }) => {
+    const rate = Number(data?.rate);
+    if (!Number.isFinite(rate) || rate <= 0) throw new Error("El valor del dólar no es válido.");
+    if (rate > 100000) throw new Error("Ese valor del dólar es demasiado alto.");
+    return { rate: Math.round(rate * 100) / 100 };
+  })
+  .handler(async ({ data, context }): Promise<{ rate: number; updated: number }> => {
+    await requireAdmin(context);
+    const { error } = await context.supabase
+      .from("platform_settings")
+      .upsert({ id: true, usd_to_cup: data.rate });
+    if (error) throw new Error("No se pudo guardar el valor del dólar.");
+
+    const { data: rows, error: readError } = await context.supabase
+      .from("products")
+      .select("id,g2bulk_cost")
+      .gt("g2bulk_cost", 0);
+    if (readError) throw new Error("No se pudieron recalcular los precios.");
+
+    let updated = 0;
+    for (const row of rows ?? []) {
+      const { error: updateError } = await context.supabase
+        .from("products")
+        .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data.rate) })
+        .eq("id", row.id);
+      if (!updateError) updated += 1;
+    }
+    return { rate: data.rate, updated };
+  });
+
 function chunked<T>(items: T[], size = CHUNK): T[][] {
   const out: T[][] = [];
   for (let index = 0; index < items.length; index += size) out.push(items.slice(index, index + size));
@@ -432,6 +481,8 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<SyncResult> => {
     await requireAdmin(context);
+    const rate = await readUsdRate(context.supabase);
+
 
     const [categories, providerProducts, topUpGames] = await Promise.all([
       listCategories(),
@@ -527,7 +578,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         description: (product.description ?? "").trim(),
         g2bulk_product_id: ref,
         g2bulk_cost: Number(product.unit_price ?? 0),
-        sale_price: 0,
+        sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_cuenta",
         active: false,
@@ -565,6 +616,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         .from("products")
         .update({
           g2bulk_cost: Number(product.unit_price ?? 0),
+          sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
           available: Number(product.stock ?? 0) > 0,
           last_synced_at: new Date().toISOString(),
         })
@@ -587,6 +639,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<SyncResult> => {
     await requireAdmin(context);
+    const rate = await readUsdRate(context.supabase);
     const { data: game } = await context.supabase
       .from("games")
       .select("id,name,g2bulk_id")
@@ -617,7 +670,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
         description: "",
         g2bulk_product_id: `topup:${code}:${offer.id}`,
         g2bulk_cost: Number(offer.amount ?? 0),
-        sale_price: 0,
+        sale_price: priceFromCost(Number(offer.amount ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_id" as const,
         active: false,
