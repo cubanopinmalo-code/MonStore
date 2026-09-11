@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, Gift, Share2 } from "lucide-react";
-import { useState } from "react";
+import { Camera, Copy, Gift, Share2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useClearAccountCache, useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { signOut } from "@/lib/auth";
@@ -44,6 +44,57 @@ function ProfilePage() {
   const { data: referrals } = useReferrals();
   const [saving, setSaving] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const avatarPath = profile?.avatar ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!avatarPath) {
+      setAvatarUrl(null);
+      return;
+    }
+    void supabase.storage
+      .from("avatars")
+      .createSignedUrl(avatarPath, 3600)
+      .then(({ data }) => {
+        if (!cancelled) setAvatarUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarPath]);
+
+  async function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !profile) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecciona una imagen válida");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) {
+      setUploading(false);
+      toast.error("No pudimos subir la foto", { description: uploadError.message });
+      return;
+    }
+    const { error } = await supabase.from("profiles").update({ avatar: path }).eq("id", profile.id);
+    setUploading(false);
+    if (error) {
+      toast.error("No pudimos guardar la foto");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    toast.success("Foto de perfil actualizada");
+  }
 
   const name = profile?.name || "Mi cuenta";
   const initials = name
@@ -108,7 +159,7 @@ function ProfilePage() {
       .from("profiles")
       .update({
         name: String(form.get("name") ?? ""),
-        phone: String(form.get("phone") ?? ""),
+        
         province: String(form.get("province") ?? ""),
         municipality: String(form.get("municipality") ?? ""),
       })
@@ -134,14 +185,36 @@ function ProfilePage() {
         <PageHeader title="Mi perfil" description="Datos personales y preferencias." />
 
         <div className="surface-card flex items-center gap-4 p-5">
-          <Avatar className="size-16">
-            <AvatarFallback className="bg-primary/12 text-lg text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="size-16">
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={`Foto de ${name}`} /> : null}
+              <AvatarFallback className="bg-primary/12 text-lg text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              type="button"
+              aria-label="Cambiar foto de perfil"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 grid size-7 place-items-center rounded-full border border-border bg-primary text-primary-foreground disabled:opacity-60"
+            >
+              <Camera className="size-3.5" aria-hidden="true" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => void handleAvatarChange(e)}
+            />
+          </div>
           <div>
             <p className="text-base font-semibold">{name}</p>
             <p className="text-sm text-muted-foreground">{profile?.phone ?? ""}</p>
+            <p className="text-xs text-muted-foreground">
+              {uploading ? "Subiendo foto…" : "Toca la cámara para cambiar tu foto"}
+            </p>
           </div>
         </div>
 
@@ -214,7 +287,10 @@ function ProfilePage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" name="phone" defaultValue={profile?.phone ?? ""} />
+              <Input id="telefono" value={profile?.phone ?? ""} readOnly disabled />
+              <p className="text-xs text-muted-foreground">
+                El teléfono de registro no se puede cambiar.
+              </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
