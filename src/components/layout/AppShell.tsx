@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV = [
-  { to: "/", label: "Inicio" },
   { to: "/juegos", label: "Juegos" },
   { to: "/recargas", label: "Recargas" },
   { to: "/comercio", label: "Comercio" },
@@ -25,18 +24,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={item.to}
                 className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 activeProps={{ className: "text-foreground font-medium" }}
-                activeOptions={{ exact: item.to === "/" }}
+
               >
                 {item.label}
               </Link>
             ))}
           </nav>
           <div className="ml-auto hidden items-center gap-2 md:flex">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login">Iniciar sesión</Link>
-            </Button>
             <Button asChild size="sm">
-              <Link to="/registro">Crear cuenta</Link>
+              <Link to="/">Iniciar sesión</Link>
             </Button>
           </div>
           <Sheet>
@@ -55,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={item.to}
                     className="rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                     activeProps={{ className: "bg-muted text-foreground font-medium" }}
-                    activeOptions={{ exact: item.to === "/" }}
+
                   >
                     {item.label}
                   </Link>
@@ -68,11 +64,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </nav>
               <div className="mt-6 grid gap-2">
-                <Button asChild variant="outline">
-                  <Link to="/login">Iniciar sesión</Link>
-                </Button>
                 <Button asChild>
-                  <Link to="/registro">Crear cuenta</Link>
+                  <Link to="/">Iniciar sesión o crear cuenta</Link>
                 </Button>
               </div>
             </SheetContent>
@@ -102,8 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="space-y-2 text-sm">
             <p className="font-semibold">Cuenta</p>
             <div className="grid gap-1.5 text-muted-foreground">
-              <Link to="/login" className="hover:text-foreground">Iniciar sesión</Link>
-              <Link to="/registro" className="hover:text-foreground">Crear cuenta</Link>
+              <Link to="/" className="hover:text-foreground">Iniciar sesión o crear cuenta</Link>
               <Link to="/app/wallet" className="hover:text-foreground">Wallet</Link>
               <Link to="/admin" className="hover:text-foreground">Panel admin</Link>
             </div>
