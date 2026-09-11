@@ -165,18 +165,25 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     try {
-      const provider = gameCode
-        ? await placeTopUpOrder(
-            gameCode,
-            {
-              catalogue_name: product.name,
-              player_id: data.player_id,
-              server_id: data.player_data["server_id"] ?? undefined,
-              charname: data.player_data["charname"] ?? undefined,
-            },
-            data.idempotency_key,
-          )
-        : await purchaseProduct(String(product.id), 1, data.idempotency_key);
+      let provider: { order_id?: number; transaction_id?: number; status?: string };
+      if (gameCode) {
+        provider = await placeTopUpOrder(
+          gameCode,
+          {
+            catalogue_name: product.name,
+            player_id: data.player_id,
+            server_id: data.player_data["server_id"] ?? undefined,
+            charname: data.player_data["charname"] ?? undefined,
+          },
+          data.idempotency_key,
+        );
+      } else {
+        const ref = product.g2bulk_product_id ?? "";
+        if (!ref.startsWith("p:")) {
+          throw new ProviderError("Esta oferta no se puede entregar automáticamente todavía.");
+        }
+        provider = await purchaseProduct(ref.slice(2), 1, data.idempotency_key);
+      }
 
       const reference = String(provider.order_id ?? provider.transaction_id ?? "");
       const done = String(provider.status ?? "").toUpperCase() === "COMPLETED";
