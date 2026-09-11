@@ -18,6 +18,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminComercioRouteImport } from './routes/admin/comercio'
 import { Route as AdminConfiguracionRouteImport } from './routes/admin/configuracion'
 import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
+import { Route as AdminEventosRouteImport } from './routes/admin/eventos'
 import { Route as AdminG2bulkRouteImport } from './routes/admin/g2bulk'
 import { Route as AdminJuegosRouteImport } from './routes/admin/juegos'
 import { Route as AdminPagosRouteImport } from './routes/admin/pagos'
@@ -38,6 +39,7 @@ import { Route as AppComercioIdRouteImport } from './routes/app/comercio/$id'
 import { Route as AppComercioMisPublicacionesRouteImport } from './routes/app/comercio/mis-publicaciones'
 import { Route as AppComercioPublicarRouteImport } from './routes/app/comercio/publicar'
 import { Route as AppEventosIndexRouteImport } from './routes/app/eventos/index'
+import { Route as AppEventosIdRouteImport } from './routes/app/eventos/$id'
 import { Route as AppPedidosIndexRouteImport } from './routes/app/pedidos/index'
 import { Route as AppPedidosIdRouteImport } from './routes/app/pedidos/$id'
 import { Route as AppRecargasIndexRouteImport } from './routes/app/recargas/index'
@@ -89,6 +91,11 @@ const AdminConfiguracionRoute = AdminConfiguracionRouteImport.update({
 const AdminDepositosRoute = AdminDepositosRouteImport.update({
   id: '/admin/depositos',
   path: '/admin/depositos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEventosRoute = AdminEventosRouteImport.update({
+  id: '/admin/eventos',
+  path: '/admin/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminG2bulkRoute = AdminG2bulkRouteImport.update({
@@ -192,6 +199,11 @@ const AppEventosIndexRoute = AppEventosIndexRouteImport.update({
   path: '/app/eventos/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEventosIdRoute = AppEventosIdRouteImport.update({
+  id: '/app/eventos/$id',
+  path: '/app/eventos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   id: '/app/pedidos/',
   path: '/app/pedidos/',
@@ -237,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/comercio': typeof AdminComercioRoute
   '/admin/configuracion': typeof AdminConfiguracionRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -256,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
+  '/app/eventos/$id': typeof AppEventosIdRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
@@ -275,6 +289,7 @@ export interface FileRoutesByTo {
   '/admin/comercio': typeof AdminComercioRoute
   '/admin/configuracion': typeof AdminConfiguracionRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -294,6 +309,7 @@ export interface FileRoutesByTo {
   '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
+  '/app/eventos/$id': typeof AppEventosIdRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
@@ -314,6 +330,7 @@ export interface FileRoutesById {
   '/admin/comercio': typeof AdminComercioRoute
   '/admin/configuracion': typeof AdminConfiguracionRoute
   '/admin/depositos': typeof AdminDepositosRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -333,6 +350,7 @@ export interface FileRoutesById {
   '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
+  '/app/eventos/$id': typeof AppEventosIdRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
   '/app/recargas/$slug': typeof AppRecargasSlugRoute
   '/app/wallet/depositar': typeof AppWalletDepositarRoute
@@ -354,6 +372,7 @@ export interface FileRouteTypes {
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
+    | '/admin/eventos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
@@ -373,6 +392,7 @@ export interface FileRouteTypes {
     | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
+    | '/app/eventos/$id'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
     | '/app/wallet/depositar'
@@ -392,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
+    | '/admin/eventos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
@@ -411,6 +432,7 @@ export interface FileRouteTypes {
     | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
+    | '/app/eventos/$id'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
     | '/app/wallet/depositar'
@@ -430,6 +452,7 @@ export interface FileRouteTypes {
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
+    | '/admin/eventos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
@@ -449,6 +472,7 @@ export interface FileRouteTypes {
     | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
+    | '/app/eventos/$id'
     | '/app/pedidos/$id'
     | '/app/recargas/$slug'
     | '/app/wallet/depositar'
@@ -469,6 +493,7 @@ export interface RootRouteChildren {
   AdminComercioRoute: typeof AdminComercioRoute
   AdminConfiguracionRoute: typeof AdminConfiguracionRoute
   AdminDepositosRoute: typeof AdminDepositosRoute
+  AdminEventosRoute: typeof AdminEventosRoute
   AdminG2bulkRoute: typeof AdminG2bulkRoute
   AdminJuegosRoute: typeof AdminJuegosRoute
   AdminPagosRoute: typeof AdminPagosRoute
@@ -488,6 +513,7 @@ export interface RootRouteChildren {
   AppComercioIdRoute: typeof AppComercioIdRoute
   AppComercioMisPublicacionesRoute: typeof AppComercioMisPublicacionesRoute
   AppComercioPublicarRoute: typeof AppComercioPublicarRoute
+  AppEventosIdRoute: typeof AppEventosIdRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppRecargasSlugRoute: typeof AppRecargasSlugRoute
   AppWalletDepositarRoute: typeof AppWalletDepositarRoute
@@ -562,6 +588,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/depositos'
       fullPath: '/admin/depositos'
       preLoaderRoute: typeof AdminDepositosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/eventos': {
+      id: '/admin/eventos'
+      path: '/admin/eventos'
+      fullPath: '/admin/eventos'
+      preLoaderRoute: typeof AdminEventosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/g2bulk': {
@@ -704,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/eventos/$id': {
+      id: '/app/eventos/$id'
+      path: '/app/eventos/$id'
+      fullPath: '/app/eventos/$id'
+      preLoaderRoute: typeof AppEventosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/pedidos/': {
       id: '/app/pedidos/'
       path: '/app/pedidos'
@@ -765,6 +805,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminComercioRoute: AdminComercioRoute,
   AdminConfiguracionRoute: AdminConfiguracionRoute,
   AdminDepositosRoute: AdminDepositosRoute,
+  AdminEventosRoute: AdminEventosRoute,
   AdminG2bulkRoute: AdminG2bulkRoute,
   AdminJuegosRoute: AdminJuegosRoute,
   AdminPagosRoute: AdminPagosRoute,
@@ -784,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppComercioIdRoute: AppComercioIdRoute,
   AppComercioMisPublicacionesRoute: AppComercioMisPublicacionesRoute,
   AppComercioPublicarRoute: AppComercioPublicarRoute,
+  AppEventosIdRoute: AppEventosIdRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
   AppRecargasSlugRoute: AppRecargasSlugRoute,
   AppWalletDepositarRoute: AppWalletDepositarRoute,

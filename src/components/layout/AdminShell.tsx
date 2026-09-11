@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingBag,
   Store,
+  Trophy,
   Users,
   Wallet,
   UserPlus,
@@ -40,6 +41,7 @@ const ADMIN_NAV = [
   { to: "/admin/depositos", label: "Depósitos", icon: ArrowDownToLine, exact: false },
   { to: "/admin/retiros", label: "Retiros", icon: ArrowUpFromLine, exact: false },
   { to: "/admin/comercio", label: "Comercio", icon: Store, exact: false },
+  { to: "/admin/eventos", label: "Eventos", icon: Trophy, exact: false },
   { to: "/admin/referidos", label: "Referidos", icon: UserPlus, exact: false },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings, exact: false },
 ] as const;

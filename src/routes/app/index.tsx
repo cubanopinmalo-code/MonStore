@@ -72,25 +72,15 @@ function UserHome() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-bold">Juegos populares</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {mockGames.slice(0, 4).map((game) => (
-              <Link
-                key={game.id}
-                to="/app/recargas/$slug"
-                params={{ slug: game.slug }}
-                className="surface-card overflow-hidden transition-transform hover:-translate-y-1"
-              >
-                <img
-                  src={game.image_url}
-                  alt={`Portada de ${game.name}`}
-                  loading="lazy"
-                  width={768}
-                  height={1024}
-                  className="aspect-4/3 w-full object-cover"
-                />
-                <p className="p-2 text-xs font-medium">{game.name}</p>
-              </Link>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">🎮 Eventos actuales</h2>
+            <Link to="/app/eventos" className="flex items-center gap-1 text-sm text-primary">
+              Ver todos <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {currentEvents.map((event) => (
+              <EventCard key={event.id} eventId={event.id} />
             ))}
           </div>
         </section>
