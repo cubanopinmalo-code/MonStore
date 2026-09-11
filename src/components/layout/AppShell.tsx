@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV = [
-  { to: "/", label: "Inicio" },
   { to: "/juegos", label: "Juegos" },
   { to: "/recargas", label: "Recargas" },
   { to: "/comercio", label: "Comercio" },
