@@ -45,7 +45,9 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
 });
 
 function EventsPage() {
-  const events = mockEvents.filter((event) => event.status !== "finalizado");
+  const [tab, setTab] = useState("todos");
+  const active = TABS.find((item) => item.value === tab) ?? TABS[0];
+  const events = mockEvents.filter((event) => active.statuses.includes(event.status));
 
   return (
     <UserShell>
