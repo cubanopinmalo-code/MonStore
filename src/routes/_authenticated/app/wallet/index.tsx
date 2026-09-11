@@ -66,7 +66,8 @@ function WalletPage() {
           ) : (
             <div className="grid gap-2">
               {transactions.map((tx) => {
-                const positive = tx.amount > 0;
+                const positive = Number(tx.amount) > 0;
+
                 return (
                   <div key={tx.id} className="surface-card flex items-center gap-3 p-4">
                     <span
