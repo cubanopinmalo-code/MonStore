@@ -18,9 +18,23 @@ import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.
 import { claimReferralReward } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
+const SUPPORT_PHONE = "5351115040";
 const SUPPORT_WHATSAPP_URL =
-  "https://wa.me/5351115040?text=" +
+  "https://wa.me/" +
+  SUPPORT_PHONE +
+  "?text=" +
   encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.");
+
+function openSupportChat(event: React.MouseEvent<HTMLAnchorElement>) {
+  // In some embedded previews target="_blank" is blocked, so fall back to direct navigation.
+  event.preventDefault();
+  const opened = window.open(
+    SUPPORT_WHATSAPP_URL,
+    "_blank",
+    "noopener,noreferrer",
+  );
+  if (!opened) window.location.assign(SUPPORT_WHATSAPP_URL);
+}
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
   head: () => ({
