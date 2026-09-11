@@ -163,6 +163,19 @@ function ProfilePage() {
             </p>
           </div>
 
+          <Button
+            className="w-full"
+            disabled={!canClaim || claiming}
+            onClick={() => void claimReward()}
+          >
+            <Gift className="size-4" aria-hidden="true" />
+            {claiming
+              ? "Entregando premio…"
+              : canClaim
+                ? "Obtener premio (1 USD en tu wallet)"
+                : "Premio disponible al llegar a 10 invitados"}
+          </Button>
+
           <div className="space-y-1.5">
             <Label htmlFor="enlace-referido">Tu enlace de referidos</Label>
             <Input id="enlace-referido" readOnly value={referralLink} />
