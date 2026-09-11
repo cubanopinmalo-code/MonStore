@@ -10,11 +10,36 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ComercioRouteImport } from './routes/comercio'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecargasRouteImport } from './routes/recargas'
+import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
+import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComercioRoute = ComercioRouteImport.update({
+  id: '/comercio',
+  path: '/comercio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecargasRoute = RecargasRouteImport.update({
+  id: '/recargas',
+  path: '/recargas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JuegosIndexRoute = JuegosIndexRouteImport.update({
@@ -22,30 +47,77 @@ const JuegosIndexRoute = JuegosIndexRouteImport.update({
   path: '/juegos/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JuegosSlugRoute = JuegosSlugRouteImport.update({
+  id: '/juegos/$slug',
+  path: '/juegos/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/comercio': typeof ComercioRoute
+  '/login': typeof LoginRoute
+  '/recargas': typeof RecargasRoute
+  '/registro': typeof RegistroRoute
+  '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/comercio': typeof ComercioRoute
+  '/login': typeof LoginRoute
+  '/recargas': typeof RecargasRoute
+  '/registro': typeof RegistroRoute
+  '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos': typeof JuegosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/comercio': typeof ComercioRoute
+  '/login': typeof LoginRoute
+  '/recargas': typeof RecargasRoute
+  '/registro': typeof RegistroRoute
+  '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/juegos/'
+  fullPaths:
+    | '/'
+    | '/comercio'
+    | '/login'
+    | '/recargas'
+    | '/registro'
+    | '/juegos/$slug'
+    | '/juegos/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/juegos'
-  id: '__root__' | '/' | '/juegos/'
+  to:
+    | '/'
+    | '/comercio'
+    | '/login'
+    | '/recargas'
+    | '/registro'
+    | '/juegos/$slug'
+    | '/juegos'
+  id:
+    | '__root__'
+    | '/'
+    | '/comercio'
+    | '/login'
+    | '/recargas'
+    | '/registro'
+    | '/juegos/$slug'
+    | '/juegos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ComercioRoute: typeof ComercioRoute
+  LoginRoute: typeof LoginRoute
+  RecargasRoute: typeof RecargasRoute
+  RegistroRoute: typeof RegistroRoute
+  JuegosSlugRoute: typeof JuegosSlugRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
 }
 
@@ -58,6 +130,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comercio': {
+      id: '/comercio'
+      path: '/comercio'
+      fullPath: '/comercio'
+      preLoaderRoute: typeof ComercioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recargas': {
+      id: '/recargas'
+      path: '/recargas'
+      fullPath: '/recargas'
+      preLoaderRoute: typeof RecargasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/juegos/': {
       id: '/juegos/'
       path: '/juegos'
@@ -65,11 +165,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JuegosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/juegos/$slug': {
+      id: '/juegos/$slug'
+      path: '/juegos/$slug'
+      fullPath: '/juegos/$slug'
+      preLoaderRoute: typeof JuegosSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ComercioRoute: ComercioRoute,
+  LoginRoute: LoginRoute,
+  RecargasRoute: RecargasRoute,
+  RegistroRoute: RegistroRoute,
+  JuegosSlugRoute: JuegosSlugRoute,
   JuegosIndexRoute: JuegosIndexRoute,
 }
 export const routeTree = rootRouteImport
