@@ -670,7 +670,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
         description: "",
         g2bulk_product_id: `topup:${code}:${offer.id}`,
         g2bulk_cost: Number(offer.amount ?? 0),
-        sale_price: 0,
+        sale_price: priceFromCost(Number(offer.amount ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_id" as const,
         active: false,
