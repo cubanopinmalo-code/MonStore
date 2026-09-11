@@ -7,6 +7,7 @@ import {
   ProviderError,
   gameCatalogue,
   gameFields,
+  checkPlayerId,
   listCategories,
   listProviderProducts,
   listTopUpGames,
@@ -815,6 +816,60 @@ export const getProviderStatus = createServerFn({ method: "GET" })
         hasKey: true,
         balance: null,
         error: messageFrom(error, "No se pudo leer el saldo del proveedor."),
+      };
+    }
+  });
+
+export type PlayerCheck = {
+  valid: boolean;
+  name: string | null;
+  message: string | null;
+};
+
+export const checkGamePlayer = createServerFn({ method: "POST" })
+  .inputValidator((data: {
+    gameCode: string;
+    playerId: string;
+    serverId?: string;
+    charname?: string;
+  }) => {
+    const gameCode = String(data?.gameCode ?? "").trim();
+    const playerId = String(data?.playerId ?? "").trim();
+    if (!gameCode) throw new Error("No se indicó el juego.");
+    if (!playerId) throw new Error("Escribe el ID del jugador.");
+    return {
+      gameCode: gameCode.slice(0, 60),
+      playerId: playerId.slice(0, 60),
+      serverId: String(data?.serverId ?? "").trim().slice(0, 60),
+      charname: String(data?.charname ?? "").trim().slice(0, 60),
+    };
+  })
+  .handler(async ({ data }): Promise<PlayerCheck> => {
+    try {
+      const body: {
+        game: string;
+        user_id: string;
+        server_id?: string;
+        charname?: string;
+      } = { game: data.gameCode, user_id: data.playerId };
+      if (data.serverId) body.server_id = data.serverId;
+      if (data.charname) body.charname = data.charname;
+
+      const result = await checkPlayerId(body);
+      const valid = result.valid.toLowerCase() === "true" || result.valid === "1";
+      if (!valid) {
+        return {
+          valid: false,
+          name: null,
+          message: "No encontramos una cuenta con ese ID.",
+        };
+      }
+      return { valid: true, name: result.name, message: null };
+    } catch (error) {
+      return {
+        valid: false,
+        name: null,
+        message: messageFrom(error, "No pudimos verificar el ID ahora mismo."),
       };
     }
   });
