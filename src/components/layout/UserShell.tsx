@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { Bell, Gamepad2, Home, Store, User, Wallet } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Bell, Gamepad2, Home, LogOut, Store, User, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { mockWallet } from "@/data/mock/wallet";
+import { useNotifications, useWallet, useClearAccountCache } from "@/hooks/useAccount";
+import { signOut } from "@/lib/auth";
 import { formatCUP } from "@/lib/format";
+
 
 const MAIN_NAV = [
   { to: "/app", label: "Inicio", icon: Home, exact: true },
