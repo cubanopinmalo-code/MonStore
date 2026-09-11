@@ -1,11 +1,12 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { mockNotifications } from "@/data/mock/account";
+import { useNotifications } from "@/hooks/useAccount";
+import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +32,16 @@ const TONE: Record<string, string> = {
 };
 
 function NotificationsPage() {
-  const [items, setItems] = useState(mockNotifications);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useNotifications();
+  const items = data ?? [];
   const unread = items.filter((item) => !item.read).length;
+
+  async function markRead(ids: string[]) {
+    if (ids.length === 0) return;
+    await supabase.from("notifications").update({ read: true }).in("id", ids);
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }
 
   return (
     <UserShell>
@@ -45,7 +54,9 @@ function NotificationsPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setItems(items.map((item) => ({ ...item, read: true })))}
+                onClick={() =>
+                  void markRead(items.filter((item) => !item.read).map((item) => item.id))
+                }
               >
                 Marcar todas como leídas
               </Button>
@@ -53,7 +64,7 @@ function NotificationsPage() {
           }
         />
 
-        {items.length === 0 ? (
+        {isLoading ? null : items.length === 0 ? (
           <EmptyState title="No tienes notificaciones" />
         ) : (
           <div className="grid gap-2">
@@ -61,11 +72,7 @@ function NotificationsPage() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() =>
-                  setItems((prev) =>
-                    prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
-                  )
-                }
+                onClick={() => void markRead([item.id])}
                 className={cn(
                   "surface-card flex gap-3 p-4 text-left",
                   !item.read && "border-primary/40",
@@ -77,7 +84,10 @@ function NotificationsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
-                      className={cn("size-1.5 rounded-full", TONE[item.type] ?? "bg-muted-foreground")}
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        TONE[item.type] ?? "bg-muted-foreground",
+                      )}
                       aria-hidden="true"
                     />
                     <p className="text-sm font-semibold">{item.title}</p>
