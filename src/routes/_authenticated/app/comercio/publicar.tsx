@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Eye, EyeOff, ImagePlus, LockKeyhole } from "lucide-react";
+import { AlertTriangle, ChevronLeft, Eye, EyeOff, ImagePlus, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,10 @@ function PublishListingPage() {
   const initialGameId = availableGames[0]?.id ?? "";
   const [gameId, setGameId] = useState(initialGameId);
   const [showPassword, setShowPassword] = useState(false);
+  const [region, setRegion] = useState("Latinoamérica");
+  const [platform, setPlatform] = useState("");
+  const [imageCount, setImageCount] = useState(0);
+  const [imageError, setImageError] = useState(false);
   const selectedGame = availableGames.find((game) => game.id === gameId);
   const platforms = getAccessMethods(selectedGame?.name);
 
@@ -55,14 +59,32 @@ function PublishListingPage() {
           className="surface-card space-y-4 p-5"
           onSubmit={(event) => {
             event.preventDefault();
+            if (!gameId || !region || !platform) {
+              toast.error("Completa el juego, la región y la plataforma de acceso");
+              return;
+            }
+            if (imageCount < 1) {
+              setImageError(true);
+              toast.error("Debes enviar al menos 1 foto de la cuenta");
+              return;
+            }
+            setImageError(false);
             toast.success("Publicación enviada (pendiente de revisión)", {
               description: "El equipo la revisará antes de mostrarla en el comercio.",
             });
           }}
         >
           <div className="space-y-1.5">
-            <Label htmlFor="juego">Juego</Label>
-            <Select value={gameId} onValueChange={setGameId}>
+            <Label htmlFor="juego">
+              Juego <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={gameId}
+              onValueChange={(value) => {
+                setGameId(value);
+                setPlatform("");
+              }}
+            >
               <SelectTrigger id="juego">
                 <SelectValue />
               </SelectTrigger>
@@ -82,8 +104,10 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="region">Región de la cuenta</Label>
-            <Select defaultValue="Latinoamérica">
+            <Label htmlFor="region">
+              Región de la cuenta <span className="text-destructive">*</span>
+            </Label>
+            <Select value={region} onValueChange={setRegion}>
               <SelectTrigger id="region"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["Latinoamérica", "Norteamérica", "Europa", "Brasil", "Asia"].map((region) => (
@@ -94,8 +118,13 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="plataforma">Plataforma de acceso</Label>
-            <Select key={gameId} defaultValue={platforms[0] ?? "Google"}>
+            <Label htmlFor="plataforma">
+              Plataforma de acceso <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={platforms.includes(platform) ? platform : (platforms[0] ?? "")}
+              onValueChange={setPlatform}
+            >
               <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {platforms.map((platform) => (
@@ -109,15 +138,39 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="imagenes">Imágenes</Label>
+            <Label htmlFor="imagenes">
+              Imágenes <span className="text-destructive">*</span>
+            </Label>
             <label
               htmlFor="imagenes"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground"
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-8 text-sm ${
+                imageError
+                  ? "border-destructive text-destructive"
+                  : "border-border text-muted-foreground"
+              }`}
             >
               <ImagePlus className="size-4" aria-hidden="true" />
-              Selecciona la foto principal y las demás imágenes
+              {imageCount > 0
+                ? `${imageCount} imagen(es) seleccionada(s)`
+                : "Selecciona la foto principal y las demás imágenes"}
             </label>
-            <Input id="imagenes" type="file" accept="image/*" multiple className="hidden" />
+            <Input
+              id="imagenes"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                const count = event.target.files?.length ?? 0;
+                setImageCount(count);
+                if (count > 0) setImageError(false);
+              }}
+            />
+            {imageError ? (
+              <p role="alert" className="text-xs font-medium text-destructive">
+                Debes enviar al menos 1 foto antes de mandar la cuenta a revisión.
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">La primera imagen será la foto principal pública.</p>
           </div>
 
@@ -146,6 +199,15 @@ function PublishListingPage() {
               <Label htmlFor="acceso-admin">Descripción extra para acceder</Label>
               <Textarea id="acceso-admin" rows={3} placeholder="Indica método de acceso, códigos o pasos que necesitará el administrador." required />
             </div>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+            <p className="text-xs text-destructive">
+              Aviso importante: después de enviar la cuenta a revisión y de que sea aprobada,
+              intentar cambiar los datos de la cuenta (correo, contraseña o acceso) provocará el
+              baneo permanente de la aplicación.
+            </p>
           </div>
 
           <Button type="submit" className="w-full">
