@@ -1,15 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Copy, Gift, Share2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { mockProfile, mockReferrals } from "@/data/mock/account";
+import { useClearAccountCache, useProfile, useReferrals } from "@/hooks/useAccount";
+import { supabase } from "@/integrations/supabase/client";
+import { signOut } from "@/lib/auth";
 
 const REFERRAL_GOAL = 10;
 
@@ -24,14 +27,24 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
 });
 
 function ProfilePage() {
-  const initials = mockProfile.name
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const clearCache = useClearAccountCache();
+  const { data: profile, isLoading } = useProfile();
+  const { data: referrals } = useReferrals();
+  const [saving, setSaving] = useState(false);
+
+  const name = profile?.name || "Mi cuenta";
+  const initials = name
     .split(" ")
     .map((part) => part[0])
     .join("")
-    .slice(0, 2);
+    .slice(0, 2)
+    .toUpperCase();
 
-  const referralLink = `https://monstore.cu/?ref=${mockProfile.referral_code}`;
-  const invited = mockReferrals.length;
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://monstore.cu";
+  const referralLink = profile ? `${origin}/?ref=${profile.referral_code}` : "";
+  const invited = referrals?.length ?? 0;
   const progress = Math.min((invited / REFERRAL_GOAL) * 100, 100);
   const remaining = Math.max(REFERRAL_GOAL - invited, 0);
 
@@ -56,6 +69,35 @@ function ProfilePage() {
     await copyLink();
   }
 
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!profile) return;
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: String(form.get("name") ?? ""),
+        phone: String(form.get("phone") ?? ""),
+        province: String(form.get("province") ?? ""),
+        municipality: String(form.get("municipality") ?? ""),
+      })
+      .eq("id", profile.id);
+    setSaving(false);
+    if (error) {
+      toast.error("No pudimos guardar los cambios.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    toast.success("Cambios guardados");
+  }
+
+  async function handleSignOut() {
+    await clearCache();
+    await signOut();
+    void navigate({ to: "/", replace: true });
+  }
+
   return (
     <UserShell>
       <div className="mx-auto max-w-xl space-y-5">
@@ -68,8 +110,8 @@ function ProfilePage() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-base font-semibold">{mockProfile.name}</p>
-            <p className="text-sm text-muted-foreground">{mockProfile.phone}</p>
+            <p className="text-base font-semibold">{name}</p>
+            <p className="text-sm text-muted-foreground">{profile?.phone ?? ""}</p>
           </div>
         </div>
 
@@ -121,61 +163,38 @@ function ProfilePage() {
           </Button>
         </section>
 
-
-        <form
-          className="surface-card space-y-4 p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            toast.success("Cambios guardados (prototipo)");
-          }}
-        >
-          <div className="space-y-1.5">
-            <Label htmlFor="nombre">Nombre</Label>
-            <Input id="nombre" defaultValue={mockProfile.name} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="telefono">Teléfono</Label>
-            <Input id="telefono" defaultValue={mockProfile.phone} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+        {isLoading ? null : (
+          <form className="surface-card space-y-4 p-5" onSubmit={(e) => void handleSave(e)}>
             <div className="space-y-1.5">
-              <Label htmlFor="provincia">Provincia</Label>
-              <Input id="provincia" defaultValue={mockProfile.province} />
+              <Label htmlFor="nombre">Nombre</Label>
+              <Input id="nombre" name="name" defaultValue={profile?.name ?? ""} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="municipio">Municipio</Label>
-              <Input id="municipio" defaultValue={mockProfile.municipality} />
+              <Label htmlFor="telefono">Teléfono</Label>
+              <Input id="telefono" name="phone" defaultValue={profile?.phone ?? ""} />
             </div>
-          </div>
-          <Button type="submit" className="w-full">
-            Guardar cambios
-          </Button>
-        </form>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="provincia">Provincia</Label>
+                <Input id="provincia" name="province" defaultValue={profile?.province ?? ""} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="municipio">Municipio</Label>
+                <Input
+                  id="municipio"
+                  name="municipality"
+                  defaultValue={profile?.municipality ?? ""}
+                />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? "Guardando…" : "Guardar cambios"}
+            </Button>
+          </form>
+        )}
 
-        <div className="surface-card space-y-4 p-5">
-          <h2 className="text-base font-semibold">Configuración</h2>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>
-              Avisos de pedidos
-              <span className="block text-xs text-muted-foreground">
-                Recibe una notificación al completarse una recarga.
-              </span>
-            </span>
-            <Switch defaultChecked />
-          </label>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>
-              Novedades y ofertas
-              <span className="block text-xs text-muted-foreground">
-                Promociones ocasionales de MONSTORE.
-              </span>
-            </span>
-            <Switch />
-          </label>
-        </div>
-
-        <Button asChild variant="outline" className="w-full">
-          <Link to="/">Cerrar sesión</Link>
+        <Button variant="outline" className="w-full" onClick={() => void handleSignOut()}>
+          Cerrar sesión
         </Button>
       </div>
     </UserShell>
