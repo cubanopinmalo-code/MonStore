@@ -18,18 +18,17 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
-import { mockGames } from "@/data/mock/games";
-import { mockProducts } from "@/data/mock/products";
 import { mockWallet } from "@/data/mock/wallet";
+import { getCatalogGame, type CatalogProduct } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
-import type { OrderStatus, Product } from "@/types";
+import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app/recargas/$slug")({
-  loader: ({ params }) => {
-    const game = mockGames.find((item) => item.slug === params.slug);
-    if (!game) throw notFound();
-    return { game, products: mockProducts.filter((p) => p.game_id === game.id) };
+  loader: async ({ params }) => {
+    const result = await getCatalogGame({ data: { slug: params.slug } });
+    if (!result) throw notFound();
+    return result;
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -55,16 +54,16 @@ const STEPS = ["Producto", "Datos", "Resumen", "Confirmación"] as const;
 function PurchaseFlowPage() {
   const { game, products } = Route.useLoaderData();
   const [step, setStep] = useState(0);
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<CatalogProduct | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [payment, setPayment] = useState("wallet");
   const [status, setStatus] = useState<OrderStatus>("procesando");
   const [submitting, setSubmitting] = useState(false);
 
-  const fields = product?.metadata.fields ?? [];
+  const fields = product ? fieldsFor(product) : [];
   const missing = fields.filter((field) => field.required && !values[field.key]?.trim());
 
-  function selectProduct(item: Product) {
+  function selectProduct(item: CatalogProduct) {
     setProduct(item);
     setValues({});
     setStep(1);
@@ -142,7 +141,9 @@ function PurchaseFlowPage() {
                 </div>
               </button>
             ))}
-            {products.every((item) => !item.available) ? <UnavailableState /> : null}
+            {products.length === 0 || products.every((item) => !item.available) ? (
+              <UnavailableState />
+            ) : null}
           </section>
         )}
 
@@ -306,4 +307,31 @@ function Row({ label, value }: { label: string; value: string }) {
       <dd className="text-right font-medium">{value}</dd>
     </div>
   );
+}
+
+function fieldsFor(product: CatalogProduct): ProductField[] {
+  const metadata = product.metadata as { fields?: unknown } | null;
+  if (!Array.isArray(metadata?.fields)) return [];
+
+  return metadata.fields.map((value) => {
+    if (typeof value === "object" && value !== null && "key" in value) {
+      return value as ProductField;
+    }
+
+    const key = String(value);
+    const labels: Record<string, string> = {
+      player_id: "ID del jugador",
+      user_id: "ID del jugador",
+      server_id: "Servidor",
+      charname: "Nombre del personaje",
+      zone_id: "ID de zona",
+    };
+    return {
+      key,
+      label: labels[key] ?? key.replaceAll("_", " "),
+      placeholder: labels[key] ?? key.replaceAll("_", " "),
+      type: "text",
+      required: true,
+    };
+  });
 }
