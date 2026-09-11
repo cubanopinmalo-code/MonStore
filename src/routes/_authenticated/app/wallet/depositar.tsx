@@ -50,6 +50,8 @@ function DepositPage() {
     : "2000";
   const [amount, setAmount] = useState(initialAmount);
   const [tab, setTab] = useState(initialTab);
+  const [mobileProof, setMobileProof] = useState<File | null>(null);
+  const [mobileAttempts, setMobileAttempts] = useState(0);
   const parsed = Number(amount) || 0;
   const isMobile = tab === "movil";
   // Saldo móvil: cada peso de saldo se multiplica por la base puesta en el panel.
@@ -67,9 +69,30 @@ function DepositPage() {
     toast.success("Copiado al portapapeles");
   }
 
-  function submit(method: string) {
+  function submit(method: string, note?: string) {
     toast.success(`Solicitud creada (pendiente) · ${method}`, {
-      description: "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+      description:
+        note ?? "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+    });
+  }
+
+  function submitMobile() {
+    if (mobileProof) {
+      setMobileAttempts(0);
+      submit("Saldo móvil ETECSA");
+      return;
+    }
+    if (mobileAttempts === 0) {
+      setMobileAttempts(1);
+      toast.error("Falta la captura de pantalla del pago", {
+        description: "Sube la captura para que podamos verificar tu depósito más rápido.",
+      });
+      return;
+    }
+    setMobileAttempts(0);
+    toast.warning("Enviado sin captura de pantalla", {
+      description:
+        "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
     });
   }
 
