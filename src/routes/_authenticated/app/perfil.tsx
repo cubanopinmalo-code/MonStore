@@ -144,7 +144,7 @@ function ProfilePage() {
             <div>
               <h2 className="text-base font-semibold">Referidos y recompensas</h2>
               <p className="text-xs text-muted-foreground">
-                Invita 10 personas y obtén una compra de 1 USD gratis.
+                Invita 10 personas y gana (valor de la base actual = {rewardCup} CUP) gratis.
               </p>
             </div>
             <span className="text-primary">
