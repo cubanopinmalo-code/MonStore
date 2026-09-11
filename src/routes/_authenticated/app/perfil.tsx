@@ -44,9 +44,28 @@ function ProfilePage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://monstore.cu";
   const referralLink = profile ? `${origin}/?ref=${profile.referral_code}` : "";
-  const invited = referrals?.length ?? 0;
+  const invited = (referrals ?? []).filter((item) => !item.reward_claimed_at).length;
   const progress = Math.min((invited / REFERRAL_GOAL) * 100, 100);
   const remaining = Math.max(REFERRAL_GOAL - invited, 0);
+  const canClaim = invited >= REFERRAL_GOAL;
+
+  async function claimReward() {
+    setClaiming(true);
+    const { data, error } = await supabase.rpc("claim_referral_reward");
+    setClaiming(false);
+    if (error) {
+      toast.error("No pudimos entregar el premio", { description: error.message });
+      return;
+    }
+    const amount = Number((data as { amount?: number } | null)?.amount ?? 0);
+    await queryClient.invalidateQueries({ queryKey: ["referrals"] });
+    await queryClient.invalidateQueries({ queryKey: ["wallet"] });
+    await queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    toast.success("¡Premio agregado a tu wallet!", {
+      description: `Sumamos ${amount.toLocaleString("es-CU")} CUP (1 USD) a tu saldo.`,
+    });
+  }
 
   async function copyLink() {
     await navigator.clipboard?.writeText(referralLink);
