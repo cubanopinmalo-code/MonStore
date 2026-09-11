@@ -1003,7 +1003,12 @@ export type Database = {
         | "error"
         | "reembolsado"
         | "cancelado"
-      payment_method: "wallet" | "saldo_movil" | "tarjeta_cup"
+      payment_method:
+        | "wallet"
+        | "saldo_movil"
+        | "tarjeta_cup"
+        | "usdt"
+        | "zelle"
       request_status: "pendiente" | "aprobado" | "rechazado"
     }
     CompositeTypes: {
@@ -1158,7 +1163,7 @@ export const Constants = {
         "reembolsado",
         "cancelado",
       ],
-      payment_method: ["wallet", "saldo_movil", "tarjeta_cup"],
+      payment_method: ["wallet", "saldo_movil", "tarjeta_cup", "usdt", "zelle"],
       request_status: ["pendiente", "aprobado", "rechazado"],
     },
   },
