@@ -117,7 +117,18 @@ function PurchaseFlowPage() {
   }
 
   function confirm() {
-    if (submitting) return;
+    if (submitting || !product) return;
+    if (balance < product.sale_price) {
+      const missingAmount = Math.ceil(product.sale_price - balance);
+      toast.info("Te falta saldo para esta compra", {
+        description: `Necesitas ${formatCUP(missingAmount)} más. Te llevamos a agregar fondos por saldo móvil.`,
+      });
+      void navigate({
+        to: "/app/wallet/depositar",
+        search: { necesario: missingAmount, metodo: "movil" },
+      });
+      return;
+    }
     setSubmitting(true);
     setStatus("procesando");
     setStep(3);
