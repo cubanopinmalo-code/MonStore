@@ -35,27 +35,39 @@ function UsdRateCard() {
   const initial = Route.useLoaderData();
   const router = useRouter();
   const save = useServerFn(setUsdRate);
-  const [value, setValue] = useState(String(initial));
+  const [value, setValue] = useState(String(initial.rate));
+  const [margin, setMargin] = useState(String(initial.margin));
   const [saving, setSaving] = useState(false);
-  const preview = Number(value) > 0 ? Number(value) : 0;
+  const base = Number(value) > 0 ? Number(value) : 0;
+  const extra = Number(margin) > 0 ? Number(margin) : 0;
+  const preview = base + extra;
 
   return (
     <section className="surface-card space-y-4 p-5 lg:col-span-2">
       <div>
         <h2 className="text-base font-semibold">Precio base del dólar</h2>
         <p className="text-xs text-muted-foreground">
-          Todos los precios en CUP se calculan multiplicando el costo en dólares del proveedor por
-          este valor.
+          Cada precio en CUP se calcula multiplicando el costo en dólares del proveedor por la base
+          más la ganancia adicional por dólar.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="usd-rate">1 USD equivale a (CUP)</Label>
+          <Label htmlFor="usd-rate">Base: 1 USD equivale a (CUP)</Label>
           <Input
             id="usd-rate"
             inputMode="decimal"
             value={value}
             onChange={(event) => setValue(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="usd-margin">Ganancia por cada USD (CUP)</Label>
+          <Input
+            id="usd-margin"
+            inputMode="decimal"
+            value={margin}
+            onChange={(event) => setMargin(event.target.value)}
           />
         </div>
         <div className="space-y-1.5">
@@ -71,7 +83,9 @@ function UsdRateCard() {
         onClick={async () => {
           setSaving(true);
           try {
-            const result = await save({ data: { rate: Number(value) } });
+            const result = await save({
+              data: { rate: Number(value), margin: Number(margin) },
+            });
             toast.success(`Precios actualizados: ${result.updated} ofertas recalculadas.`);
             await router.invalidate();
           } catch (error) {
