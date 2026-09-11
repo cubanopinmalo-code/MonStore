@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockWallet } from "@/data/mock/wallet";
-import { WITHDRAWAL_FEE_PCT } from "@/services/wallet";
+import { calculateWithdrawal } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/app/wallet/retirar")({
@@ -33,8 +33,7 @@ function WithdrawPage() {
   const [destination, setDestination] = useState("");
 
   const parsed = Number(amount) || 0;
-  const fee = Math.round((parsed * WITHDRAWAL_FEE_PCT) / 100);
-  const net = Math.max(parsed - fee, 0);
+  const breakdown = calculateWithdrawal(parsed, method);
   const tooMuch = parsed > mockWallet.balance;
 
   return (
@@ -104,13 +103,21 @@ function WithdrawPage() {
               <span className="text-muted-foreground">Cantidad</span>
               <span>{formatCUP(parsed)}</span>
             </div>
+            {breakdown.conversionPct > 0 ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Conversión a saldo (−{breakdown.conversionPct}%)
+                </span>
+                <span>− {formatCUP(breakdown.conversion)}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Comisión ({WITHDRAWAL_FEE_PCT}%)</span>
-              <span>− {formatCUP(fee)}</span>
+              <span className="text-muted-foreground">Comisión ({breakdown.feePct}%)</span>
+              <span>− {formatCUP(breakdown.fee)}</span>
             </div>
             <div className="flex justify-between border-t border-border pt-2 font-semibold">
               <span>Recibirás</span>
-              <span className="text-primary">{formatCUP(net)}</span>
+              <span className="text-primary">{formatCUP(breakdown.net)}</span>
             </div>
           </div>
 

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockPaymentSettings } from "@/data/mock/admin";
+import { calculateDeposit } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/app/wallet/depositar")({
@@ -22,9 +23,11 @@ export const Route = createFileRoute("/app/wallet/depositar")({
 
 function DepositPage() {
   const [amount, setAmount] = useState("2000");
+  const [tab, setTab] = useState("movil");
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
   const card = mockPaymentSettings.find((s) => s.payment_method === "tarjeta_cup");
   const parsed = Number(amount) || 0;
+  const breakdown = calculateDeposit(parsed, tab === "movil" ? "saldo_movil" : "tarjeta_cup");
 
   function copy(value: string) {
     void navigator.clipboard?.writeText(value);
@@ -57,10 +60,27 @@ function DepositPage() {
             value={amount}
             onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ""))}
           />
-          <p className="text-sm text-muted-foreground">Acreditaremos {formatCUP(parsed)}</p>
+          <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Envías</span>
+              <span>{formatCUP(breakdown.amount)}</span>
+            </div>
+            {breakdown.bonusPct > 0 ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Conversión (+{breakdown.bonusPct}%)
+                </span>
+                <span>+ {formatCUP(breakdown.bonus)}</span>
+              </div>
+            ) : null}
+            <div className="flex justify-between border-t border-border pt-2 font-semibold">
+              <span>Acreditaremos</span>
+              <span className="text-primary">{formatCUP(breakdown.credited)}</span>
+            </div>
+          </div>
         </div>
 
-        <Tabs defaultValue="movil">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="w-full">
             <TabsTrigger value="movil" className="flex-1">Saldo móvil</TabsTrigger>
             <TabsTrigger value="tarjeta" className="flex-1">Tarjeta CUP</TabsTrigger>
