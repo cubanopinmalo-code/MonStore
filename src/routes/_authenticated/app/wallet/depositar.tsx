@@ -228,7 +228,7 @@ function DepositPage() {
                   </p>
                 ) : null}
               </div>
-              <Button className="w-full" onClick={submitMobile}>
+              <Button className="w-full" disabled={sending} onClick={submitMobile}>
                 He pagado
               </Button>
             </div>
