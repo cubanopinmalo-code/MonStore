@@ -18,6 +18,9 @@ import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.
 import { claimReferralReward } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
+const SUPPORT_WHATSAPP_URL =
+  "https://wa.me/5351115040?text=" +
+  encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.");
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
   head: () => ({
