@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
+import { claimReferralReward } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
 
