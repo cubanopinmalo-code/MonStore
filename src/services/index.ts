@@ -11,3 +11,4 @@ export * from "./wallet";
 export * from "./marketplace";
 export * from "./account";
 export * from "./admin";
+export * from "./events";
