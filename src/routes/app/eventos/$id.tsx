@@ -6,6 +6,7 @@ import {
   Copy,
   Globe2,
   Lock,
+  Share2,
   Ticket,
   Trophy,
   Users,
@@ -28,11 +29,13 @@ import {
 } from "@/components/ui/dialog";
 import { mockEvents, mockEventSubscriptions } from "@/data/mock/events";
 import { mockGames } from "@/data/mock/games";
+import { mockProfile } from "@/data/mock/account";
 import { mockWallet } from "@/data/mock/wallet";
 import {
   EVENT_STATUS_LABEL,
   formatCountdown,
   formatEventDate,
+  buildEventShareUrl,
   goalProgress,
   isFull,
   isSubscriptionOpen,
@@ -118,6 +121,25 @@ function EventDetail({ event }: { event: GameEvent }) {
   const balance = mockWallet.balance;
   const enoughBalance = balance >= event.entry_price;
   const windowOpen = secondsLeft === null || secondsLeft > 0;
+
+  async function handleShare() {
+    const url = buildEventShareUrl(event.id, mockProfile.referral_code);
+    const text = `Participa conmigo en ${event.name} · Premio: ${event.prize}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.name, text, url });
+        return;
+      } catch {
+        // El usuario canceló: seguimos con la copia al portapapeles.
+      }
+    }
+    try {
+      await navigator.clipboard?.writeText(`${text} ${url}`);
+      toast.success("Enlace del evento copiado", { description: url });
+    } catch {
+      toast.error("No se pudo copiar el enlace.");
+    }
+  }
 
   function handleSubscribe() {
     const value = accountId.trim();
