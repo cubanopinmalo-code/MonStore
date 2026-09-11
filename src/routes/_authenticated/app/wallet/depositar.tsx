@@ -114,8 +114,9 @@ function DepositPage() {
       return;
     }
     setMobileAttempts(0);
-    submit(
-      "Saldo móvil ETECSA",
+    void submit(
+      "saldo_movil",
+      false,
       "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
     );
   }
