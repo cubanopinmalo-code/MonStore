@@ -23,6 +23,19 @@ const DESKTOP_EXTRA = [
 ] as const;
 
 export function UserShell({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const { data: wallet } = useWallet();
+  const { data: notifications } = useNotifications();
+  const clearCache = useClearAccountCache();
+  const balance = Number(wallet?.balance ?? 0);
+  const unread = (notifications ?? []).filter((item) => !item.read).length;
+
+  const handleSignOut = async () => {
+    await clearCache();
+    await signOut();
+    void navigate({ to: "/", replace: true });
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur">
@@ -55,21 +68,29 @@ export function UserShell({ children }: { children: ReactNode }) {
             <Link
               to="/app/wallet"
               className="flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary/50 sm:px-3"
-              aria-label={`Saldo disponible: ${formatCUP(mockWallet.balance)}`}
+              aria-label={`Saldo disponible: ${formatCUP(balance)}`}
             >
               <Wallet className="size-4 shrink-0" aria-hidden="true" />
-              <span className="whitespace-nowrap">{formatCUP(mockWallet.balance)}</span>
+              <span className="whitespace-nowrap">{formatCUP(balance)}</span>
             </Link>
             <Button asChild variant="ghost" size="icon" className="relative">
               <Link to="/app/notificaciones" aria-label="Notificaciones">
                 <Bell className="size-5" aria-hidden="true" />
-                <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
+                {unread > 0 ? (
+                  <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
+                ) : null}
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
-              <Link to="/">Ver sitio público</Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => void handleSignOut()}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="size-5" aria-hidden="true" />
             </Button>
           </div>
+
         </div>
       </header>
 
