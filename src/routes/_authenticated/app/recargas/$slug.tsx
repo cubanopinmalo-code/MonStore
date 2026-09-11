@@ -398,3 +398,12 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
     };
   });
 }
+
+const PLAYER_KEYS = ["player_id", "user_id", "userid", "uid"];
+
+function codeFor(product: CatalogProduct | null, gameRef: string | null): string | null {
+  const metadata = product?.metadata as { game_code?: unknown } | null;
+  if (typeof metadata?.game_code === "string" && metadata.game_code) return metadata.game_code;
+  if (typeof gameRef === "string" && gameRef.startsWith("game:")) return gameRef.slice(5);
+  return null;
+}
