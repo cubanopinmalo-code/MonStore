@@ -195,7 +195,7 @@ function DepositPage() {
     if (!isSaldo || sender.length >= 8) return true;
     setSenderError(true);
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      senderRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     senderRef.current?.focus({ preventScroll: true });
     toast.error("Escribe desde qué número realizaste la transferencia de saldo", {
