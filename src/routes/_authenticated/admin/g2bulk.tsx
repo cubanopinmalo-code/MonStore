@@ -38,9 +38,35 @@ function AdminProviderPage() {
   const queryClient = useQueryClient();
   const fetchStatus = useServerFn(getProviderStatus);
   const runSync = useServerFn(syncProviderCatalog);
+  const runOffers = useServerFn(syncMissingGameOffers);
   const fetchGames = useServerFn(listGamesAdmin);
   const [syncing, setSyncing] = useState(false);
+  const [loadingOffers, setLoadingOffers] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
+
+  async function handleOffers() {
+    setLoadingOffers(true);
+    try {
+      let created = 0;
+      let remaining = 1;
+      let guard = 0;
+      while (remaining > 0 && guard < 30) {
+        const result = await runOffers({ data: { batch: 20 } });
+        created += result.offersCreated;
+        remaining = result.remaining;
+        guard += 1;
+        if (result.processed === 0) break;
+        setLastRun(`${created} ofertas añadidas · ${remaining} juegos por revisar`);
+      }
+      setLastRun(`${created} ofertas añadidas`);
+      toast.success(`Listo: ${created} ofertas añadidas.`);
+      await queryClient.invalidateQueries();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudieron cargar las ofertas.");
+    } finally {
+      setLoadingOffers(false);
+    }
+  }
 
   const status = useQuery({
     queryKey: ["provider-status"],
