@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={item.to}
                 className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 activeProps={{ className: "text-foreground font-medium" }}
-                activeOptions={{ exact: item.to === "/" }}
+
               >
                 {item.label}
               </Link>
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={item.to}
                     className="rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                     activeProps={{ className: "bg-muted text-foreground font-medium" }}
-                    activeOptions={{ exact: item.to === "/" }}
+
                   >
                     {item.label}
                   </Link>
