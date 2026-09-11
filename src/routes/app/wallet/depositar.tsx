@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockPaymentSettings } from "@/data/mock/admin";
+import { calculateDeposit } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/app/wallet/depositar")({
