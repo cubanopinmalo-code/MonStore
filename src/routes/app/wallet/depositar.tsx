@@ -23,9 +23,11 @@ export const Route = createFileRoute("/app/wallet/depositar")({
 
 function DepositPage() {
   const [amount, setAmount] = useState("2000");
+  const [tab, setTab] = useState("movil");
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
   const card = mockPaymentSettings.find((s) => s.payment_method === "tarjeta_cup");
   const parsed = Number(amount) || 0;
+  const breakdown = calculateDeposit(parsed, tab === "movil" ? "saldo_movil" : "tarjeta_cup");
 
   function copy(value: string) {
     void navigator.clipboard?.writeText(value);
