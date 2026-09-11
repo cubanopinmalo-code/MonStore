@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { FileStack, Plus, Store } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
-import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { mockGameAccounts } from "@/data/mock/marketplace";
 import { mockGames } from "@/data/mock/games";
@@ -22,24 +22,58 @@ export const Route = createFileRoute("/_authenticated/app/comercio/")({
 
 function UserMarketplacePage() {
   const listings = mockGameAccounts.filter((item) => item.status === "aprobada");
+  const total = listings.length;
 
   return (
     <UserShell>
-      <div className="space-y-6">
-        <PageHeader
-          title="Comercio"
-          description="Cuentas revisadas por el equipo."
-          action={
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/app/comercio/mis-publicaciones">Mis publicaciones</Link>
+      <div className="space-y-4">
+        <section className="surface-card relative overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-28 -right-16 size-56 rounded-full bg-primary/12 blur-3xl"
+          />
+          <div className="relative flex items-start gap-3 p-5">
+            <span className="hidden size-11 shrink-0 place-items-center rounded-xl border border-primary/25 bg-primary/10 text-primary sm:grid">
+              <Store className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <h1 className="text-2xl font-bold md:text-3xl">Comercio</h1>
+              <p className="text-sm text-muted-foreground">
+                Cuentas revisadas por el equipo antes de publicarse.
+              </p>
+            </div>
+            <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary sm:inline-flex">
+              <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+              {total} en venta
+            </span>
+          </div>
+        </section>
+
+        <div className="sticky top-16 z-30 -mx-4 border-y border-border/70 bg-background/95 px-4 py-3 shadow-[0_10px_24px_-20px_oklch(0_0_0/0.9)] backdrop-blur">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground sm:hidden">
+              <span className="font-semibold text-foreground">{total}</span>{" "}
+              {total === 1 ? "cuenta en venta" : "cuentas en venta"}
+            </p>
+            <p className="hidden text-sm text-muted-foreground sm:block">
+              ¿Tienes una cuenta? Publícala y la revisamos antes de mostrarla.
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <Button asChild variant="outline" size="touch" className="bg-surface/60">
+                <Link to="/app/comercio/mis-publicaciones">
+                  <FileStack aria-hidden="true" />
+                  Mis publicaciones
+                </Link>
               </Button>
-              <Button asChild size="sm">
-                <Link to="/app/comercio/publicar">Publicar</Link>
+              <Button asChild variant="gradient" size="touch" className="sm:ml-2">
+                <Link to="/app/comercio/publicar">
+                  <Plus aria-hidden="true" />
+                  Publicar cuenta
+                </Link>
               </Button>
             </div>
-          }
-        />
+          </div>
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => {

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -28,8 +29,11 @@ function MyListingsPage() {
           title="Mis publicaciones"
           description="Sigue el estado de cada anuncio."
           action={
-            <Button asChild size="sm">
-              <Link to="/app/comercio/publicar">Publicar otra</Link>
+            <Button asChild variant="gradient" size="touch">
+              <Link to="/app/comercio/publicar">
+                <Plus aria-hidden="true" />
+                Publicar otra
+              </Link>
             </Button>
           }
         />
