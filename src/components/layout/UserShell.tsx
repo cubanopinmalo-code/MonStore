@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Bell, Gamepad2, Home, LogOut, Store, User, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
-import { useNotifications, useWallet, useClearAccountCache } from "@/hooks/useAccount";
-import { signOut } from "@/lib/auth";
+import { useNotifications, useWallet } from "@/hooks/useAccount";
 import { formatCUP } from "@/lib/format";
 
 
@@ -23,18 +23,10 @@ const DESKTOP_EXTRA = [
 ] as const;
 
 export function UserShell({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
   const { data: wallet } = useWallet();
   const { data: notifications } = useNotifications();
-  const clearCache = useClearAccountCache();
   const balance = Number(wallet?.balance ?? 0);
   const unread = (notifications ?? []).filter((item) => !item.read).length;
-
-  const handleSignOut = async () => {
-    await clearCache();
-    await signOut();
-    void navigate({ to: "/", replace: true });
-  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -81,14 +73,11 @@ export function UserShell({ children }: { children: ReactNode }) {
                 ) : null}
               </Link>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => void handleSignOut()}
-              aria-label="Cerrar sesión"
-            >
-              <LogOut className="size-5" aria-hidden="true" />
-            </Button>
+            <SignOutDialog>
+              <Button variant="ghost" size="icon" aria-label="Cerrar sesión">
+                <LogOut className="size-5" aria-hidden="true" />
+              </Button>
+            </SignOutDialog>
           </div>
 
         </div>
