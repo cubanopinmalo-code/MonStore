@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
@@ -19,7 +19,11 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { mockWallet } from "@/data/mock/wallet";
-import { getCatalogGame, type CatalogProduct } from "@/lib/catalog.functions";
+import {
+  checkGamePlayer,
+  getCatalogGame,
+  type CatalogProduct,
+} from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
@@ -60,8 +64,51 @@ function PurchaseFlowPage() {
   const [status, setStatus] = useState<OrderStatus>("procesando");
   const [submitting, setSubmitting] = useState(false);
 
+  const [player, setPlayer] = useState<{
+    loading: boolean;
+    name: string | null;
+    message: string | null;
+  }>({ loading: false, name: null, message: null });
+
   const fields = product ? fieldsFor(product) : [];
   const missing = fields.filter((field) => field.required && !values[field.key]?.trim());
+
+  const gameCode = codeFor(product, game.g2bulk_id);
+  const playerKey = fields.find((field) => PLAYER_KEYS.includes(field.key))?.key ?? null;
+  const playerId = playerKey ? (values[playerKey] ?? "").trim() : "";
+  const serverId = (values["server_id"] ?? "").trim();
+  const needsServer = fields.some((field) => field.key === "server_id" && field.required);
+
+  useEffect(() => {
+    if (!gameCode || !playerId || playerId.length < 4 || (needsServer && !serverId)) {
+      setPlayer({ loading: false, name: null, message: null });
+      return;
+    }
+    let active = true;
+    setPlayer({ loading: true, name: null, message: null });
+    const timer = window.setTimeout(() => {
+      void checkGamePlayer({
+        data: { gameCode, playerId, ...(serverId ? { serverId } : {}) },
+      })
+        .then((result) => {
+          if (!active) return;
+          setPlayer({ loading: false, name: result.name, message: result.message });
+        })
+        .catch(() => {
+          if (!active) return;
+          setPlayer({
+            loading: false,
+            name: null,
+            message: "No pudimos verificar el ID ahora mismo.",
+          });
+        });
+    }, 600);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [gameCode, playerId, serverId, needsServer]);
+
 
   function selectProduct(item: CatalogProduct) {
     setProduct(item);
@@ -189,6 +236,21 @@ function PurchaseFlowPage() {
                 )}
               </div>
             ))}
+            {playerKey ? (
+              player.loading ? (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  Verificando el ID en el juego…
+                </p>
+              ) : player.name ? (
+                <div className="rounded-lg border border-success/40 bg-success/10 p-3">
+                  <p className="text-xs text-muted-foreground">Personaje encontrado</p>
+                  <p className="text-sm font-semibold text-success">{player.name}</p>
+                </div>
+              ) : player.message ? (
+                <p className="text-xs text-warning">{player.message}</p>
+              ) : null
+            ) : null}
             {missing.length > 0 ? (
               <p className="text-xs text-warning">
                 Completa los campos obligatorios para continuar.
@@ -219,6 +281,7 @@ function PurchaseFlowPage() {
                     value={values[field.key] || "—"}
                   />
                 ))}
+                {player.name ? <Row label="Personaje" value={player.name} /> : null}
                 <Row label="Precio" value={formatCUP(product.sale_price)} />
               </dl>
             </div>
@@ -334,4 +397,13 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
       required: true,
     };
   });
+}
+
+const PLAYER_KEYS = ["player_id", "user_id", "userid", "uid"];
+
+function codeFor(product: CatalogProduct | null, gameRef: string | null): string | null {
+  const metadata = product?.metadata as { game_code?: unknown } | null;
+  if (typeof metadata?.game_code === "string" && metadata.game_code) return metadata.game_code;
+  if (typeof gameRef === "string" && gameRef.startsWith("game:")) return gameRef.slice(5);
+  return null;
 }
