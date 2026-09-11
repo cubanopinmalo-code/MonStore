@@ -39,6 +39,7 @@ import {
   isSubscriptionOpen,
 } from "@/lib/events";
 import { formatCUP } from "@/lib/format";
+import type { GameEvent } from "@/types";
 
 export const Route = createFileRoute("/app/eventos/$id")({
   head: () => ({
@@ -83,6 +84,10 @@ function EventDetailPage() {
     );
   }
 
+  return <EventDetail event={event} />;
+}
+
+function EventDetail({ event }: { event: GameEvent }) {
   const game = mockGames.find((item) => item.id === event.game_id);
   const existing = mockEventSubscriptions.find(
     (item) => item.event_id === event.id && item.user_id === CURRENT_USER_ID,
