@@ -494,6 +494,8 @@ export type Database = {
           label: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           phone_number: string | null
+          position: number
+          transfer_fields: Json
           updated_at: string
           withdrawal_conversion_pct: number
           withdrawal_fee_pct: number
@@ -508,6 +510,8 @@ export type Database = {
           label: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           phone_number?: string | null
+          position?: number
+          transfer_fields?: Json
           updated_at?: string
           withdrawal_conversion_pct?: number
           withdrawal_fee_pct?: number
@@ -522,6 +526,8 @@ export type Database = {
           label?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
           phone_number?: string | null
+          position?: number
+          transfer_fields?: Json
           updated_at?: string
           withdrawal_conversion_pct?: number
           withdrawal_fee_pct?: number
