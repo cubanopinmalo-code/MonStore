@@ -159,11 +159,10 @@ function RechargesPage() {
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {results.map((offer) => (
               <article key={offer.id} className="surface-card flex gap-3 p-3">
-                <img
+                <GameCover
                   src={offer.game_cover}
-                  alt={`Portada de ${offer.game_name}`}
-                  loading="lazy"
-                  className="size-20 shrink-0 rounded-lg bg-muted object-cover"
+                  name={offer.game_name}
+                  className="size-20 shrink-0 rounded-lg"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <p className="text-xs text-muted-foreground">{offer.game_name}</p>
