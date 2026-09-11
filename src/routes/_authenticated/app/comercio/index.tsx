@@ -99,15 +99,31 @@ function UserMarketplacePage() {
                   </span>
                 </Link>
                 <div className="space-y-3 p-4">
-                  <h2 className="text-sm font-semibold">{listing.title}</h2>
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                    <div><dt className="text-muted-foreground">Vendedor</dt><dd className="font-medium">{listing.seller_name}</dd></div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Vendedor</dt>
+                      <dd className="mt-1 flex items-center gap-2">
+                        <Avatar className="size-8 border border-border">
+                          <AvatarImage
+                            src={listing.seller_avatar_url ?? undefined}
+                            alt={`Foto de perfil de ${listing.seller_name}`}
+                          />
+                          <AvatarFallback className="text-[10px] font-semibold">
+                            {getInitials(listing.seller_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate font-medium">{listing.seller_name}</span>
+                      </dd>
+                    </div>
                     <div><dt className="text-muted-foreground">Juego</dt><dd className="font-medium">{game?.name}</dd></div>
                     <div><dt className="text-muted-foreground">Región</dt><dd className="font-medium">{listing.region}</dd></div>
                     <div><dt className="text-muted-foreground">Plataforma</dt><dd className="font-medium">{listing.platform}</dd></div>
                   </dl>
                   <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <p className="font-display text-base font-bold text-primary">{formatCUP(listing.price)}</p>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Precio</p>
+                      <p className="font-display text-base font-bold text-primary">{formatCUP(listing.price)}</p>
+                    </div>
                     <Button asChild size="sm">
                       <Link to="/app/comercio/$id" params={{ id: listing.id }}>Comprar</Link>
                     </Button>
