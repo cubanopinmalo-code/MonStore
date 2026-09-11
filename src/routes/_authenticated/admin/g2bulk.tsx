@@ -161,7 +161,7 @@ function AdminProviderPage() {
           </li>
           <li>
             <span className="font-medium text-foreground">Nada se publica solo.</span> Lo nuevo
-            llega inactivo y sin precio de venta; tú decides qué mostrar y a cuánto.
+            se muestra en la tienda automáticamente con su precio en CUP calculado.
           </li>
           <li>
             <span className="font-medium text-foreground">Sin duplicados.</span> Cada juego y
