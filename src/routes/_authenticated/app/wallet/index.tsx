@@ -4,7 +4,12 @@ import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { useWallet, useWalletTransactions } from "@/hooks/useAccount";
+import {
+  useDeposits,
+  useWallet,
+  useWalletTransactions,
+  useWithdrawals,
+} from "@/hooks/useAccount";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/wallet/")({
