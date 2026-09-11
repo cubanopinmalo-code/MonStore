@@ -278,13 +278,25 @@ export const listOrdersAdmin = createServerFn({ method: "GET" })
     await requireAdmin(context);
     const { data, error } = await context.supabase
       .from("orders")
-      .select("*, products(name), games(name), profiles!orders_user_id_fkey(phone)")
+      .select("*, products(name), games(name)")
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error("No se pudieron cargar los pedidos.");
-    return (data ?? []).map((row) => ({
+
+    const rows = data ?? [];
+    const phones = new Map<string, string>();
+    const userIds = [...new Set(rows.map((row) => row.user_id))];
+    if (userIds.length > 0) {
+      const { data: people } = await context.supabase
+        .from("profiles")
+        .select("id, phone")
+        .in("id", userIds);
+      for (const person of people ?? []) phones.set(person.id, person.phone);
+    }
+
+    return rows.map((row) => ({
       ...toList([row])[0],
-      user_phone: (row.profiles as { phone?: string } | null)?.phone ?? "",
+      user_phone: phones.get(row.user_id) ?? "",
     }));
   });
 
