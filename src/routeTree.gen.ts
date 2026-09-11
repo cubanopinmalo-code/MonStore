@@ -15,11 +15,16 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminComercioRouteImport } from './routes/admin/comercio'
+import { Route as AdminConfiguracionRouteImport } from './routes/admin/configuracion'
+import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
 import { Route as AdminG2bulkRouteImport } from './routes/admin/g2bulk'
 import { Route as AdminJuegosRouteImport } from './routes/admin/juegos'
 import { Route as AdminPagosRouteImport } from './routes/admin/pagos'
 import { Route as AdminPedidosRouteImport } from './routes/admin/pedidos'
 import { Route as AdminProductosRouteImport } from './routes/admin/productos'
+import { Route as AdminReferidosRouteImport } from './routes/admin/referidos'
+import { Route as AdminRetirosRouteImport } from './routes/admin/retiros'
 import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as AdminWalletsRouteImport } from './routes/admin/wallets'
 import { Route as AppIndexRouteImport } from './routes/app/index'
@@ -69,6 +74,21 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminComercioRoute = AdminComercioRouteImport.update({
+  id: '/admin/comercio',
+  path: '/admin/comercio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConfiguracionRoute = AdminConfiguracionRouteImport.update({
+  id: '/admin/configuracion',
+  path: '/admin/configuracion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDepositosRoute = AdminDepositosRouteImport.update({
+  id: '/admin/depositos',
+  path: '/admin/depositos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminG2bulkRoute = AdminG2bulkRouteImport.update({
   id: '/admin/g2bulk',
   path: '/admin/g2bulk',
@@ -92,6 +112,16 @@ const AdminPedidosRoute = AdminPedidosRouteImport.update({
 const AdminProductosRoute = AdminProductosRouteImport.update({
   id: '/admin/productos',
   path: '/admin/productos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReferidosRoute = AdminReferidosRouteImport.update({
+  id: '/admin/referidos',
+  path: '/admin/referidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRetirosRoute = AdminRetirosRouteImport.update({
+  id: '/admin/retiros',
+  path: '/admin/retiros',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
@@ -192,11 +222,16 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/comercio': typeof AdminComercioRoute
+  '/admin/configuracion': typeof AdminConfiguracionRoute
+  '/admin/depositos': typeof AdminDepositosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
   '/admin/pedidos': typeof AdminPedidosRoute
   '/admin/productos': typeof AdminProductosRoute
+  '/admin/referidos': typeof AdminReferidosRoute
+  '/admin/retiros': typeof AdminRetirosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
@@ -223,11 +258,16 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/comercio': typeof AdminComercioRoute
+  '/admin/configuracion': typeof AdminConfiguracionRoute
+  '/admin/depositos': typeof AdminDepositosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
   '/admin/pedidos': typeof AdminPedidosRoute
   '/admin/productos': typeof AdminProductosRoute
+  '/admin/referidos': typeof AdminReferidosRoute
+  '/admin/retiros': typeof AdminRetirosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
@@ -255,11 +295,16 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/comercio': typeof AdminComercioRoute
+  '/admin/configuracion': typeof AdminConfiguracionRoute
+  '/admin/depositos': typeof AdminDepositosRoute
   '/admin/g2bulk': typeof AdminG2bulkRoute
   '/admin/juegos': typeof AdminJuegosRoute
   '/admin/pagos': typeof AdminPagosRoute
   '/admin/pedidos': typeof AdminPedidosRoute
   '/admin/productos': typeof AdminProductosRoute
+  '/admin/referidos': typeof AdminReferidosRoute
+  '/admin/retiros': typeof AdminRetirosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
@@ -288,11 +333,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/comercio'
+    | '/admin/configuracion'
+    | '/admin/depositos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
     | '/admin/pedidos'
     | '/admin/productos'
+    | '/admin/referidos'
+    | '/admin/retiros'
     | '/admin/usuarios'
     | '/admin/wallets'
     | '/app/notificaciones'
@@ -319,11 +369,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/comercio'
+    | '/admin/configuracion'
+    | '/admin/depositos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
     | '/admin/pedidos'
     | '/admin/productos'
+    | '/admin/referidos'
+    | '/admin/retiros'
     | '/admin/usuarios'
     | '/admin/wallets'
     | '/app/notificaciones'
@@ -350,11 +405,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/comercio'
+    | '/admin/configuracion'
+    | '/admin/depositos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
     | '/admin/pedidos'
     | '/admin/productos'
+    | '/admin/referidos'
+    | '/admin/retiros'
     | '/admin/usuarios'
     | '/admin/wallets'
     | '/app/notificaciones'
@@ -382,11 +442,16 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RecargasRoute: typeof RecargasRoute
   RegistroRoute: typeof RegistroRoute
+  AdminComercioRoute: typeof AdminComercioRoute
+  AdminConfiguracionRoute: typeof AdminConfiguracionRoute
+  AdminDepositosRoute: typeof AdminDepositosRoute
   AdminG2bulkRoute: typeof AdminG2bulkRoute
   AdminJuegosRoute: typeof AdminJuegosRoute
   AdminPagosRoute: typeof AdminPagosRoute
   AdminPedidosRoute: typeof AdminPedidosRoute
   AdminProductosRoute: typeof AdminProductosRoute
+  AdminReferidosRoute: typeof AdminReferidosRoute
+  AdminRetirosRoute: typeof AdminRetirosRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminWalletsRoute: typeof AdminWalletsRoute
   AppNotificacionesRoute: typeof AppNotificacionesRoute
@@ -452,6 +517,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/comercio': {
+      id: '/admin/comercio'
+      path: '/admin/comercio'
+      fullPath: '/admin/comercio'
+      preLoaderRoute: typeof AdminComercioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/configuracion': {
+      id: '/admin/configuracion'
+      path: '/admin/configuracion'
+      fullPath: '/admin/configuracion'
+      preLoaderRoute: typeof AdminConfiguracionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/depositos': {
+      id: '/admin/depositos'
+      path: '/admin/depositos'
+      fullPath: '/admin/depositos'
+      preLoaderRoute: typeof AdminDepositosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/g2bulk': {
       id: '/admin/g2bulk'
       path: '/admin/g2bulk'
@@ -485,6 +571,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/productos'
       fullPath: '/admin/productos'
       preLoaderRoute: typeof AdminProductosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/referidos': {
+      id: '/admin/referidos'
+      path: '/admin/referidos'
+      fullPath: '/admin/referidos'
+      preLoaderRoute: typeof AdminReferidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/retiros': {
+      id: '/admin/retiros'
+      path: '/admin/retiros'
+      fullPath: '/admin/retiros'
+      preLoaderRoute: typeof AdminRetirosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/usuarios': {
@@ -622,11 +722,16 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RecargasRoute: RecargasRoute,
   RegistroRoute: RegistroRoute,
+  AdminComercioRoute: AdminComercioRoute,
+  AdminConfiguracionRoute: AdminConfiguracionRoute,
+  AdminDepositosRoute: AdminDepositosRoute,
   AdminG2bulkRoute: AdminG2bulkRoute,
   AdminJuegosRoute: AdminJuegosRoute,
   AdminPagosRoute: AdminPagosRoute,
   AdminPedidosRoute: AdminPedidosRoute,
   AdminProductosRoute: AdminProductosRoute,
+  AdminReferidosRoute: AdminReferidosRoute,
+  AdminRetirosRoute: AdminRetirosRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AdminWalletsRoute: AdminWalletsRoute,
   AppNotificacionesRoute: AppNotificacionesRoute,
