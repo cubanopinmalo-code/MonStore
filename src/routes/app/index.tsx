@@ -8,6 +8,8 @@ import { mockWallet } from "@/data/mock/wallet";
 import { mockOrders } from "@/data/mock/orders";
 import { mockGames } from "@/data/mock/games";
 import { mockProducts } from "@/data/mock/products";
+import { mockEvents } from "@/data/mock/events";
+import { EventCard } from "@/routes/app/eventos/index";
 import { formatCUP, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/app/")({
@@ -28,6 +30,9 @@ const SHORTCUTS = [
 
 function UserHome() {
   const orders = mockOrders.filter((order) => order.user_id === "us_001").slice(0, 3);
+  const currentEvents = mockEvents
+    .filter((event) => event.status !== "finalizado" && event.status !== "cancelado")
+    .slice(0, 3);
 
   return (
     <UserShell>
