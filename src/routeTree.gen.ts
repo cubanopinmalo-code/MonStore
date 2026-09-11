@@ -10,47 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ComercioRouteImport } from './routes/comercio'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminComercioRouteImport } from './routes/admin/comercio'
-import { Route as AdminConfiguracionRouteImport } from './routes/admin/configuracion'
-import { Route as AdminDepositosRouteImport } from './routes/admin/depositos'
-import { Route as AdminEventosRouteImport } from './routes/admin/eventos'
-import { Route as AdminG2bulkRouteImport } from './routes/admin/g2bulk'
-import { Route as AdminJuegosRouteImport } from './routes/admin/juegos'
-import { Route as AdminPagosRouteImport } from './routes/admin/pagos'
-import { Route as AdminPedidosRouteImport } from './routes/admin/pedidos'
-import { Route as AdminProductosRouteImport } from './routes/admin/productos'
-import { Route as AdminReferidosRouteImport } from './routes/admin/referidos'
-import { Route as AdminRetirosRouteImport } from './routes/admin/retiros'
-import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
-import { Route as AdminWalletsRouteImport } from './routes/admin/wallets'
-import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppNotificacionesRouteImport } from './routes/app/notificaciones'
-import { Route as AppPerfilRouteImport } from './routes/app/perfil'
-import { Route as AppReferidosRouteImport } from './routes/app/referidos'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
 import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
-import { Route as AppComercioIndexRouteImport } from './routes/app/comercio/index'
-import { Route as AppComercioIdRouteImport } from './routes/app/comercio/$id'
-import { Route as AppComercioMisPublicacionesRouteImport } from './routes/app/comercio/mis-publicaciones'
-import { Route as AppComercioPublicarRouteImport } from './routes/app/comercio/publicar'
-import { Route as AppEventosIndexRouteImport } from './routes/app/eventos/index'
-import { Route as AppEventosIdRouteImport } from './routes/app/eventos/$id'
-import { Route as AppPedidosIndexRouteImport } from './routes/app/pedidos/index'
-import { Route as AppPedidosIdRouteImport } from './routes/app/pedidos/$id'
-import { Route as AppRecargasIndexRouteImport } from './routes/app/recargas/index'
-import { Route as AppRecargasSlugRouteImport } from './routes/app/recargas/$slug'
-import { Route as AppWalletIndexRouteImport } from './routes/app/wallet/index'
-import { Route as AppWalletDepositarRouteImport } from './routes/app/wallet/depositar'
-import { Route as AppWalletRetirarRouteImport } from './routes/app/wallet/retirar'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminComercioRouteImport } from './routes/_authenticated/admin/comercio'
+import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin/configuracion'
+import { Route as AuthenticatedAdminDepositosRouteImport } from './routes/_authenticated/admin/depositos'
+import { Route as AuthenticatedAdminEventosRouteImport } from './routes/_authenticated/admin/eventos'
+import { Route as AuthenticatedAdminG2bulkRouteImport } from './routes/_authenticated/admin/g2bulk'
+import { Route as AuthenticatedAdminJuegosRouteImport } from './routes/_authenticated/admin/juegos'
+import { Route as AuthenticatedAdminPagosRouteImport } from './routes/_authenticated/admin/pagos'
+import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
+import { Route as AuthenticatedAdminProductosRouteImport } from './routes/_authenticated/admin/productos'
+import { Route as AuthenticatedAdminReferidosRouteImport } from './routes/_authenticated/admin/referidos'
+import { Route as AuthenticatedAdminRetirosRouteImport } from './routes/_authenticated/admin/retiros'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
+import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated/admin/wallets'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
+import { Route as AuthenticatedAppNotificacionesRouteImport } from './routes/_authenticated/app/notificaciones'
+import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app/perfil'
+import { Route as AuthenticatedAppReferidosRouteImport } from './routes/_authenticated/app/referidos'
+import { Route as AuthenticatedAppComercioIndexRouteImport } from './routes/_authenticated/app/comercio/index'
+import { Route as AuthenticatedAppComercioIdRouteImport } from './routes/_authenticated/app/comercio/$id'
+import { Route as AuthenticatedAppComercioMisPublicacionesRouteImport } from './routes/_authenticated/app/comercio/mis-publicaciones'
+import { Route as AuthenticatedAppComercioPublicarRouteImport } from './routes/_authenticated/app/comercio/publicar'
+import { Route as AuthenticatedAppEventosIndexRouteImport } from './routes/_authenticated/app/eventos/index'
+import { Route as AuthenticatedAppEventosIdRouteImport } from './routes/_authenticated/app/eventos/$id'
+import { Route as AuthenticatedAppPedidosIndexRouteImport } from './routes/_authenticated/app/pedidos/index'
+import { Route as AuthenticatedAppPedidosIdRouteImport } from './routes/_authenticated/app/pedidos/$id'
+import { Route as AuthenticatedAppRecargasIndexRouteImport } from './routes/_authenticated/app/recargas/index'
+import { Route as AuthenticatedAppRecargasSlugRouteImport } from './routes/_authenticated/app/recargas/$slug'
+import { Route as AuthenticatedAppWalletIndexRouteImport } from './routes/_authenticated/app/wallet/index'
+import { Route as AuthenticatedAppWalletDepositarRouteImport } from './routes/_authenticated/app/wallet/depositar'
+import { Route as AuthenticatedAppWalletRetirarRouteImport } from './routes/_authenticated/app/wallet/retirar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComercioRoute = ComercioRouteImport.update({
@@ -73,95 +79,10 @@ const RegistroRoute = RegistroRouteImport.update({
   path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminComercioRoute = AdminComercioRouteImport.update({
-  id: '/admin/comercio',
-  path: '/admin/comercio',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminConfiguracionRoute = AdminConfiguracionRouteImport.update({
-  id: '/admin/configuracion',
-  path: '/admin/configuracion',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminDepositosRoute = AdminDepositosRouteImport.update({
-  id: '/admin/depositos',
-  path: '/admin/depositos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminEventosRoute = AdminEventosRouteImport.update({
-  id: '/admin/eventos',
-  path: '/admin/eventos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminG2bulkRoute = AdminG2bulkRouteImport.update({
-  id: '/admin/g2bulk',
-  path: '/admin/g2bulk',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminJuegosRoute = AdminJuegosRouteImport.update({
-  id: '/admin/juegos',
-  path: '/admin/juegos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminPagosRoute = AdminPagosRouteImport.update({
-  id: '/admin/pagos',
-  path: '/admin/pagos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminPedidosRoute = AdminPedidosRouteImport.update({
-  id: '/admin/pedidos',
-  path: '/admin/pedidos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminProductosRoute = AdminProductosRouteImport.update({
-  id: '/admin/productos',
-  path: '/admin/productos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminReferidosRoute = AdminReferidosRouteImport.update({
-  id: '/admin/referidos',
-  path: '/admin/referidos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRetirosRoute = AdminRetirosRouteImport.update({
-  id: '/admin/retiros',
-  path: '/admin/retiros',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
-  id: '/admin/usuarios',
-  path: '/admin/usuarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminWalletsRoute = AdminWalletsRouteImport.update({
-  id: '/admin/wallets',
-  path: '/admin/wallets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/app/',
-  path: '/app/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppNotificacionesRoute = AppNotificacionesRouteImport.update({
-  id: '/app/notificaciones',
-  path: '/app/notificaciones',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppPerfilRoute = AppPerfilRouteImport.update({
-  id: '/app/perfil',
-  path: '/app/perfil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppReferidosRoute = AppReferidosRouteImport.update({
-  id: '/app/referidos',
-  path: '/app/referidos',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const JuegosIndexRoute = JuegosIndexRouteImport.update({
   id: '/juegos/',
@@ -173,72 +94,188 @@ const JuegosSlugRoute = JuegosSlugRouteImport.update({
   path: '/juegos/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppComercioIndexRoute = AppComercioIndexRouteImport.update({
-  id: '/app/comercio/',
-  path: '/app/comercio/',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
-const AppComercioIdRoute = AppComercioIdRouteImport.update({
-  id: '/app/comercio/$id',
-  path: '/app/comercio/$id',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminComercioRoute =
+  AuthenticatedAdminComercioRouteImport.update({
+    id: '/comercio',
+    path: '/comercio',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminConfiguracionRoute =
+  AuthenticatedAdminConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminDepositosRoute =
+  AuthenticatedAdminDepositosRouteImport.update({
+    id: '/depositos',
+    path: '/depositos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminEventosRoute =
+  AuthenticatedAdminEventosRouteImport.update({
+    id: '/eventos',
+    path: '/eventos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminG2bulkRoute =
+  AuthenticatedAdminG2bulkRouteImport.update({
+    id: '/g2bulk',
+    path: '/g2bulk',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminJuegosRoute =
+  AuthenticatedAdminJuegosRouteImport.update({
+    id: '/juegos',
+    path: '/juegos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminPagosRoute = AuthenticatedAdminPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
-const AppComercioMisPublicacionesRoute =
-  AppComercioMisPublicacionesRouteImport.update({
+const AuthenticatedAdminPedidosRoute =
+  AuthenticatedAdminPedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminProductosRoute =
+  AuthenticatedAdminProductosRouteImport.update({
+    id: '/productos',
+    path: '/productos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminReferidosRoute =
+  AuthenticatedAdminReferidosRouteImport.update({
+    id: '/referidos',
+    path: '/referidos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRetirosRoute =
+  AuthenticatedAdminRetirosRouteImport.update({
+    id: '/retiros',
+    path: '/retiros',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminWalletsRoute =
+  AuthenticatedAdminWalletsRouteImport.update({
+    id: '/wallets',
+    path: '/wallets',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppNotificacionesRoute =
+  AuthenticatedAppNotificacionesRouteImport.update({
+    id: '/app/notificaciones',
+    path: '/app/notificaciones',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppPerfilRoute = AuthenticatedAppPerfilRouteImport.update({
+  id: '/app/perfil',
+  path: '/app/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppReferidosRoute =
+  AuthenticatedAppReferidosRouteImport.update({
+    id: '/app/referidos',
+    path: '/app/referidos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppComercioIndexRoute =
+  AuthenticatedAppComercioIndexRouteImport.update({
+    id: '/app/comercio/',
+    path: '/app/comercio/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppComercioIdRoute =
+  AuthenticatedAppComercioIdRouteImport.update({
+    id: '/app/comercio/$id',
+    path: '/app/comercio/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppComercioMisPublicacionesRoute =
+  AuthenticatedAppComercioMisPublicacionesRouteImport.update({
     id: '/app/comercio/mis-publicaciones',
     path: '/app/comercio/mis-publicaciones',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AppComercioPublicarRoute = AppComercioPublicarRouteImport.update({
-  id: '/app/comercio/publicar',
-  path: '/app/comercio/publicar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppEventosIndexRoute = AppEventosIndexRouteImport.update({
-  id: '/app/eventos/',
-  path: '/app/eventos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppEventosIdRoute = AppEventosIdRouteImport.update({
-  id: '/app/eventos/$id',
-  path: '/app/eventos/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
-  id: '/app/pedidos/',
-  path: '/app/pedidos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppPedidosIdRoute = AppPedidosIdRouteImport.update({
-  id: '/app/pedidos/$id',
-  path: '/app/pedidos/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRecargasIndexRoute = AppRecargasIndexRouteImport.update({
-  id: '/app/recargas/',
-  path: '/app/recargas/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRecargasSlugRoute = AppRecargasSlugRouteImport.update({
-  id: '/app/recargas/$slug',
-  path: '/app/recargas/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppWalletIndexRoute = AppWalletIndexRouteImport.update({
-  id: '/app/wallet/',
-  path: '/app/wallet/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppWalletDepositarRoute = AppWalletDepositarRouteImport.update({
-  id: '/app/wallet/depositar',
-  path: '/app/wallet/depositar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppWalletRetirarRoute = AppWalletRetirarRouteImport.update({
-  id: '/app/wallet/retirar',
-  path: '/app/wallet/retirar',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedAppComercioPublicarRoute =
+  AuthenticatedAppComercioPublicarRouteImport.update({
+    id: '/app/comercio/publicar',
+    path: '/app/comercio/publicar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppEventosIndexRoute =
+  AuthenticatedAppEventosIndexRouteImport.update({
+    id: '/app/eventos/',
+    path: '/app/eventos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppEventosIdRoute =
+  AuthenticatedAppEventosIdRouteImport.update({
+    id: '/app/eventos/$id',
+    path: '/app/eventos/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppPedidosIndexRoute =
+  AuthenticatedAppPedidosIndexRouteImport.update({
+    id: '/app/pedidos/',
+    path: '/app/pedidos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppPedidosIdRoute =
+  AuthenticatedAppPedidosIdRouteImport.update({
+    id: '/app/pedidos/$id',
+    path: '/app/pedidos/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppRecargasIndexRoute =
+  AuthenticatedAppRecargasIndexRouteImport.update({
+    id: '/app/recargas/',
+    path: '/app/recargas/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppRecargasSlugRoute =
+  AuthenticatedAppRecargasSlugRouteImport.update({
+    id: '/app/recargas/$slug',
+    path: '/app/recargas/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppWalletIndexRoute =
+  AuthenticatedAppWalletIndexRouteImport.update({
+    id: '/app/wallet/',
+    path: '/app/wallet/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppWalletDepositarRoute =
+  AuthenticatedAppWalletDepositarRouteImport.update({
+    id: '/app/wallet/depositar',
+    path: '/app/wallet/depositar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppWalletRetirarRoute =
+  AuthenticatedAppWalletRetirarRouteImport.update({
+    id: '/app/wallet/retirar',
+    path: '/app/wallet/retirar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -246,39 +283,40 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
-  '/admin/comercio': typeof AdminComercioRoute
-  '/admin/configuracion': typeof AdminConfiguracionRoute
-  '/admin/depositos': typeof AdminDepositosRoute
-  '/admin/eventos': typeof AdminEventosRoute
-  '/admin/g2bulk': typeof AdminG2bulkRoute
-  '/admin/juegos': typeof AdminJuegosRoute
-  '/admin/pagos': typeof AdminPagosRoute
-  '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/productos': typeof AdminProductosRoute
-  '/admin/referidos': typeof AdminReferidosRoute
-  '/admin/retiros': typeof AdminRetirosRoute
-  '/admin/usuarios': typeof AdminUsuariosRoute
-  '/admin/wallets': typeof AdminWalletsRoute
-  '/app/notificaciones': typeof AppNotificacionesRoute
-  '/app/perfil': typeof AppPerfilRoute
-  '/app/referidos': typeof AppReferidosRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
-  '/admin/': typeof AdminIndexRoute
-  '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
-  '/app/comercio/$id': typeof AppComercioIdRoute
-  '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
-  '/app/comercio/publicar': typeof AppComercioPublicarRoute
-  '/app/eventos/$id': typeof AppEventosIdRoute
-  '/app/pedidos/$id': typeof AppPedidosIdRoute
-  '/app/recargas/$slug': typeof AppRecargasSlugRoute
-  '/app/wallet/depositar': typeof AppWalletDepositarRoute
-  '/app/wallet/retirar': typeof AppWalletRetirarRoute
-  '/app/comercio/': typeof AppComercioIndexRoute
-  '/app/eventos/': typeof AppEventosIndexRoute
-  '/app/pedidos/': typeof AppPedidosIndexRoute
-  '/app/recargas/': typeof AppRecargasIndexRoute
-  '/app/wallet/': typeof AppWalletIndexRoute
+  '/admin/comercio': typeof AuthenticatedAdminComercioRoute
+  '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
+  '/admin/eventos': typeof AuthenticatedAdminEventosRoute
+  '/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
+  '/admin/juegos': typeof AuthenticatedAdminJuegosRoute
+  '/admin/pagos': typeof AuthenticatedAdminPagosRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/productos': typeof AuthenticatedAdminProductosRoute
+  '/admin/referidos': typeof AuthenticatedAdminReferidosRoute
+  '/admin/retiros': typeof AuthenticatedAdminRetirosRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
+  '/app/perfil': typeof AuthenticatedAppPerfilRoute
+  '/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
+  '/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
+  '/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
+  '/app/pedidos/$id': typeof AuthenticatedAppPedidosIdRoute
+  '/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
+  '/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
+  '/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/app/comercio/': typeof AuthenticatedAppComercioIndexRoute
+  '/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
+  '/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
+  '/app/recargas/': typeof AuthenticatedAppRecargasIndexRoute
+  '/app/wallet/': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -286,80 +324,82 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
-  '/admin/comercio': typeof AdminComercioRoute
-  '/admin/configuracion': typeof AdminConfiguracionRoute
-  '/admin/depositos': typeof AdminDepositosRoute
-  '/admin/eventos': typeof AdminEventosRoute
-  '/admin/g2bulk': typeof AdminG2bulkRoute
-  '/admin/juegos': typeof AdminJuegosRoute
-  '/admin/pagos': typeof AdminPagosRoute
-  '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/productos': typeof AdminProductosRoute
-  '/admin/referidos': typeof AdminReferidosRoute
-  '/admin/retiros': typeof AdminRetirosRoute
-  '/admin/usuarios': typeof AdminUsuariosRoute
-  '/admin/wallets': typeof AdminWalletsRoute
-  '/app/notificaciones': typeof AppNotificacionesRoute
-  '/app/perfil': typeof AppPerfilRoute
-  '/app/referidos': typeof AppReferidosRoute
   '/juegos/$slug': typeof JuegosSlugRoute
-  '/admin': typeof AdminIndexRoute
-  '/app': typeof AppIndexRoute
   '/juegos': typeof JuegosIndexRoute
-  '/app/comercio/$id': typeof AppComercioIdRoute
-  '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
-  '/app/comercio/publicar': typeof AppComercioPublicarRoute
-  '/app/eventos/$id': typeof AppEventosIdRoute
-  '/app/pedidos/$id': typeof AppPedidosIdRoute
-  '/app/recargas/$slug': typeof AppRecargasSlugRoute
-  '/app/wallet/depositar': typeof AppWalletDepositarRoute
-  '/app/wallet/retirar': typeof AppWalletRetirarRoute
-  '/app/comercio': typeof AppComercioIndexRoute
-  '/app/eventos': typeof AppEventosIndexRoute
-  '/app/pedidos': typeof AppPedidosIndexRoute
-  '/app/recargas': typeof AppRecargasIndexRoute
-  '/app/wallet': typeof AppWalletIndexRoute
+  '/admin/comercio': typeof AuthenticatedAdminComercioRoute
+  '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
+  '/admin/eventos': typeof AuthenticatedAdminEventosRoute
+  '/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
+  '/admin/juegos': typeof AuthenticatedAdminJuegosRoute
+  '/admin/pagos': typeof AuthenticatedAdminPagosRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/productos': typeof AuthenticatedAdminProductosRoute
+  '/admin/referidos': typeof AuthenticatedAdminReferidosRoute
+  '/admin/retiros': typeof AuthenticatedAdminRetirosRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
+  '/app/perfil': typeof AuthenticatedAppPerfilRoute
+  '/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
+  '/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
+  '/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
+  '/app/pedidos/$id': typeof AuthenticatedAppPedidosIdRoute
+  '/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
+  '/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
+  '/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/app/comercio': typeof AuthenticatedAppComercioIndexRoute
+  '/app/eventos': typeof AuthenticatedAppEventosIndexRoute
+  '/app/pedidos': typeof AuthenticatedAppPedidosIndexRoute
+  '/app/recargas': typeof AuthenticatedAppRecargasIndexRoute
+  '/app/wallet': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/comercio': typeof ComercioRoute
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
-  '/admin/comercio': typeof AdminComercioRoute
-  '/admin/configuracion': typeof AdminConfiguracionRoute
-  '/admin/depositos': typeof AdminDepositosRoute
-  '/admin/eventos': typeof AdminEventosRoute
-  '/admin/g2bulk': typeof AdminG2bulkRoute
-  '/admin/juegos': typeof AdminJuegosRoute
-  '/admin/pagos': typeof AdminPagosRoute
-  '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/productos': typeof AdminProductosRoute
-  '/admin/referidos': typeof AdminReferidosRoute
-  '/admin/retiros': typeof AdminRetirosRoute
-  '/admin/usuarios': typeof AdminUsuariosRoute
-  '/admin/wallets': typeof AdminWalletsRoute
-  '/app/notificaciones': typeof AppNotificacionesRoute
-  '/app/perfil': typeof AppPerfilRoute
-  '/app/referidos': typeof AppReferidosRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
-  '/admin/': typeof AdminIndexRoute
-  '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
-  '/app/comercio/$id': typeof AppComercioIdRoute
-  '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
-  '/app/comercio/publicar': typeof AppComercioPublicarRoute
-  '/app/eventos/$id': typeof AppEventosIdRoute
-  '/app/pedidos/$id': typeof AppPedidosIdRoute
-  '/app/recargas/$slug': typeof AppRecargasSlugRoute
-  '/app/wallet/depositar': typeof AppWalletDepositarRoute
-  '/app/wallet/retirar': typeof AppWalletRetirarRoute
-  '/app/comercio/': typeof AppComercioIndexRoute
-  '/app/eventos/': typeof AppEventosIndexRoute
-  '/app/pedidos/': typeof AppPedidosIndexRoute
-  '/app/recargas/': typeof AppRecargasIndexRoute
-  '/app/wallet/': typeof AppWalletIndexRoute
+  '/_authenticated/admin/comercio': typeof AuthenticatedAdminComercioRoute
+  '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/_authenticated/admin/depositos': typeof AuthenticatedAdminDepositosRoute
+  '/_authenticated/admin/eventos': typeof AuthenticatedAdminEventosRoute
+  '/_authenticated/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
+  '/_authenticated/admin/juegos': typeof AuthenticatedAdminJuegosRoute
+  '/_authenticated/admin/pagos': typeof AuthenticatedAdminPagosRoute
+  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/_authenticated/admin/productos': typeof AuthenticatedAdminProductosRoute
+  '/_authenticated/admin/referidos': typeof AuthenticatedAdminReferidosRoute
+  '/_authenticated/admin/retiros': typeof AuthenticatedAdminRetirosRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/_authenticated/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/_authenticated/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
+  '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
+  '/_authenticated/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/_authenticated/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
+  '/_authenticated/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
+  '/_authenticated/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
+  '/_authenticated/app/pedidos/$id': typeof AuthenticatedAppPedidosIdRoute
+  '/_authenticated/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
+  '/_authenticated/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
+  '/_authenticated/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/_authenticated/app/comercio/': typeof AuthenticatedAppComercioIndexRoute
+  '/_authenticated/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
+  '/_authenticated/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
+  '/_authenticated/app/recargas/': typeof AuthenticatedAppRecargasIndexRoute
+  '/_authenticated/app/wallet/': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -369,6 +409,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin'
+    | '/juegos/$slug'
+    | '/juegos/'
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
@@ -385,10 +428,8 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
-    | '/juegos/$slug'
     | '/admin/'
     | '/app/'
-    | '/juegos/'
     | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
@@ -409,6 +450,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/juegos/$slug'
+    | '/juegos'
     | '/admin/comercio'
     | '/admin/configuracion'
     | '/admin/depositos'
@@ -425,10 +468,8 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
-    | '/juegos/$slug'
     | '/admin'
     | '/app'
-    | '/juegos'
     | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
@@ -445,84 +486,56 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/comercio'
     | '/login'
     | '/recargas'
     | '/registro'
-    | '/admin/comercio'
-    | '/admin/configuracion'
-    | '/admin/depositos'
-    | '/admin/eventos'
-    | '/admin/g2bulk'
-    | '/admin/juegos'
-    | '/admin/pagos'
-    | '/admin/pedidos'
-    | '/admin/productos'
-    | '/admin/referidos'
-    | '/admin/retiros'
-    | '/admin/usuarios'
-    | '/admin/wallets'
-    | '/app/notificaciones'
-    | '/app/perfil'
-    | '/app/referidos'
+    | '/_authenticated/admin'
     | '/juegos/$slug'
-    | '/admin/'
-    | '/app/'
     | '/juegos/'
-    | '/app/comercio/$id'
-    | '/app/comercio/mis-publicaciones'
-    | '/app/comercio/publicar'
-    | '/app/eventos/$id'
-    | '/app/pedidos/$id'
-    | '/app/recargas/$slug'
-    | '/app/wallet/depositar'
-    | '/app/wallet/retirar'
-    | '/app/comercio/'
-    | '/app/eventos/'
-    | '/app/pedidos/'
-    | '/app/recargas/'
-    | '/app/wallet/'
+    | '/_authenticated/admin/comercio'
+    | '/_authenticated/admin/configuracion'
+    | '/_authenticated/admin/depositos'
+    | '/_authenticated/admin/eventos'
+    | '/_authenticated/admin/g2bulk'
+    | '/_authenticated/admin/juegos'
+    | '/_authenticated/admin/pagos'
+    | '/_authenticated/admin/pedidos'
+    | '/_authenticated/admin/productos'
+    | '/_authenticated/admin/referidos'
+    | '/_authenticated/admin/retiros'
+    | '/_authenticated/admin/usuarios'
+    | '/_authenticated/admin/wallets'
+    | '/_authenticated/app/notificaciones'
+    | '/_authenticated/app/perfil'
+    | '/_authenticated/app/referidos'
+    | '/_authenticated/admin/'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/comercio/$id'
+    | '/_authenticated/app/comercio/mis-publicaciones'
+    | '/_authenticated/app/comercio/publicar'
+    | '/_authenticated/app/eventos/$id'
+    | '/_authenticated/app/pedidos/$id'
+    | '/_authenticated/app/recargas/$slug'
+    | '/_authenticated/app/wallet/depositar'
+    | '/_authenticated/app/wallet/retirar'
+    | '/_authenticated/app/comercio/'
+    | '/_authenticated/app/eventos/'
+    | '/_authenticated/app/pedidos/'
+    | '/_authenticated/app/recargas/'
+    | '/_authenticated/app/wallet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ComercioRoute: typeof ComercioRoute
   LoginRoute: typeof LoginRoute
   RecargasRoute: typeof RecargasRoute
   RegistroRoute: typeof RegistroRoute
-  AdminComercioRoute: typeof AdminComercioRoute
-  AdminConfiguracionRoute: typeof AdminConfiguracionRoute
-  AdminDepositosRoute: typeof AdminDepositosRoute
-  AdminEventosRoute: typeof AdminEventosRoute
-  AdminG2bulkRoute: typeof AdminG2bulkRoute
-  AdminJuegosRoute: typeof AdminJuegosRoute
-  AdminPagosRoute: typeof AdminPagosRoute
-  AdminPedidosRoute: typeof AdminPedidosRoute
-  AdminProductosRoute: typeof AdminProductosRoute
-  AdminReferidosRoute: typeof AdminReferidosRoute
-  AdminRetirosRoute: typeof AdminRetirosRoute
-  AdminUsuariosRoute: typeof AdminUsuariosRoute
-  AdminWalletsRoute: typeof AdminWalletsRoute
-  AppNotificacionesRoute: typeof AppNotificacionesRoute
-  AppPerfilRoute: typeof AppPerfilRoute
-  AppReferidosRoute: typeof AppReferidosRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-  AppIndexRoute: typeof AppIndexRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
-  AppComercioIdRoute: typeof AppComercioIdRoute
-  AppComercioMisPublicacionesRoute: typeof AppComercioMisPublicacionesRoute
-  AppComercioPublicarRoute: typeof AppComercioPublicarRoute
-  AppEventosIdRoute: typeof AppEventosIdRoute
-  AppPedidosIdRoute: typeof AppPedidosIdRoute
-  AppRecargasSlugRoute: typeof AppRecargasSlugRoute
-  AppWalletDepositarRoute: typeof AppWalletDepositarRoute
-  AppWalletRetirarRoute: typeof AppWalletRetirarRoute
-  AppComercioIndexRoute: typeof AppComercioIndexRoute
-  AppEventosIndexRoute: typeof AppEventosIndexRoute
-  AppPedidosIndexRoute: typeof AppPedidosIndexRoute
-  AppRecargasIndexRoute: typeof AppRecargasIndexRoute
-  AppWalletIndexRoute: typeof AppWalletIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -532,6 +545,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comercio': {
@@ -562,131 +582,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegistroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
       path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/comercio': {
-      id: '/admin/comercio'
-      path: '/admin/comercio'
-      fullPath: '/admin/comercio'
-      preLoaderRoute: typeof AdminComercioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/configuracion': {
-      id: '/admin/configuracion'
-      path: '/admin/configuracion'
-      fullPath: '/admin/configuracion'
-      preLoaderRoute: typeof AdminConfiguracionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/depositos': {
-      id: '/admin/depositos'
-      path: '/admin/depositos'
-      fullPath: '/admin/depositos'
-      preLoaderRoute: typeof AdminDepositosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/eventos': {
-      id: '/admin/eventos'
-      path: '/admin/eventos'
-      fullPath: '/admin/eventos'
-      preLoaderRoute: typeof AdminEventosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/g2bulk': {
-      id: '/admin/g2bulk'
-      path: '/admin/g2bulk'
-      fullPath: '/admin/g2bulk'
-      preLoaderRoute: typeof AdminG2bulkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/juegos': {
-      id: '/admin/juegos'
-      path: '/admin/juegos'
-      fullPath: '/admin/juegos'
-      preLoaderRoute: typeof AdminJuegosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/pagos': {
-      id: '/admin/pagos'
-      path: '/admin/pagos'
-      fullPath: '/admin/pagos'
-      preLoaderRoute: typeof AdminPagosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/pedidos': {
-      id: '/admin/pedidos'
-      path: '/admin/pedidos'
-      fullPath: '/admin/pedidos'
-      preLoaderRoute: typeof AdminPedidosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/productos': {
-      id: '/admin/productos'
-      path: '/admin/productos'
-      fullPath: '/admin/productos'
-      preLoaderRoute: typeof AdminProductosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/referidos': {
-      id: '/admin/referidos'
-      path: '/admin/referidos'
-      fullPath: '/admin/referidos'
-      preLoaderRoute: typeof AdminReferidosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/retiros': {
-      id: '/admin/retiros'
-      path: '/admin/retiros'
-      fullPath: '/admin/retiros'
-      preLoaderRoute: typeof AdminRetirosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/usuarios': {
-      id: '/admin/usuarios'
-      path: '/admin/usuarios'
-      fullPath: '/admin/usuarios'
-      preLoaderRoute: typeof AdminUsuariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/wallets': {
-      id: '/admin/wallets'
-      path: '/admin/wallets'
-      fullPath: '/admin/wallets'
-      preLoaderRoute: typeof AdminWalletsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/': {
-      id: '/app/'
-      path: '/app'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/notificaciones': {
-      id: '/app/notificaciones'
-      path: '/app/notificaciones'
-      fullPath: '/app/notificaciones'
-      preLoaderRoute: typeof AppNotificacionesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/perfil': {
-      id: '/app/perfil'
-      path: '/app/perfil'
-      fullPath: '/app/perfil'
-      preLoaderRoute: typeof AppPerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/referidos': {
-      id: '/app/referidos'
-      path: '/app/referidos'
-      fullPath: '/app/referidos'
-      preLoaderRoute: typeof AppReferidosRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/juegos/': {
       id: '/juegos/'
@@ -702,139 +603,321 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JuegosSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/comercio/': {
-      id: '/app/comercio/'
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/comercio': {
+      id: '/_authenticated/admin/comercio'
+      path: '/comercio'
+      fullPath: '/admin/comercio'
+      preLoaderRoute: typeof AuthenticatedAdminComercioRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/configuracion': {
+      id: '/_authenticated/admin/configuracion'
+      path: '/configuracion'
+      fullPath: '/admin/configuracion'
+      preLoaderRoute: typeof AuthenticatedAdminConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/depositos': {
+      id: '/_authenticated/admin/depositos'
+      path: '/depositos'
+      fullPath: '/admin/depositos'
+      preLoaderRoute: typeof AuthenticatedAdminDepositosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/eventos': {
+      id: '/_authenticated/admin/eventos'
+      path: '/eventos'
+      fullPath: '/admin/eventos'
+      preLoaderRoute: typeof AuthenticatedAdminEventosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/g2bulk': {
+      id: '/_authenticated/admin/g2bulk'
+      path: '/g2bulk'
+      fullPath: '/admin/g2bulk'
+      preLoaderRoute: typeof AuthenticatedAdminG2bulkRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/juegos': {
+      id: '/_authenticated/admin/juegos'
+      path: '/juegos'
+      fullPath: '/admin/juegos'
+      preLoaderRoute: typeof AuthenticatedAdminJuegosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/pagos': {
+      id: '/_authenticated/admin/pagos'
+      path: '/pagos'
+      fullPath: '/admin/pagos'
+      preLoaderRoute: typeof AuthenticatedAdminPagosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/pedidos': {
+      id: '/_authenticated/admin/pedidos'
+      path: '/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/productos': {
+      id: '/_authenticated/admin/productos'
+      path: '/productos'
+      fullPath: '/admin/productos'
+      preLoaderRoute: typeof AuthenticatedAdminProductosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/referidos': {
+      id: '/_authenticated/admin/referidos'
+      path: '/referidos'
+      fullPath: '/admin/referidos'
+      preLoaderRoute: typeof AuthenticatedAdminReferidosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/retiros': {
+      id: '/_authenticated/admin/retiros'
+      path: '/retiros'
+      fullPath: '/admin/retiros'
+      preLoaderRoute: typeof AuthenticatedAdminRetirosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/wallets': {
+      id: '/_authenticated/admin/wallets'
+      path: '/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/notificaciones': {
+      id: '/_authenticated/app/notificaciones'
+      path: '/app/notificaciones'
+      fullPath: '/app/notificaciones'
+      preLoaderRoute: typeof AuthenticatedAppNotificacionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/perfil': {
+      id: '/_authenticated/app/perfil'
+      path: '/app/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AuthenticatedAppPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/referidos': {
+      id: '/_authenticated/app/referidos'
+      path: '/app/referidos'
+      fullPath: '/app/referidos'
+      preLoaderRoute: typeof AuthenticatedAppReferidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/comercio/': {
+      id: '/_authenticated/app/comercio/'
       path: '/app/comercio'
       fullPath: '/app/comercio/'
-      preLoaderRoute: typeof AppComercioIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppComercioIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/comercio/$id': {
-      id: '/app/comercio/$id'
+    '/_authenticated/app/comercio/$id': {
+      id: '/_authenticated/app/comercio/$id'
       path: '/app/comercio/$id'
       fullPath: '/app/comercio/$id'
-      preLoaderRoute: typeof AppComercioIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppComercioIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/comercio/mis-publicaciones': {
-      id: '/app/comercio/mis-publicaciones'
+    '/_authenticated/app/comercio/mis-publicaciones': {
+      id: '/_authenticated/app/comercio/mis-publicaciones'
       path: '/app/comercio/mis-publicaciones'
       fullPath: '/app/comercio/mis-publicaciones'
-      preLoaderRoute: typeof AppComercioMisPublicacionesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppComercioMisPublicacionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/comercio/publicar': {
-      id: '/app/comercio/publicar'
+    '/_authenticated/app/comercio/publicar': {
+      id: '/_authenticated/app/comercio/publicar'
       path: '/app/comercio/publicar'
       fullPath: '/app/comercio/publicar'
-      preLoaderRoute: typeof AppComercioPublicarRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppComercioPublicarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/eventos/': {
-      id: '/app/eventos/'
+    '/_authenticated/app/eventos/': {
+      id: '/_authenticated/app/eventos/'
       path: '/app/eventos'
       fullPath: '/app/eventos/'
-      preLoaderRoute: typeof AppEventosIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppEventosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/eventos/$id': {
-      id: '/app/eventos/$id'
+    '/_authenticated/app/eventos/$id': {
+      id: '/_authenticated/app/eventos/$id'
       path: '/app/eventos/$id'
       fullPath: '/app/eventos/$id'
-      preLoaderRoute: typeof AppEventosIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppEventosIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/pedidos/': {
-      id: '/app/pedidos/'
+    '/_authenticated/app/pedidos/': {
+      id: '/_authenticated/app/pedidos/'
       path: '/app/pedidos'
       fullPath: '/app/pedidos/'
-      preLoaderRoute: typeof AppPedidosIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppPedidosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/pedidos/$id': {
-      id: '/app/pedidos/$id'
+    '/_authenticated/app/pedidos/$id': {
+      id: '/_authenticated/app/pedidos/$id'
       path: '/app/pedidos/$id'
       fullPath: '/app/pedidos/$id'
-      preLoaderRoute: typeof AppPedidosIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppPedidosIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/recargas/': {
-      id: '/app/recargas/'
+    '/_authenticated/app/recargas/': {
+      id: '/_authenticated/app/recargas/'
       path: '/app/recargas'
       fullPath: '/app/recargas/'
-      preLoaderRoute: typeof AppRecargasIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppRecargasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/recargas/$slug': {
-      id: '/app/recargas/$slug'
+    '/_authenticated/app/recargas/$slug': {
+      id: '/_authenticated/app/recargas/$slug'
       path: '/app/recargas/$slug'
       fullPath: '/app/recargas/$slug'
-      preLoaderRoute: typeof AppRecargasSlugRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppRecargasSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/wallet/': {
-      id: '/app/wallet/'
+    '/_authenticated/app/wallet/': {
+      id: '/_authenticated/app/wallet/'
       path: '/app/wallet'
       fullPath: '/app/wallet/'
-      preLoaderRoute: typeof AppWalletIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppWalletIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/wallet/depositar': {
-      id: '/app/wallet/depositar'
+    '/_authenticated/app/wallet/depositar': {
+      id: '/_authenticated/app/wallet/depositar'
       path: '/app/wallet/depositar'
       fullPath: '/app/wallet/depositar'
-      preLoaderRoute: typeof AppWalletDepositarRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppWalletDepositarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/app/wallet/retirar': {
-      id: '/app/wallet/retirar'
+    '/_authenticated/app/wallet/retirar': {
+      id: '/_authenticated/app/wallet/retirar'
       path: '/app/wallet/retirar'
       fullPath: '/app/wallet/retirar'
-      preLoaderRoute: typeof AppWalletRetirarRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAppWalletRetirarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminComercioRoute: typeof AuthenticatedAdminComercioRoute
+  AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
+  AuthenticatedAdminDepositosRoute: typeof AuthenticatedAdminDepositosRoute
+  AuthenticatedAdminEventosRoute: typeof AuthenticatedAdminEventosRoute
+  AuthenticatedAdminG2bulkRoute: typeof AuthenticatedAdminG2bulkRoute
+  AuthenticatedAdminJuegosRoute: typeof AuthenticatedAdminJuegosRoute
+  AuthenticatedAdminPagosRoute: typeof AuthenticatedAdminPagosRoute
+  AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
+  AuthenticatedAdminProductosRoute: typeof AuthenticatedAdminProductosRoute
+  AuthenticatedAdminReferidosRoute: typeof AuthenticatedAdminReferidosRoute
+  AuthenticatedAdminRetirosRoute: typeof AuthenticatedAdminRetirosRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
+  AuthenticatedAdminWalletsRoute: typeof AuthenticatedAdminWalletsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminComercioRoute: AuthenticatedAdminComercioRoute,
+    AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
+    AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,
+    AuthenticatedAdminEventosRoute: AuthenticatedAdminEventosRoute,
+    AuthenticatedAdminG2bulkRoute: AuthenticatedAdminG2bulkRoute,
+    AuthenticatedAdminJuegosRoute: AuthenticatedAdminJuegosRoute,
+    AuthenticatedAdminPagosRoute: AuthenticatedAdminPagosRoute,
+    AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
+    AuthenticatedAdminProductosRoute: AuthenticatedAdminProductosRoute,
+    AuthenticatedAdminReferidosRoute: AuthenticatedAdminReferidosRoute,
+    AuthenticatedAdminRetirosRoute: AuthenticatedAdminRetirosRoute,
+    AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
+    AuthenticatedAdminWalletsRoute: AuthenticatedAdminWalletsRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedAppNotificacionesRoute: typeof AuthenticatedAppNotificacionesRoute
+  AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
+  AuthenticatedAppReferidosRoute: typeof AuthenticatedAppReferidosRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppComercioIdRoute: typeof AuthenticatedAppComercioIdRoute
+  AuthenticatedAppComercioMisPublicacionesRoute: typeof AuthenticatedAppComercioMisPublicacionesRoute
+  AuthenticatedAppComercioPublicarRoute: typeof AuthenticatedAppComercioPublicarRoute
+  AuthenticatedAppEventosIdRoute: typeof AuthenticatedAppEventosIdRoute
+  AuthenticatedAppPedidosIdRoute: typeof AuthenticatedAppPedidosIdRoute
+  AuthenticatedAppRecargasSlugRoute: typeof AuthenticatedAppRecargasSlugRoute
+  AuthenticatedAppWalletDepositarRoute: typeof AuthenticatedAppWalletDepositarRoute
+  AuthenticatedAppWalletRetirarRoute: typeof AuthenticatedAppWalletRetirarRoute
+  AuthenticatedAppComercioIndexRoute: typeof AuthenticatedAppComercioIndexRoute
+  AuthenticatedAppEventosIndexRoute: typeof AuthenticatedAppEventosIndexRoute
+  AuthenticatedAppPedidosIndexRoute: typeof AuthenticatedAppPedidosIndexRoute
+  AuthenticatedAppRecargasIndexRoute: typeof AuthenticatedAppRecargasIndexRoute
+  AuthenticatedAppWalletIndexRoute: typeof AuthenticatedAppWalletIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedAppNotificacionesRoute: AuthenticatedAppNotificacionesRoute,
+  AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
+  AuthenticatedAppReferidosRoute: AuthenticatedAppReferidosRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppComercioIdRoute: AuthenticatedAppComercioIdRoute,
+  AuthenticatedAppComercioMisPublicacionesRoute:
+    AuthenticatedAppComercioMisPublicacionesRoute,
+  AuthenticatedAppComercioPublicarRoute: AuthenticatedAppComercioPublicarRoute,
+  AuthenticatedAppEventosIdRoute: AuthenticatedAppEventosIdRoute,
+  AuthenticatedAppPedidosIdRoute: AuthenticatedAppPedidosIdRoute,
+  AuthenticatedAppRecargasSlugRoute: AuthenticatedAppRecargasSlugRoute,
+  AuthenticatedAppWalletDepositarRoute: AuthenticatedAppWalletDepositarRoute,
+  AuthenticatedAppWalletRetirarRoute: AuthenticatedAppWalletRetirarRoute,
+  AuthenticatedAppComercioIndexRoute: AuthenticatedAppComercioIndexRoute,
+  AuthenticatedAppEventosIndexRoute: AuthenticatedAppEventosIndexRoute,
+  AuthenticatedAppPedidosIndexRoute: AuthenticatedAppPedidosIndexRoute,
+  AuthenticatedAppRecargasIndexRoute: AuthenticatedAppRecargasIndexRoute,
+  AuthenticatedAppWalletIndexRoute: AuthenticatedAppWalletIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ComercioRoute: ComercioRoute,
   LoginRoute: LoginRoute,
   RecargasRoute: RecargasRoute,
   RegistroRoute: RegistroRoute,
-  AdminComercioRoute: AdminComercioRoute,
-  AdminConfiguracionRoute: AdminConfiguracionRoute,
-  AdminDepositosRoute: AdminDepositosRoute,
-  AdminEventosRoute: AdminEventosRoute,
-  AdminG2bulkRoute: AdminG2bulkRoute,
-  AdminJuegosRoute: AdminJuegosRoute,
-  AdminPagosRoute: AdminPagosRoute,
-  AdminPedidosRoute: AdminPedidosRoute,
-  AdminProductosRoute: AdminProductosRoute,
-  AdminReferidosRoute: AdminReferidosRoute,
-  AdminRetirosRoute: AdminRetirosRoute,
-  AdminUsuariosRoute: AdminUsuariosRoute,
-  AdminWalletsRoute: AdminWalletsRoute,
-  AppNotificacionesRoute: AppNotificacionesRoute,
-  AppPerfilRoute: AppPerfilRoute,
-  AppReferidosRoute: AppReferidosRoute,
   JuegosSlugRoute: JuegosSlugRoute,
-  AdminIndexRoute: AdminIndexRoute,
-  AppIndexRoute: AppIndexRoute,
   JuegosIndexRoute: JuegosIndexRoute,
-  AppComercioIdRoute: AppComercioIdRoute,
-  AppComercioMisPublicacionesRoute: AppComercioMisPublicacionesRoute,
-  AppComercioPublicarRoute: AppComercioPublicarRoute,
-  AppEventosIdRoute: AppEventosIdRoute,
-  AppPedidosIdRoute: AppPedidosIdRoute,
-  AppRecargasSlugRoute: AppRecargasSlugRoute,
-  AppWalletDepositarRoute: AppWalletDepositarRoute,
-  AppWalletRetirarRoute: AppWalletRetirarRoute,
-  AppComercioIndexRoute: AppComercioIndexRoute,
-  AppEventosIndexRoute: AppEventosIndexRoute,
-  AppPedidosIndexRoute: AppPedidosIndexRoute,
-  AppRecargasIndexRoute: AppRecargasIndexRoute,
-  AppWalletIndexRoute: AppWalletIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
