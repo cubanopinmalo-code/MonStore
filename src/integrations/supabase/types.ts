@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _offer_sync: {
-        Row: {
-          code: string
-          game_id: string
-          request_id: number | null
-        }
-        Insert: {
-          code: string
-          game_id: string
-          request_id?: number | null
-        }
-        Update: {
-          code?: string
-          game_id?: string
-          request_id?: number | null
-        }
-        Relationships: []
-      }
       api_transactions: {
         Row: {
           created_at: string
