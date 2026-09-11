@@ -165,3 +165,21 @@ export function useWithdrawals() {
     },
   });
 }
+
+export function useOrders(limit = 50) {
+  const { data: user } = useCurrentUser();
+  return useQuery({
+    queryKey: ["orders", user?.id, limit],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, products(name), games(name)")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
