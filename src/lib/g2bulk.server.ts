@@ -164,10 +164,13 @@ export async function checkPlayerId(body: {
   server_id?: string;
   charname?: string;
 }): Promise<{ valid: string; name: string | null }> {
-  return call<{ valid?: string; name?: string }>("/games/checkPlayerId", {
-    method: "POST",
-    body,
-  }).then((data) => ({ valid: String(data.valid ?? "unknown"), name: data.name ?? null }));
+  return call<{ valid?: string; name?: string; nickname?: string; username?: string }>(
+    "/games/checkPlayerId",
+    { method: "POST", body },
+  ).then((data) => ({
+    valid: String(data.valid ?? "unknown"),
+    name: data.name || data.nickname || data.username || null,
+  }));
 }
 
 export async function providerBalance(): Promise<{ balance: number; username: string | null }> {

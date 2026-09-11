@@ -385,6 +385,8 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
     const labels: Record<string, string> = {
       player_id: "ID del jugador",
       user_id: "ID del jugador",
+      userid: "ID del jugador",
+      uid: "ID del jugador",
       server_id: "Servidor",
       charname: "Nombre del personaje",
       zone_id: "ID de zona",
