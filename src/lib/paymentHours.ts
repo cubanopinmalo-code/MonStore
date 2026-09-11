@@ -33,7 +33,8 @@ export function getVerificationClock(now: Date = new Date()): VerificationClock 
 
 /** Frase lista para mostrar al cliente antes o después de enviar una solicitud. */
 export function verificationNotice(clock: VerificationClock = getVerificationClock()): string {
+  const base = `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba)`;
   return clock.open
-    ? `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba). Te avisamos en cuanto se acrediten.`
-    : `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba). Fuera de ese horario se revisa ${clock.nextReview}.`;
+    ? `${base}. Te avisamos en cuanto se acrediten.`
+    : `${base}. Envías ahora fuera de ese horario: se revisa ${clock.nextReview}`;
 }

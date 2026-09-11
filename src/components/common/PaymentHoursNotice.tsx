@@ -11,6 +11,7 @@ import {
  */
 export function PaymentHoursNotice({ compact = false }: { compact?: boolean }) {
   const clock = getVerificationClock();
+  const base = `Revisamos y aprobamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba)`;
 
   return (
     <div
@@ -27,13 +28,12 @@ export function PaymentHoursNotice({ compact = false }: { compact?: boolean }) {
       <div className="min-w-0 space-y-1">
         <p className="text-sm font-semibold">Horario de verificación de pagos</p>
         <p className="text-sm text-muted-foreground">
-          Revisamos y aprobamos los pagos de <span className="font-medium">{VERIFICATION_WINDOW_LABEL}</span>{" "}
-          (hora de Cuba). Si envías tu solicitud fuera de ese horario, se revisa {clock.nextReview}.
+          {clock.open
+            ? `${base}.`
+            : `${base}. Ahora mismo estamos fuera de ese horario: tu solicitud se revisa ${clock.nextReview}`}
         </p>
-        <p
-          className={`text-xs font-medium ${clock.open ? "text-success" : "text-warning"}`}
-        >
-          {clock.open ? "Ahora estamos verificando pagos." : `Fuera de horario: se revisa ${clock.nextReview}.`}
+        <p className={`text-xs font-medium ${clock.open ? "text-success" : "text-warning"}`}>
+          {clock.open ? "Ahora estamos verificando pagos." : `Se revisa ${clock.nextReview}`}
         </p>
       </div>
     </div>
