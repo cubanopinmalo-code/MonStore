@@ -580,18 +580,21 @@ export type Database = {
           created_at: string
           id: boolean
           updated_at: string
+          usd_margin_cup: number
           usd_to_cup: number
         }
         Insert: {
           created_at?: string
           id?: boolean
           updated_at?: string
+          usd_margin_cup?: number
           usd_to_cup?: number
         }
         Update: {
           created_at?: string
           id?: boolean
           updated_at?: string
+          usd_margin_cup?: number
           usd_to_cup?: number
         }
         Relationships: []
