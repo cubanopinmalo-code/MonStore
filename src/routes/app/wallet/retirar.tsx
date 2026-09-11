@@ -103,13 +103,21 @@ function WithdrawPage() {
               <span className="text-muted-foreground">Cantidad</span>
               <span>{formatCUP(parsed)}</span>
             </div>
+            {breakdown.conversionPct > 0 ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Conversión a saldo (−{breakdown.conversionPct}%)
+                </span>
+                <span>− {formatCUP(breakdown.conversion)}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Comisión ({WITHDRAWAL_FEE_PCT}%)</span>
-              <span>− {formatCUP(fee)}</span>
+              <span className="text-muted-foreground">Comisión ({breakdown.feePct}%)</span>
+              <span>− {formatCUP(breakdown.fee)}</span>
             </div>
             <div className="flex justify-between border-t border-border pt-2 font-semibold">
               <span>Recibirás</span>
-              <span className="text-primary">{formatCUP(net)}</span>
+              <span className="text-primary">{formatCUP(breakdown.net)}</span>
             </div>
           </div>
 
