@@ -179,6 +179,10 @@
   box-shadow: var(--glow-primary);
 }
 
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
 @utility text-gradient-primary {
   background-image: var(--gradient-primary);
   background-clip: text;
