@@ -129,16 +129,24 @@ function UserHome() {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Últimos pedidos</h2>
+            <h2 className="text-lg font-bold">Historial de compras</h2>
             <Link to="/app/pedidos" className="flex items-center gap-1 text-sm text-primary">
-              Ver todos <ArrowRight className="size-4" aria-hidden="true" />
+              Ver todo <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
-          <div className="grid gap-2">
-            {orders.map((order) => {
-              const product = mockProducts.find((item) => item.id === order.product_id);
-              const game = mockGames.find((item) => item.id === order.game_id);
-              return (
+          {orders.length === 0 ? (
+            <EmptyState
+              title="Todavía no tienes compras"
+              description="Cuando hagas una recarga aparecerá aquí."
+              action={
+                <Button asChild size="sm">
+                  <Link to="/app/recargas">Hacer una recarga</Link>
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid gap-2">
+              {orders.map((order) => (
                 <Link
                   key={order.id}
                   to="/app/pedidos/$id"
@@ -147,7 +155,8 @@ function UserHome() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
-                      {product?.name} · {game?.name}
+                      {order.products?.name ?? "Recarga"}
+                      {order.games?.name ? ` · ${order.games.name}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {order.code} · {formatDate(order.created_at)}
@@ -158,9 +167,9 @@ function UserHome() {
                     <StatusBadge status={order.status} />
                   </div>
                 </Link>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </UserShell>
