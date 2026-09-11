@@ -29,6 +29,7 @@ const SHORTCUTS = [
 ] as const;
 
 function UserHome() {
+  const { data: wallet } = useWallet();
   const orders = mockOrders.filter((order) => order.user_id === "us_001").slice(0, 3);
   const currentEvents = mockEvents
     .filter((event) => event.status !== "finalizado" && event.status !== "cancelado")
@@ -38,8 +39,6 @@ function UserHome() {
     <UserShell>
       <div className="space-y-6">
         <h1 className="sr-only">Tu panel en MONSTORE</h1>
-        <ProtectedNotice area="el área de usuario" />
-
 
         <section className="surface-card relative overflow-hidden p-5 glow-ring">
           <div
@@ -51,7 +50,10 @@ function UserHome() {
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Wallet className="size-4" aria-hidden="true" /> Saldo disponible
             </p>
-            <p className="font-display text-3xl font-bold">{formatCUP(mockWallet.balance)}</p>
+            <p className="font-display text-3xl font-bold">
+              {formatCUP(Number(wallet?.balance ?? 0))}
+            </p>
+
             <div className="flex flex-wrap gap-2 pt-3">
               <Button asChild size="sm">
                 <Link to="/app/wallet/depositar">Agregar fondos</Link>
