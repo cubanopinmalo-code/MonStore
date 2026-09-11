@@ -260,8 +260,12 @@ function PurchaseFlowPage() {
               <Button variant="outline" onClick={() => setStep(0)}>
                 Atrás
               </Button>
-              <Button className="flex-1" disabled={missing.length > 0} onClick={() => setStep(2)}>
-                Continuar
+              <Button
+                className="flex-1"
+                disabled={missing.length > 0 || (playerKey ? !player.name : false)}
+                onClick={() => setStep(2)}
+              >
+                {playerKey && player.loading ? "Verificando…" : "Continuar"}
               </Button>
             </div>
           </section>
