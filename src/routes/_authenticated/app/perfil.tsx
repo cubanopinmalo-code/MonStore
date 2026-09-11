@@ -144,7 +144,7 @@ function ProfilePage() {
             <div>
               <h2 className="text-base font-semibold">Referidos y recompensas</h2>
               <p className="text-xs text-muted-foreground">
-                Invita 10 personas y gana (valor de la base actual = {rewardCup} CUP) gratis.
+                Invita 10 personas y gana {rewardCup} CUP gratis.
               </p>
             </div>
             <span className="text-primary">
@@ -162,7 +162,7 @@ function ProfilePage() {
             <Progress value={progress} aria-label="Progreso hacia la recompensa" />
             <p className="text-xs text-muted-foreground">
               {remaining > 0
-                ? `Te faltan ${remaining} invitados para ganar (valor de la base actual = ${rewardCup} CUP) Gratis.`
+                ? `Te faltan ${remaining} invitados para ganar ${rewardCup} CUP gratis.`
                 : `¡Recompensa desbloqueada! Tienes ${rewardCup} CUP gratis.`}
             </p>
           </div>
