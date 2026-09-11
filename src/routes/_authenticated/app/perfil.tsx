@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, Copy, Gift, Share2 } from "lucide-react";
+import { Camera, Copy, Gift, Pencil, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -42,7 +42,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useProfile();
   const { data: referrals } = useReferrals();
-  const [saving, setSaving] = useState(false);
+  
   const [claiming, setClaiming] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -155,28 +155,6 @@ function ProfilePage() {
     await copyLink();
   }
 
-  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    const form = new FormData(event.currentTarget);
-    setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        name: String(form.get("name") ?? ""),
-        
-        province: String(form.get("province") ?? ""),
-        municipality: String(form.get("municipality") ?? ""),
-      })
-      .eq("id", profile.id);
-    setSaving(false);
-    if (error) {
-      toast.error("No pudimos guardar los cambios.");
-      return;
-    }
-    await queryClient.invalidateQueries({ queryKey: ["profile"] });
-    toast.success("Cambios guardados");
-  }
 
   return (
     <UserShell>
@@ -279,36 +257,20 @@ function ProfilePage() {
         </section>
 
         {isLoading ? null : (
-          <form className="surface-card space-y-4 p-5" onSubmit={(e) => void handleSave(e)}>
-            <div className="space-y-1.5">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" name="name" defaultValue={profile?.name ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" value={profile?.phone ?? ""} readOnly disabled />
+          <section className="surface-card space-y-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold">Datos personales</h2>
               <p className="text-xs text-muted-foreground">
-                El teléfono de registro no se puede cambiar.
+                Nombre, provincia y municipio de tu cuenta.
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="provincia">Provincia</Label>
-                <Input id="provincia" name="province" defaultValue={profile?.province ?? ""} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="municipio">Municipio</Label>
-                <Input
-                  id="municipio"
-                  name="municipality"
-                  defaultValue={profile?.municipality ?? ""}
-                />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar cambios"}
+            <Button asChild className="w-full">
+              <Link to="/app/editar-perfil">
+                <Pencil className="size-4" aria-hidden="true" />
+                Editar perfil
+              </Link>
             </Button>
-          </form>
+          </section>
         )}
 
         <SignOutDialog>
