@@ -39,7 +39,7 @@ function AdminListingCard({ listing }: { listing: Listing }) {
     const { error } = await supabase.rpc("review_game_account", {
       p_listing: listing.id,
       p_approve: approve,
-      p_reason: reason,
+      p_reason: reason ?? "",
     });
     setWorking(false);
     if (error) {
