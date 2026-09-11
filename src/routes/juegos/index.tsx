@@ -57,12 +57,7 @@ function GamesPage() {
                 params={{ slug: game.slug }}
                 className="group surface-card overflow-hidden transition-transform duration-200 hover:-translate-y-1"
               >
-                <img
-                  src={game.cover}
-                  alt={`Portada de ${game.name}`}
-                  loading="lazy"
-                  className="aspect-3/4 w-full bg-muted object-cover"
-                />
+                <GameCover src={game.cover} name={game.name} className="aspect-3/4 w-full" />
                 <div className="space-y-1.5 p-3">
                   <p className="text-sm font-semibold">{game.name}</p>
                   <p className="line-clamp-2 text-xs text-muted-foreground">{game.description}</p>
