@@ -520,7 +520,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         category: "Tarjetas y códigos",
         platforms: [],
         image_url: (category.image_url ?? "").trim(),
-        active: false,
+        active: true,
         g2bulk_id: ref,
       });
     }
@@ -534,7 +534,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         category: "Recarga directa",
         platforms: [],
         image_url: (game.image_url ?? "").trim(),
-        active: false,
+        active: true,
         g2bulk_id: ref,
       });
     }
@@ -581,7 +581,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_cuenta",
-        active: false,
+        active: true,
         available: Number(product.stock ?? 0) > 0,
         metadata: { fields: [] },
         image_url: (product.image_url ?? "").trim(),
@@ -673,7 +673,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
         sale_price: priceFromCost(Number(offer.amount ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_id" as const,
-        active: false,
+        active: true,
         available: true,
         metadata: { fields, game_code: code },
         image_url: "",
