@@ -13,6 +13,8 @@ import { mockPaymentSettings } from "@/data/mock/admin";
 import { calculateDeposit } from "@/services/wallet";
 import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
+import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 
 type DepositSearch = { necesario?: number; metodo?: string };
 
@@ -99,8 +101,8 @@ function DepositPage() {
     }
     await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     toast.success("Solicitud de fondos enviada", {
-      description:
-        note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla.",
+      description: `${note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla."} ${verificationNotice(getVerificationClock())}`,
+      duration: 10000,
     });
     void navigate({ to: "/app/recargas" });
   }
@@ -137,6 +139,9 @@ function DepositPage() {
           </Button>
           <h1 className="text-xl font-bold">Agregar fondos</h1>
         </div>
+
+        <PaymentHoursNotice />
+
 
         {necesario ? (
           <div className="surface-card border-primary/40 p-4">

@@ -35,5 +35,5 @@ export function getVerificationClock(now: Date = new Date()): VerificationClock 
 export function verificationNotice(clock: VerificationClock = getVerificationClock()): string {
   return clock.open
     ? `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba). Te avisamos en cuanto se acrediten.`
-    : `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba). Envías fuera de ese horario, se revisa ${clock.nextReview}.`;
+    : `Verificamos los pagos de ${VERIFICATION_WINDOW_LABEL} (hora de Cuba). Fuera de ese horario se revisa ${clock.nextReview}.`;
 }
