@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { mockPaymentSettings } from "@/data/mock/admin";
-import { WITHDRAWAL_FEE_PCT } from "@/services/wallet";
+
 
 export const Route = createFileRoute("/admin/configuracion")({
   head: () => ({
