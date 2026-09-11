@@ -19,7 +19,11 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { mockWallet } from "@/data/mock/wallet";
-import { getCatalogGame, type CatalogProduct } from "@/lib/catalog.functions";
+import {
+  checkGamePlayer,
+  getCatalogGame,
+  type CatalogProduct,
+} from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
