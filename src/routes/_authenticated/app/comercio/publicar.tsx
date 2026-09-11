@@ -201,6 +201,15 @@ function PublishListingPage() {
             </div>
           </div>
 
+          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+            <p className="text-xs text-destructive">
+              Aviso importante: después de enviar la cuenta a revisión y de que sea aprobada,
+              intentar cambiar los datos de la cuenta (correo, contraseña o acceso) provocará el
+              baneo permanente de la aplicación.
+            </p>
+          </div>
+
           <Button type="submit" className="w-full">
             Enviar para revisión
           </Button>
