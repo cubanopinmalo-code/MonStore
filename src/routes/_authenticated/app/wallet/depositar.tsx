@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { getSaldoRate } from "@/lib/catalog.functions";
-import { formatCUP } from "@/lib/format";
+import { formatBaseCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import {
@@ -265,7 +265,7 @@ function DepositPage() {
     return (
       <div className="surface-card border-primary/40 p-4">
         <p className="text-sm">
-          Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span>{" "}
+          Te faltan <span className="font-semibold text-primary">{formatBaseCUP(necesario)}</span>{" "}
           para completar tu compra. Ya pusimos el importe justo a pagar.
         </p>
       </div>
@@ -395,24 +395,24 @@ function DepositPage() {
           <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Envías</span>
-              <span>{formatCUP(bonus < 0 ? 0 : parsed)}</span>
+              <span>{formatBaseCUP(bonus < 0 ? 0 : parsed)}</span>
             </div>
             {isSaldo ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Conversión (cada peso de saldo × {saldoRate})
                 </span>
-                <span>+ {formatCUP(bonus)}</span>
+                <span>+ {formatBaseCUP(bonus)}</span>
               </div>
             ) : bonusPct > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Conversión (+{bonusPct}%)</span>
-                <span>+ {formatCUP(bonus)}</span>
+                <span>+ {formatBaseCUP(bonus)}</span>
               </div>
             ) : null}
             <div className="flex justify-between border-t border-border pt-2 font-semibold">
               <span>Acreditaremos</span>
-              <span className="text-primary">{formatCUP(credited)}</span>
+              <span className="text-primary">{formatBaseCUP(credited)}</span>
             </div>
           </div>
         </div>

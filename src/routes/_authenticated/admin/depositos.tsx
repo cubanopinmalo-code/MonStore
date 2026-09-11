@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCUP, formatDateTime } from "@/lib/format";
+import { formatBaseCUP, formatDateTime } from "@/lib/format";
 import { listPaymentMethods, reviewDeposit } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
@@ -120,9 +120,9 @@ function AdminDepositsPage() {
               deposits.map((deposit) => (
                 <TableRow key={deposit.id}>
                   <TableCell className="font-medium">{deposit.user_name}</TableCell>
-                  <TableCell>{formatCUP(deposit.amount)}</TableCell>
+                  <TableCell>{formatBaseCUP(deposit.amount)}</TableCell>
                   <TableCell className="text-primary">
-                    {formatCUP(deposit.credited_amount)}
+                    {formatBaseCUP(deposit.credited_amount)}
                   </TableCell>
                   <TableCell className="text-xs">{labelFor(deposit.payment_method)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">

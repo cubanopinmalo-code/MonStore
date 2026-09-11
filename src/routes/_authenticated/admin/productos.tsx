@@ -55,7 +55,7 @@ import {
   type CatalogProduct,
   type ProductDraft,
 } from "@/lib/catalog.functions";
-import { formatCUP } from "@/lib/format";
+import { formatBaseCUP } from "@/lib/format";
 
 type OfferRow = CatalogProduct & { game_name: string };
 
@@ -291,7 +291,7 @@ function AdminProductsPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     USD {product.g2bulk_cost.toFixed(2)}
                   </TableCell>
-                  <TableCell>{formatCUP(product.sale_price)}</TableCell>
+                  <TableCell>{formatBaseCUP(product.sale_price)}</TableCell>
                   <TableCell>
                     <StatusBadge status={product.available ? "disponible" : "no disponible"} />
                   </TableCell>

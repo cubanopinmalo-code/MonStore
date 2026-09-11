@@ -4,6 +4,7 @@ import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
+import { CurrencyToggle } from "@/components/wallet/CurrencyToggle";
 import { Button } from "@/components/ui/button";
 import {
   useDeposits,
@@ -78,6 +79,11 @@ function WalletPage() {
             <p className="font-display text-4xl font-bold">
               {formatCUP(Number(wallet?.balance ?? 0))}
             </p>
+
+            <div className="pt-2">
+              <CurrencyToggle />
+            </div>
+
 
             <div className="flex flex-wrap gap-2 pt-3">
               <Button asChild>

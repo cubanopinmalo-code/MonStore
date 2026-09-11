@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { mockWallet } from "@/data/mock/wallet";
 import { calculateWithdrawal } from "@/services/wallet";
-import { formatCUP } from "@/lib/format";
+import { formatBaseCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/wallet/retirar")({
   head: () => ({
@@ -66,7 +66,7 @@ function WithdrawPage() {
               onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ""))}
             />
             <p className="text-xs text-muted-foreground">
-              Disponible: {formatCUP(mockWallet.balance)}
+              Disponible: {formatBaseCUP(mockWallet.balance)}
             </p>
             {tooMuch ? (
               <p className="text-xs text-destructive">
@@ -101,23 +101,23 @@ function WithdrawPage() {
           <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Cantidad</span>
-              <span>{formatCUP(parsed)}</span>
+              <span>{formatBaseCUP(parsed)}</span>
             </div>
             {breakdown.conversionPct > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Conversión a saldo (−{breakdown.conversionPct}%)
                 </span>
-                <span>− {formatCUP(breakdown.conversion)}</span>
+                <span>− {formatBaseCUP(breakdown.conversion)}</span>
               </div>
             ) : null}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Comisión ({breakdown.feePct}%)</span>
-              <span>− {formatCUP(breakdown.fee)}</span>
+              <span>− {formatBaseCUP(breakdown.fee)}</span>
             </div>
             <div className="flex justify-between border-t border-border pt-2 font-semibold">
               <span>Recibirás</span>
-              <span className="text-primary">{formatCUP(breakdown.net)}</span>
+              <span className="text-primary">{formatBaseCUP(breakdown.net)}</span>
             </div>
           </div>
 

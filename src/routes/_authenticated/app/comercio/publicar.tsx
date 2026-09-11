@@ -23,7 +23,7 @@ import {
   useListingFee,
 } from "@/hooks/useMarketplace";
 import { getAccessMethods } from "@/lib/accountAccess";
-import { formatCUP } from "@/lib/format";
+import { formatBaseCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/comercio/publicar")({
   head: () => ({
@@ -85,7 +85,7 @@ function PublishListingPage() {
     }
     if (!canPay) {
       toast.error("No tienes saldo suficiente para publicar", {
-        description: `Necesitas ${formatCUP(total)} por ${days} día(s).`,
+        description: `Necesitas ${formatBaseCUP(total)} por ${days} día(s).`,
       });
       navigate({ to: "/app/wallet/depositar", search: { necesario: total, metodo: "movil" } });
       return;
@@ -129,7 +129,7 @@ function PublishListingPage() {
 
     const charged = Number((data as { total?: number } | null)?.total ?? total);
     await queryClient.invalidateQueries();
-    toast.success(`Cuenta enviada a revisión — se descontaron ${formatCUP(charged)}`, {
+    toast.success(`Cuenta enviada a revisión — se descontaron ${formatBaseCUP(charged)}`, {
       description: `Al ser aprobada, tu cuenta será publicada por ${days * 24} horas para que todos los que usan la app la vean. ¡Buena suerte con la venta!`,
     });
     void navigate({ to: "/app/comercio/mis-publicaciones" });
@@ -274,7 +274,7 @@ function PublishListingPage() {
               <div>
                 <h2 className="text-sm font-semibold">Tiempo de publicación</h2>
                 <p className="text-xs text-muted-foreground">
-                  {formatCUP(dailyFee)} por cada 24 horas. Se descuenta de tu wallet al enviar la
+                  {formatBaseCUP(dailyFee)} por cada 24 horas. Se descuenta de tu wallet al enviar la
                   cuenta a revisión.
                 </p>
               </div>
@@ -296,10 +296,10 @@ function PublishListingPage() {
               <span className="text-muted-foreground">
                 {days} día(s) · {days * 24} horas
               </span>
-              <span className="font-display text-lg font-bold text-primary">{formatCUP(total)}</span>
+              <span className="font-display text-lg font-bold text-primary">{formatBaseCUP(total)}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Saldo actual: {formatCUP(balance)}.{" "}
+              Saldo actual: {formatBaseCUP(balance)}.{" "}
               {canPay
                 ? "Al aprobarse, tu cuenta se publicará por las horas contratadas para que todos los que usan la app la vean."
                 : "No te alcanza el saldo: agrega fondos antes de enviarla."}
@@ -366,7 +366,7 @@ function PublishListingPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={sending}>
-            {sending ? "Enviando…" : `Enviar para revisión y pagar ${formatCUP(total)}`}
+            {sending ? "Enviando…" : `Enviar para revisión y pagar ${formatBaseCUP(total)}`}
           </Button>
           <p className="text-xs text-muted-foreground">
             Todas las publicaciones inician en estado pendiente. Si el administrador la rechaza, te

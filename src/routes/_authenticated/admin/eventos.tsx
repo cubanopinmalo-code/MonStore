@@ -23,7 +23,7 @@ import {
   PAYMENT_STATUS_LABEL,
   formatEventDate,
 } from "@/lib/events";
-import { formatCUP } from "@/lib/format";
+import { formatBaseCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/eventos")({
   head: () => ({
@@ -108,7 +108,7 @@ function AdminEventsPage() {
                         (máx {event.max_participants})
                       </span>
                     </TableCell>
-                    <TableCell>{formatCUP(event.entry_price)}</TableCell>
+                    <TableCell>{formatBaseCUP(event.entry_price)}</TableCell>
                     <TableCell>
                       <StatusBadge status={EVENT_STATUS_LABEL[event.status]} />
                     </TableCell>

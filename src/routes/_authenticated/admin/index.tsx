@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { mockAdminStats, mockDeposits, mockSyncStatus, mockWithdrawals } from "@/data/mock/admin";
 import { mockOrders } from "@/data/mock/orders";
-import { formatCUP, formatDateTime, marginPct } from "@/lib/format";
+import { formatBaseCUP, formatDateTime, marginPct } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -35,12 +35,12 @@ function AdminDashboard() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Ventas hoy"
-          value={formatCUP(stats.sales_today)}
+          value={formatBaseCUP(stats.sales_today)}
           icon={<TrendingUp className="size-4" aria-hidden="true" />}
         />
         <StatCard
           label="Ventas del mes"
-          value={formatCUP(stats.sales_month)}
+          value={formatBaseCUP(stats.sales_month)}
           hint={`Margen ${marginPct(stats.provider_cost_month, stats.sales_month)}`}
           icon={<Coins className="size-4" aria-hidden="true" />}
         />
@@ -60,18 +60,18 @@ function AdminDashboard() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Depósitos acumulados"
-          value={formatCUP(stats.deposits_total)}
+          value={formatBaseCUP(stats.deposits_total)}
           hint={`${pendingDeposits} pendientes`}
           icon={<ArrowDownToLine className="size-4" aria-hidden="true" />}
         />
         <StatCard
           label="Retiros acumulados"
-          value={formatCUP(stats.withdrawals_total)}
+          value={formatBaseCUP(stats.withdrawals_total)}
           hint={`${pendingWithdrawals} pendientes`}
           icon={<ArrowUpFromLine className="size-4" aria-hidden="true" />}
         />
-        <StatCard label="Costo proveedor (mes)" value={formatCUP(stats.provider_cost_month)} />
-        <StatCard label="Ganancia (mes)" value={formatCUP(stats.margin_month)} />
+        <StatCard label="Costo proveedor (mes)" value={formatBaseCUP(stats.provider_cost_month)} />
+        <StatCard label="Ganancia (mes)" value={formatBaseCUP(stats.margin_month)} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -95,7 +95,7 @@ function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className="text-sm">{formatCUP(order.total_amount)}</span>
+                  <span className="text-sm">{formatBaseCUP(order.total_amount)}</span>
                   <StatusBadge status={order.status} />
                 </div>
               </div>

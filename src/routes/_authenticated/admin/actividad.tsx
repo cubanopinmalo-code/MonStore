@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCUP, formatDateTime } from "@/lib/format";
+import { formatBaseCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/actividad")({
   head: () => ({
@@ -176,7 +176,7 @@ function AdminActivityPage() {
                       <TableCell>{order.user_name}</TableCell>
                       <TableCell>{order.products?.name ?? "—"}</TableCell>
                       <TableCell>{order.games?.name ?? "—"}</TableCell>
-                      <TableCell>{formatCUP(Number(order.total_amount))}</TableCell>
+                      <TableCell>{formatBaseCUP(Number(order.total_amount))}</TableCell>
                       <TableCell>
                         <StatusBadge status={order.status} />
                       </TableCell>
@@ -222,8 +222,8 @@ function AdminActivityPage() {
                       <TableCell className="capitalize">
                         {row.method.replace("_", " ")}
                       </TableCell>
-                      <TableCell>{formatCUP(row.amount)}</TableCell>
-                      <TableCell>{formatCUP(row.net)}</TableCell>
+                      <TableCell>{formatBaseCUP(row.amount)}</TableCell>
+                      <TableCell>{formatBaseCUP(row.net)}</TableCell>
                       <TableCell>
                         <StatusBadge status={row.status} />
                       </TableCell>
@@ -264,7 +264,7 @@ function AdminActivityPage() {
                       <TableCell>
                         <StatusBadge status={row.status} />
                       </TableCell>
-                      <TableCell>{formatCUP(Number(row.reward_amount))}</TableCell>
+                      <TableCell>{formatBaseCUP(Number(row.reward_amount))}</TableCell>
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {formatDateTime(row.created_at)}
                       </TableCell>
