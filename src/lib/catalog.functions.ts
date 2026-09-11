@@ -856,7 +856,8 @@ export const checkGamePlayer = createServerFn({ method: "POST" })
       if (data.charname) body.charname = data.charname;
 
       const result = await checkPlayerId(body);
-      const valid = result.valid.toLowerCase() === "true" || result.valid === "1";
+      const flag = result.valid.toLowerCase();
+      const valid = flag === "valid" || flag === "true" || flag === "1" || flag === "ok";
       if (!valid) {
         return {
           valid: false,
