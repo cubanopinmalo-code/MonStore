@@ -47,15 +47,37 @@ function AdminSettingsPage() {
               <Label htmlFor={`inst-${setting.id}`}>Instrucciones para el usuario</Label>
               <Textarea id={`inst-${setting.id}`} rows={3} defaultValue={setting.instructions} />
             </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`bonus-${setting.id}`}>Conversión al depositar (%)</Label>
+                <Input
+                  id={`bonus-${setting.id}`}
+                  inputMode="numeric"
+                  defaultValue={String(setting.deposit_bonus_pct)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`fee-${setting.id}`}>Comisión al retirar (%)</Label>
+                <Input
+                  id={`fee-${setting.id}`}
+                  inputMode="numeric"
+                  defaultValue={String(setting.withdrawal_fee_pct)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`conv-${setting.id}`}>Conversión al retirar (%)</Label>
+                <Input
+                  id={`conv-${setting.id}`}
+                  inputMode="numeric"
+                  defaultValue={String(setting.withdrawal_conversion_pct)}
+                />
+              </div>
+            </div>
           </section>
         ))}
 
         <section className="surface-card space-y-4 p-5">
-          <h2 className="text-base font-semibold">Comisiones y límites</h2>
-          <div className="space-y-1.5">
-            <Label htmlFor="comision">Comisión de retiro (%)</Label>
-            <Input id="comision" inputMode="numeric" defaultValue={String(WITHDRAWAL_FEE_PCT)} />
-          </div>
+          <h2 className="text-base font-semibold">Límites</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="min-dep">Depósito mínimo (CUP)</Label>
