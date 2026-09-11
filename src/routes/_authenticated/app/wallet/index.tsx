@@ -22,10 +22,47 @@ export const Route = createFileRoute("/_authenticated/app/wallet/")({
   component: WalletPage,
 });
 
+const METHOD_LABEL: Record<string, string> = {
+  saldo_movil: "Saldo móvil",
+  tarjeta_cup: "Tarjeta CUP",
+  wallet: "Wallet",
+};
+
+const STATUS_NOTE: Record<string, string> = {
+  pendiente: "En revisión",
+  aprobado: "Aprobada",
+  rechazado: "Rechazada",
+};
+
 function WalletPage() {
   const { data: wallet } = useWallet();
   const { data: txData } = useWalletTransactions();
+  const { data: depositsData } = useDeposits();
+  const { data: withdrawalsData } = useWithdrawals();
   const transactions = txData ?? [];
+
+  const requests = [
+    ...(depositsData ?? []).map((d) => ({
+      id: `d-${d.id}`,
+      kind: "Agregar fondos" as const,
+      amount: Number(d.credited_amount ?? d.amount),
+      sent: Number(d.amount),
+      status: d.status as string,
+      method: d.payment_method as string,
+      reason: d.rejection_reason,
+      created_at: d.created_at,
+    })),
+    ...(withdrawalsData ?? []).map((w) => ({
+      id: `w-${w.id}`,
+      kind: "Retiro" as const,
+      amount: Number(w.net_amount ?? w.amount),
+      sent: Number(w.amount),
+      status: w.status as string,
+      method: w.payment_method as string,
+      reason: w.rejection_reason,
+      created_at: w.created_at,
+    })),
+  ].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
   return (
     <UserShell>
