@@ -46,6 +46,7 @@ import { Route as AuthenticatedAppPedidosIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppPedidosIdRouteImport } from './routes/_authenticated/app/pedidos/$id'
 import { Route as AuthenticatedAppRecargasIndexRouteImport } from './routes/_authenticated/app/recargas/index'
 import { Route as AuthenticatedAppRecargasSlugRouteImport } from './routes/_authenticated/app/recargas/$slug'
+import { Route as AuthenticatedAppTarjetasIndexRouteImport } from './routes/_authenticated/app/tarjetas/index'
 import { Route as AuthenticatedAppWalletIndexRouteImport } from './routes/_authenticated/app/wallet/index'
 import { Route as AuthenticatedAppWalletDepositarRouteImport } from './routes/_authenticated/app/wallet/depositar'
 import { Route as AuthenticatedAppWalletRetirarRouteImport } from './routes/_authenticated/app/wallet/retirar'
@@ -258,6 +259,12 @@ const AuthenticatedAppRecargasSlugRoute =
     path: '/app/recargas/$slug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppTarjetasIndexRoute =
+  AuthenticatedAppTarjetasIndexRouteImport.update({
+    id: '/app/tarjetas/',
+    path: '/app/tarjetas/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppWalletIndexRoute =
   AuthenticatedAppWalletIndexRouteImport.update({
     id: '/app/wallet/',
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
   '/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
   '/app/recargas/': typeof AuthenticatedAppRecargasIndexRoute
+  '/app/tarjetas/': typeof AuthenticatedAppTarjetasIndexRoute
   '/app/wallet/': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRoutesByTo {
@@ -356,6 +364,7 @@ export interface FileRoutesByTo {
   '/app/eventos': typeof AuthenticatedAppEventosIndexRoute
   '/app/pedidos': typeof AuthenticatedAppPedidosIndexRoute
   '/app/recargas': typeof AuthenticatedAppRecargasIndexRoute
+  '/app/tarjetas': typeof AuthenticatedAppTarjetasIndexRoute
   '/app/wallet': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRoutesById {
@@ -399,6 +408,7 @@ export interface FileRoutesById {
   '/_authenticated/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
   '/_authenticated/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
   '/_authenticated/app/recargas/': typeof AuthenticatedAppRecargasIndexRoute
+  '/_authenticated/app/tarjetas/': typeof AuthenticatedAppTarjetasIndexRoute
   '/_authenticated/app/wallet/': typeof AuthenticatedAppWalletIndexRoute
 }
 export interface FileRouteTypes {
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/app/eventos/'
     | '/app/pedidos/'
     | '/app/recargas/'
+    | '/app/tarjetas/'
     | '/app/wallet/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/app/eventos'
     | '/app/pedidos'
     | '/app/recargas'
+    | '/app/tarjetas'
     | '/app/wallet'
   id:
     | '__root__'
@@ -524,6 +536,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/eventos/'
     | '/_authenticated/app/pedidos/'
     | '/_authenticated/app/recargas/'
+    | '/_authenticated/app/tarjetas/'
     | '/_authenticated/app/wallet/'
   fileRoutesById: FileRoutesById
 }
@@ -799,6 +812,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRecargasSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/tarjetas/': {
+      id: '/_authenticated/app/tarjetas/'
+      path: '/app/tarjetas'
+      fullPath: '/app/tarjetas/'
+      preLoaderRoute: typeof AuthenticatedAppTarjetasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/wallet/': {
       id: '/_authenticated/app/wallet/'
       path: '/app/wallet'
@@ -881,6 +901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppEventosIndexRoute: typeof AuthenticatedAppEventosIndexRoute
   AuthenticatedAppPedidosIndexRoute: typeof AuthenticatedAppPedidosIndexRoute
   AuthenticatedAppRecargasIndexRoute: typeof AuthenticatedAppRecargasIndexRoute
+  AuthenticatedAppTarjetasIndexRoute: typeof AuthenticatedAppTarjetasIndexRoute
   AuthenticatedAppWalletIndexRoute: typeof AuthenticatedAppWalletIndexRoute
 }
 
@@ -903,6 +924,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppEventosIndexRoute: AuthenticatedAppEventosIndexRoute,
   AuthenticatedAppPedidosIndexRoute: AuthenticatedAppPedidosIndexRoute,
   AuthenticatedAppRecargasIndexRoute: AuthenticatedAppRecargasIndexRoute,
+  AuthenticatedAppTarjetasIndexRoute: AuthenticatedAppTarjetasIndexRoute,
   AuthenticatedAppWalletIndexRoute: AuthenticatedAppWalletIndexRoute,
 }
 
