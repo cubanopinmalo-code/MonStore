@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockWallet } from "@/data/mock/wallet";
-import { WITHDRAWAL_FEE_PCT } from "@/services/wallet";
+import { calculateWithdrawal } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/app/wallet/retirar")({
