@@ -1001,6 +1001,13 @@ export type Database = {
     Functions: {
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
       enter_event_room: { Args: { p_event: string }; Returns: Json }
+      event_participant_counts: {
+        Args: never
+        Returns: {
+          event_id: string
+          participants: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
