@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { mockPaymentSettings } from "@/data/mock/admin";
-
+import { getUsdRate, setUsdRate } from "@/lib/catalog.functions";
+import { formatCup } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
@@ -16,8 +19,73 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
       { name: "description", content: "Métodos de pago, comisiones y ajustes generales." },
     ],
   }),
+  loader: () => getUsdRate(),
+  errorComponent: () => (
+    <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
+      <p className="surface-card p-5 text-sm text-muted-foreground">
+        No se pudo cargar la configuración. Recarga la página.
+      </p>
+    </AdminShell>
+  ),
+  notFoundComponent: () => null,
   component: AdminSettingsPage,
 });
+
+function UsdRateCard() {
+  const initial = Route.useLoaderData();
+  const router = useRouter();
+  const save = useServerFn(setUsdRate);
+  const [value, setValue] = useState(String(initial));
+  const [saving, setSaving] = useState(false);
+  const preview = Number(value) > 0 ? Number(value) : 0;
+
+  return (
+    <section className="surface-card space-y-4 p-5 lg:col-span-2">
+      <div>
+        <h2 className="text-base font-semibold">Precio base del dólar</h2>
+        <p className="text-xs text-muted-foreground">
+          Todos los precios en CUP se calculan multiplicando el costo en dólares del proveedor por
+          este valor.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="usd-rate">1 USD equivale a (CUP)</Label>
+          <Input
+            id="usd-rate"
+            inputMode="decimal"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Ejemplo</Label>
+          <p className="rounded-md border border-border/60 px-3 py-2 text-sm">
+            Una oferta de 1 USD se vende en {formatCup(preview)}
+          </p>
+        </div>
+      </div>
+      <Button
+        type="button"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            const result = await save({ data: { rate: Number(value) } });
+            toast.success(`Precios actualizados: ${result.updated} ofertas recalculadas.`);
+            await router.invalidate();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        {saving ? "Guardando…" : "Guardar y recalcular precios"}
+      </Button>
+    </section>
+  );
+}
 
 function AdminSettingsPage() {
   return (
