@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/Logo";
+import { RouteLoading } from "@/components/common/RouteLoading";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,25 +50,36 @@ function AuthPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "registro">("login");
   const [loading, setLoading] = useState(false);
+  // Mientras comprobamos la sesión guardada no mostramos el formulario:
+  // así quien ya entró una vez vuelve directo a su cuenta.
+  const [checking, setChecking] = useState(true);
 
   const goToApp = () => {
     if (evento) {
-      void navigate({ to: "/app/eventos/$id", params: { id: evento } });
+      void navigate({ to: "/app/eventos/$id", params: { id: evento }, replace: true });
     } else {
-      void navigate({ to: "/app" });
+      void navigate({ to: "/app", replace: true });
     }
   };
 
   useEffect(() => {
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
-      if (active && data.session) goToApp();
+      if (!active) return;
+      if (data.session) goToApp();
+      else setChecking(false);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) goToApp();
     });
     return () => {
       active = false;
+      sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -113,7 +126,10 @@ function AuthPage() {
     goToApp();
   };
 
+  if (checking) return <RouteLoading />;
+
   return (
+
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
