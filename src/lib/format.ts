@@ -30,6 +30,11 @@ export function formatBaseCUP(amount: number): string {
   return `${formatNumber(amount)} CUP`;
 }
 
+/** Importe expresado en saldo móvil, sin depender de la moneda elegida. */
+export function formatSaldo(amount: number): string {
+  return `${formatNumber(amount)} saldo`;
+}
+
 /** CUP → saldo móvil: se divide entre la base de conversión actual. */
 export function cupToSaldo(amountCup: number, rate = saldoRate): number {
   return rate > 0 ? amountCup / rate : amountCup;
