@@ -18,7 +18,7 @@ import { mockProducts } from "@/data/mock/products";
 import { mockUsers } from "@/data/mock/account";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/pedidos")({
+export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   head: () => ({
     meta: [
       { title: "Pedidos — Panel MONSTORE" },

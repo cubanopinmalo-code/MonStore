@@ -14,7 +14,7 @@ import {
 import { mockDeposits } from "@/data/mock/admin";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/depositos")({
+export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
     meta: [
       { title: "Depósitos — Panel MONSTORE" },

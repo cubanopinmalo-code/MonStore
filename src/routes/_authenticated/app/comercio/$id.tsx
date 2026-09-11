@@ -9,7 +9,7 @@ import { mockGames } from "@/data/mock/games";
 import { mockWallet } from "@/data/mock/wallet";
 import { formatCUP } from "@/lib/format";
 
-export const Route = createFileRoute("/app/comercio/$id")({
+export const Route = createFileRoute("/_authenticated/app/comercio/$id")({
   head: () => ({
     meta: [
       { title: "Detalle de cuenta — MONSTORE" },

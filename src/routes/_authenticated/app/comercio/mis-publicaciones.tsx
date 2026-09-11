@@ -8,7 +8,7 @@ import { mockGameAccounts } from "@/data/mock/marketplace";
 import { mockGames } from "@/data/mock/games";
 import { formatCUP, formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/app/comercio/mis-publicaciones")({
+export const Route = createFileRoute("/_authenticated/app/comercio/mis-publicaciones")({
   head: () => ({
     meta: [
       { title: "Mis publicaciones — MONSTORE" },

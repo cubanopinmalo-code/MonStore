@@ -12,7 +12,7 @@ import {
 import { mockPayments } from "@/data/mock/admin";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/pagos")({
+export const Route = createFileRoute("/_authenticated/admin/pagos")({
   head: () => ({
     meta: [
       { title: "Pagos — Panel MONSTORE" },

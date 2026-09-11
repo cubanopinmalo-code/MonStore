@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { mockGames } from "@/data/mock/games";
 
-export const Route = createFileRoute("/app/recargas/")({
+export const Route = createFileRoute("/_authenticated/app/recargas/")({
   head: () => ({
     meta: [
       { title: "Recargas — MONSTORE" },

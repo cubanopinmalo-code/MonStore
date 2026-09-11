@@ -13,7 +13,7 @@ import { mockProfile, mockReferrals } from "@/data/mock/account";
 
 const REFERRAL_GOAL = 10;
 
-export const Route = createFileRoute("/app/perfil")({
+export const Route = createFileRoute("/_authenticated/app/perfil")({
   head: () => ({
     meta: [
       { title: "Mi perfil — MONSTORE" },

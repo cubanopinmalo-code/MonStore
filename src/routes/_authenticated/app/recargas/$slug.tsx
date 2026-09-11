@@ -25,7 +25,7 @@ import { formatCUP } from "@/lib/format";
 import type { OrderStatus, Product } from "@/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/recargas/$slug")({
+export const Route = createFileRoute("/_authenticated/app/recargas/$slug")({
   loader: ({ params }) => {
     const game = mockGames.find((item) => item.slug === params.slug);
     if (!game) throw notFound();

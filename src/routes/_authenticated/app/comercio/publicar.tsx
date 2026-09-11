@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { mockGames } from "@/data/mock/games";
 
-export const Route = createFileRoute("/app/comercio/publicar")({
+export const Route = createFileRoute("/_authenticated/app/comercio/publicar")({
   head: () => ({
     meta: [
       { title: "Publicar cuenta — MONSTORE" },

@@ -8,7 +8,7 @@ import { mockGames } from "@/data/mock/games";
 import { mockProducts } from "@/data/mock/products";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/app/pedidos/$id")({
+export const Route = createFileRoute("/_authenticated/app/pedidos/$id")({
   loader: ({ params }) => {
     const order = mockOrders.find((item) => item.id === params.id || item.code === params.id);
     if (!order) throw notFound();

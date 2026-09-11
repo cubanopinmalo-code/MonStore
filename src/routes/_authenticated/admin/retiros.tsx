@@ -14,7 +14,7 @@ import {
 import { mockWithdrawals } from "@/data/mock/admin";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/retiros")({
+export const Route = createFileRoute("/_authenticated/admin/retiros")({
   head: () => ({
     meta: [
       { title: "Retiros — Panel MONSTORE" },

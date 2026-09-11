@@ -9,7 +9,7 @@ import { mockNotifications } from "@/data/mock/account";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/notificaciones")({
+export const Route = createFileRoute("/_authenticated/app/notificaciones")({
   head: () => ({
     meta: [
       { title: "Notificaciones — MONSTORE" },

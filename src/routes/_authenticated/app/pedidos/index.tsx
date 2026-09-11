@@ -11,7 +11,7 @@ import { mockProducts } from "@/data/mock/products";
 import { formatCUP, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/app/pedidos/")({
+export const Route = createFileRoute("/_authenticated/app/pedidos/")({
   head: () => ({
     meta: [
       { title: "Mis pedidos — MONSTORE" },

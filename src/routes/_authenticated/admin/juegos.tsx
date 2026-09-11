@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { mockGames } from "@/data/mock/games";
 import { formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/juegos")({
+export const Route = createFileRoute("/_authenticated/admin/juegos")({
   head: () => ({
     meta: [
       { title: "Juegos — Panel MONSTORE" },

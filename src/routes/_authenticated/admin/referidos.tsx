@@ -13,7 +13,7 @@ import {
 import { mockReferrals, mockUsers } from "@/data/mock/account";
 import { formatCUP, formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/referidos")({
+export const Route = createFileRoute("/_authenticated/admin/referidos")({
   head: () => ({
     meta: [
       { title: "Referidos — Panel MONSTORE" },

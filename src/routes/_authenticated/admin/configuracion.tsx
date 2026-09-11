@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { mockPaymentSettings } from "@/data/mock/admin";
 
 
-export const Route = createFileRoute("/admin/configuracion")({
+export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
     meta: [
       { title: "Configuración — Panel MONSTORE" },

@@ -11,7 +11,7 @@ import { mockPaymentSettings } from "@/data/mock/admin";
 import { calculateDeposit } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
-export const Route = createFileRoute("/app/wallet/depositar")({
+export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
   head: () => ({
     meta: [
       { title: "Agregar fondos — MONSTORE" },

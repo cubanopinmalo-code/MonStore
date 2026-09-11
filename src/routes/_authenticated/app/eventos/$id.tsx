@@ -43,7 +43,7 @@ import {
 import { formatCUP } from "@/lib/format";
 import type { GameEvent } from "@/types";
 
-export const Route = createFileRoute("/app/eventos/$id")({
+export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
   head: () => ({
     meta: [
       { title: "Detalle del evento — MONSTORE" },

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { mockSyncStatus } from "@/data/mock/admin";
 import { formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/g2bulk")({
+export const Route = createFileRoute("/_authenticated/admin/g2bulk")({
   head: () => ({
     meta: [
       { title: "G2Bulk — Panel MONSTORE" },

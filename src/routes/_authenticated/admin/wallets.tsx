@@ -14,7 +14,7 @@ import { mockUsers } from "@/data/mock/account";
 import { mockWallet, mockWalletTransactions } from "@/data/mock/wallet";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/wallets")({
+export const Route = createFileRoute("/_authenticated/admin/wallets")({
   head: () => ({
     meta: [
       { title: "Wallets — Panel MONSTORE" },

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { mockProfile, mockReferrals } from "@/data/mock/account";
 import { formatCUP, formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/app/referidos")({
+export const Route = createFileRoute("/_authenticated/app/referidos")({
   head: () => ({
     meta: [
       { title: "Referidos — MONSTORE" },

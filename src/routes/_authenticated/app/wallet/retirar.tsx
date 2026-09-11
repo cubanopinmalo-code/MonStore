@@ -17,7 +17,7 @@ import { mockWallet } from "@/data/mock/wallet";
 import { calculateWithdrawal } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
-export const Route = createFileRoute("/app/wallet/retirar")({
+export const Route = createFileRoute("/_authenticated/app/wallet/retirar")({
   head: () => ({
     meta: [
       { title: "Retirar fondos — MONSTORE" },

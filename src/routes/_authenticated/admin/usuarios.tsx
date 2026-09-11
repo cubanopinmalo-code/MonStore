@@ -13,7 +13,7 @@ import {
 import { mockUsers } from "@/data/mock/account";
 import { formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/usuarios")({
+export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   head: () => ({
     meta: [
       { title: "Usuarios — Panel MONSTORE" },

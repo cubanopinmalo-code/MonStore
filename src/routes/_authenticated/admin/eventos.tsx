@@ -25,7 +25,7 @@ import {
 } from "@/lib/events";
 import { formatCUP } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/eventos")({
+export const Route = createFileRoute("/_authenticated/admin/eventos")({
   head: () => ({
     meta: [
       { title: "Eventos — Panel MONSTORE" },

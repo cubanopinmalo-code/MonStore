@@ -15,7 +15,7 @@ import { mockAdminStats, mockDeposits, mockSyncStatus, mockWithdrawals } from "@
 import { mockOrders } from "@/data/mock/orders";
 import { formatCUP, formatDateTime, marginPct } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Panel administrativo — MONSTORE" },

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { mockWallet, mockWalletTransactions } from "@/data/mock/wallet";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/app/wallet/")({
+export const Route = createFileRoute("/_authenticated/app/wallet/")({
   head: () => ({
     meta: [
       { title: "Mi wallet — MONSTORE" },

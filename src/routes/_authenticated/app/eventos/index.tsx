@@ -5,7 +5,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { EmptyState } from "@/components/common/states";
 import { mockEvents } from "@/data/mock/events";
 
-export const Route = createFileRoute("/app/eventos/")({
+export const Route = createFileRoute("/_authenticated/app/eventos/")({
   head: () => ({
     meta: [
       { title: "Eventos actuales — MONSTORE" },

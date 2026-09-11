@@ -7,7 +7,7 @@ import { mockGameAccounts } from "@/data/mock/marketplace";
 import { mockGames } from "@/data/mock/games";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/comercio")({
+export const Route = createFileRoute("/_authenticated/admin/comercio")({
   head: () => ({
     meta: [
       { title: "Comercio — Panel MONSTORE" },

@@ -6,7 +6,7 @@ import { mockGameAccounts } from "@/data/mock/marketplace";
 import { mockGames } from "@/data/mock/games";
 import { formatCUP } from "@/lib/format";
 
-export const Route = createFileRoute("/app/comercio/")({
+export const Route = createFileRoute("/_authenticated/app/comercio/")({
   head: () => ({
     meta: [
       { title: "Comercio — MONSTORE" },

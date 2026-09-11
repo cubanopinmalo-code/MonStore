@@ -12,7 +12,7 @@ import { mockEvents } from "@/data/mock/events";
 import { EventCard } from "@/components/events/EventCard";
 import { formatCUP, formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/app/")({
+export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
     meta: [
       { title: "Mi cuenta — MONSTORE" },

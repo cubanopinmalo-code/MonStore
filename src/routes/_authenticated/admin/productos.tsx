@@ -14,7 +14,7 @@ import { mockProducts } from "@/data/mock/products";
 import { mockGames } from "@/data/mock/games";
 import { formatCUP, marginPct } from "@/lib/format";
 
-export const Route = createFileRoute("/admin/productos")({
+export const Route = createFileRoute("/_authenticated/admin/productos")({
   head: () => ({
     meta: [
       { title: "Productos — Panel MONSTORE" },
