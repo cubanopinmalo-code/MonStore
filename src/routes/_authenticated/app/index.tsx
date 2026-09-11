@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Gamepad2, Plus, Store, Wallet } from "lucide-react";
+import { ArrowRight, Gamepad2, Gift, Plus, Store, Wallet } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { GameCover } from "@/components/common/GameCover";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useAccount";
+import { listCatalogGames } from "@/lib/catalog.functions";
+import { giftCardImage, isGiftCard } from "@/lib/giftcards";
 
 import { mockOrders } from "@/data/mock/orders";
 import { mockGames } from "@/data/mock/games";
