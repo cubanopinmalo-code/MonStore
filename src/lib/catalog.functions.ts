@@ -126,7 +126,6 @@ async function withOffers(
   const counts = new Map<string, number>();
   if (games.length > 0) {
     let query = client.from("products").select("game_id");
-    if (onlyActive) query = query.eq("active", true);
     const { data } = await query.in(
       "game_id",
       games.map((game) => game.id),
@@ -151,7 +150,6 @@ export const listCatalogGames = createServerFn({ method: "GET" }).handler(
     const { data, error } = await supabase
       .from("games")
       .select("*")
-      .eq("active", true)
       .order("name");
     if (error) throw new Error("No se pudo cargar el catálogo de juegos.");
     return withOffers(supabase, data ?? [], true);
@@ -171,7 +169,6 @@ export const getCatalogGame = createServerFn({ method: "GET" })
       .from("games")
       .select("*")
       .eq("slug", data.slug)
-      .eq("active", true)
       .maybeSingle();
     if (error) throw new Error("No se pudo cargar este juego.");
     if (!game) return null;
@@ -180,7 +177,6 @@ export const getCatalogGame = createServerFn({ method: "GET" })
       .from("products")
       .select("*")
       .eq("game_id", game.id)
-      .eq("active", true)
       .order("sale_price");
     const rows = products ?? [];
     const signed = await signCatalogImages([game.image_url, ...rows.map((row) => row.image_url)]);
@@ -207,7 +203,6 @@ export const listCatalogOffers = createServerFn({ method: "GET" })
     let query = supabase
       .from("products")
       .select("*, games(name, slug, image_url)")
-      .eq("active", true)
       .order("sale_price");
     if (data.search) query = query.ilike("name", `%${data.search}%`);
     const { data: rows, error } = await query.limit(300);
