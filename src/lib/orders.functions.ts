@@ -266,7 +266,7 @@ export const getMyOrder = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error("No se pudo cargar este pedido.");
     if (!row) return null;
-    return toList([row])[0];
+    return (toList([row])[0] ?? null) as OrderListItem | null;
   });
 
 /* ------------------------------------------------------------------ *
