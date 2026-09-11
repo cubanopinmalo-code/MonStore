@@ -128,6 +128,11 @@ export const mockPaymentSettings: PaymentSetting[] = [
     deposit_bonus_pct: 25,
     withdrawal_fee_pct: 5,
     withdrawal_conversion_pct: 30,
+    transfer_fields: [
+      { label: "Número de destino", value: "+53 5 555 1234" },
+      { label: "Teléfono de contacto", value: "+53 5 555 1234" },
+    ],
+    position: 10,
     updated_at: "2026-09-01T10:00:00Z",
   },
   {
@@ -143,6 +148,11 @@ export const mockPaymentSettings: PaymentSetting[] = [
     deposit_bonus_pct: 0,
     withdrawal_fee_pct: 5,
     withdrawal_conversion_pct: 0,
+    transfer_fields: [
+      { label: "Número de tarjeta", value: "9227 1234 5678 9012" },
+      { label: "Móvil asociado", value: "+53 5 555 1234" },
+    ],
+    position: 20,
     updated_at: "2026-09-01T10:00:00Z",
   },
 ];
