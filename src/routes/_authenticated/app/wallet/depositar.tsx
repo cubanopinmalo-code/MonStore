@@ -227,6 +227,13 @@ function DepositPage() {
   }
 
   function submitPaid() {
+    const sender = fromNumber.replace(/\D/g, "");
+    if (isSaldo && sender.length < 8) {
+      toast.error("Falta el número desde donde vas a transferir", {
+        description: "Escribe el número de tu saldo móvil (al menos 8 dígitos).",
+      });
+      return;
+    }
     if (proof) {
       setAttempts(0);
       void submit(true);
