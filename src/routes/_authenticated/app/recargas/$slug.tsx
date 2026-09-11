@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
