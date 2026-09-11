@@ -137,12 +137,16 @@ export const placeOrder = createServerFn({ method: "POST" })
       };
     }
 
-    const { data: game } = await supabaseAdmin
-      .from("games")
-      .select("g2bulk_id")
-      .eq("id", product.game_id ?? "00000000-0000-0000-0000-000000000000")
-      .maybeSingle();
-    const gameCode = game?.g2bulk_id ?? null;
+    let gameCode: string | null = null;
+    if (product.game_id) {
+      const { data: game } = await supabaseAdmin
+        .from("games")
+        .select("g2bulk_id")
+        .eq("id", product.game_id)
+        .maybeSingle();
+      const ref = game?.g2bulk_id ?? "";
+      if (ref.startsWith("game:")) gameCode = ref.slice(5);
+    }
 
     const { providerHasKey, purchaseProduct, placeTopUpOrder, ProviderError } = await import(
       "./g2bulk.server"
