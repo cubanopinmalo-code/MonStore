@@ -48,7 +48,7 @@ export const mockEvents: GameEvent[] = [
     status: "sala_activa",
     room_id: "MLBB-77321",
     room_password: "monstore25",
-    room_activated_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+    room_activated_at: "2026-09-11T12:00:00Z",
     entry_window_minutes: 15,
     description: "Equipos aleatorios. El pago se realiza solo al entrar a la sala.",
     banner_url: null,

@@ -31,7 +31,6 @@ import { mockGames } from "@/data/mock/games";
 import { mockWallet } from "@/data/mock/wallet";
 import {
   EVENT_STATUS_LABEL,
-  entrySecondsLeft,
   formatCountdown,
   formatEventDate,
   goalProgress,
@@ -104,8 +103,14 @@ function EventDetail({ event }: { event: GameEvent }) {
 
   useEffect(() => {
     if (event.status !== "sala_activa") return;
-    setSecondsLeft(entrySecondsLeft(event));
-    const timer = setInterval(() => setSecondsLeft(entrySecondsLeft(event)), 1000);
+    // Prototipo: la ventana de entrada se cuenta desde que se abre la pantalla.
+    const total = event.entry_window_minutes * 60;
+    const start = Date.now();
+    setSecondsLeft(total);
+    const timer = setInterval(() => {
+      const left = total - Math.floor((Date.now() - start) / 1000);
+      setSecondsLeft(left > 0 ? left : 0);
+    }, 1000);
     return () => clearInterval(timer);
   }, [event]);
 
