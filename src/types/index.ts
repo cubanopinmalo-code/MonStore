@@ -208,6 +208,7 @@ export interface GameAccount {
   id: string;
   seller_id: string;
   seller_name: string;
+  seller_avatar_url?: string | null;
   game_id: string;
   title: string;
   description: string;
