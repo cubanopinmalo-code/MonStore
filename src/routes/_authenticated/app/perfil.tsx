@@ -287,7 +287,10 @@ function ProfilePage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" name="phone" defaultValue={profile?.phone ?? ""} />
+              <Input id="telefono" value={profile?.phone ?? ""} readOnly disabled />
+              <p className="text-xs text-muted-foreground">
+                El teléfono de registro no se puede cambiar.
+              </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
