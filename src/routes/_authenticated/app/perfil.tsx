@@ -185,14 +185,36 @@ function ProfilePage() {
         <PageHeader title="Mi perfil" description="Datos personales y preferencias." />
 
         <div className="surface-card flex items-center gap-4 p-5">
-          <Avatar className="size-16">
-            <AvatarFallback className="bg-primary/12 text-lg text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="size-16">
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={`Foto de ${name}`} /> : null}
+              <AvatarFallback className="bg-primary/12 text-lg text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              type="button"
+              aria-label="Cambiar foto de perfil"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 grid size-7 place-items-center rounded-full border border-border bg-primary text-primary-foreground disabled:opacity-60"
+            >
+              <Camera className="size-3.5" aria-hidden="true" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => void handleAvatarChange(e)}
+            />
+          </div>
           <div>
             <p className="text-base font-semibold">{name}</p>
             <p className="text-sm text-muted-foreground">{profile?.phone ?? ""}</p>
+            <p className="text-xs text-muted-foreground">
+              {uploading ? "Subiendo foto…" : "Toca la cámara para cambiar tu foto"}
+            </p>
           </div>
         </div>
 
