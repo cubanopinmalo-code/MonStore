@@ -13,9 +13,10 @@ function Shell({
 }: {
   icon: ReactNode;
   title: string;
-  description?: string;
-  action?: ReactNode;
-  tone?: "muted" | "warning" | "danger";
+  description?: string | undefined;
+  action?: ReactNode | undefined;
+  tone?: "muted" | "warning" | "danger" | undefined;
+
 }) {
   return (
     <div className="surface-card flex flex-col items-center gap-3 px-6 py-10 text-center">
