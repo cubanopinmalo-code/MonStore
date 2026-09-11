@@ -412,6 +412,7 @@ export type Database = {
           g2bulk_transaction_id: string | null
           game_id: string | null
           id: string
+          idempotency_key: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           player_data: Json
           player_id: string
@@ -432,6 +433,7 @@ export type Database = {
           g2bulk_transaction_id?: string | null
           game_id?: string | null
           id?: string
+          idempotency_key?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           player_data?: Json
           player_id?: string
@@ -452,6 +454,7 @@ export type Database = {
           g2bulk_transaction_id?: string | null
           game_id?: string | null
           id?: string
+          idempotency_key?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           player_data?: Json
           player_id?: string
@@ -880,6 +883,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      place_wallet_order: {
+        Args: {
+          p_idempotency_key: string
+          p_player_data: Json
+          p_player_id: string
+          p_product: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      refund_wallet_order: {
+        Args: { p_order: string; p_reason: string }
+        Returns: Json
       }
     }
     Enums: {
