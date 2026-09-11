@@ -1,9 +1,27 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/events/EventCard";
 import { EmptyState } from "@/components/common/states";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockEvents } from "@/data/mock/events";
+import type { EventStatus } from "@/types";
+
+const TABS: { value: string; label: string; statuses: EventStatus[] }[] = [
+  {
+    value: "todos",
+    label: "Todos",
+    statuses: ["inscripciones_abiertas", "meta_alcanzada", "sala_activa", "proximamente"],
+  },
+  {
+    value: "abiertas",
+    label: "Inscripciones abiertas",
+    statuses: ["inscripciones_abiertas", "meta_alcanzada"],
+  },
+  { value: "sala", label: "Sala activa", statuses: ["sala_activa"] },
+  { value: "proximamente", label: "Próximamente", statuses: ["proximamente"] },
+];
 
 export const Route = createFileRoute("/_authenticated/app/eventos/")({
   head: () => ({
@@ -27,7 +45,10 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
 });
 
 function EventsPage() {
-  const events = mockEvents.filter((event) => event.status !== "finalizado");
+  const [tab, setTab] = useState("todos");
+  const active = TABS.find((item) => item.value === tab);
+  const statuses = active?.statuses ?? [];
+  const events = mockEvents.filter((event) => statuses.includes(event.status));
 
   return (
     <UserShell>
@@ -37,10 +58,20 @@ function EventsPage() {
           description="Salas personalizadas con premios. El pago se realiza solo al entrar a la sala."
         />
 
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+            {TABS.map((item) => (
+              <TabsTrigger key={item.value} value={item.value} className="text-xs">
+                {item.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
         {events.length === 0 ? (
           <EmptyState
-            title="Todavía no hay eventos"
-            description="Cuando el equipo publique un evento aparecerá aquí."
+            title="No hay eventos en esta categoría"
+            description="Prueba con otra pestaña o vuelve más tarde."
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
