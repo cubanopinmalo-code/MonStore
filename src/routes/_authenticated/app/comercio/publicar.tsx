@@ -101,6 +101,10 @@ function PublishListingPage() {
           <div className="space-y-1.5">
             <Label htmlFor="precio">Precio (CUP)</Label>
             <Input id="precio" inputMode="numeric" placeholder="25000" required />
+            <p className="text-xs text-muted-foreground">
+              El precio que le pongas a tu cuenta importa: si estás exagerando, nadie te la
+              compraría. Trata de no sobrevalorar tu cuenta.
+            </p>
           </div>
 
           <div className="space-y-1.5">
