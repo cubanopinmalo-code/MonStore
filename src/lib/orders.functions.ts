@@ -167,16 +167,17 @@ export const placeOrder = createServerFn({ method: "POST" })
     try {
       let provider: { order_id?: number; transaction_id?: number; status?: string };
       if (gameCode) {
-        provider = await placeTopUpOrder(
-          gameCode,
-          {
-            catalogue_name: product.name,
-            player_id: data.player_id,
-            server_id: data.player_data["server_id"] ?? undefined,
-            charname: data.player_data["charname"] ?? undefined,
-          },
-          data.idempotency_key,
-        );
+        const body: {
+          catalogue_name: string;
+          player_id: string;
+          server_id?: string;
+          charname?: string;
+        } = { catalogue_name: product.name, player_id: data.player_id };
+        const serverId = data.player_data["server_id"];
+        if (serverId) body.server_id = serverId;
+        const charname = data.player_data["charname"];
+        if (charname) body.charname = charname;
+        provider = await placeTopUpOrder(gameCode, body, data.idempotency_key);
       } else {
         const ref = product.g2bulk_product_id ?? "";
         if (!ref.startsWith("p:")) {
