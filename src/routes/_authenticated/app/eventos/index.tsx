@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/events/EventCard";
-import { EmptyState, ErrorState, LoadingState } from "@/components/common/states";
+import { EmptyState, ErrorState, GridSkeleton } from "@/components/common/states";
 import { useEvents } from "@/hooks/useEvents";
 
 export const Route = createFileRoute("/_authenticated/app/eventos/")({
@@ -38,7 +38,7 @@ function EventsPage() {
         />
 
         {isLoading ? (
-          <LoadingState />
+          <GridSkeleton items={3} />
         ) : isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : !events || events.length === 0 ? (
