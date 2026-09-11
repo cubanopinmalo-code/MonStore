@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, Copy, Gift, Pencil, Share2 } from "lucide-react";
+import { Camera, Copy, Gift, MessageCircle, Pencil, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -18,6 +18,9 @@ import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.
 import { claimReferralReward } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
+const SUPPORT_WHATSAPP_URL =
+  "https://wa.me/5351115040?text=" +
+  encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.");
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
   head: () => ({
@@ -272,6 +275,26 @@ function ProfilePage() {
             </Button>
           </section>
         )}
+
+        <section className="surface-card space-y-3 p-5">
+          <div>
+            <h2 className="text-base font-semibold">Ayuda al cliente</h2>
+            <p className="text-xs text-muted-foreground">
+              ¿Tienes un problema con un pedido o tus fondos? Escríbenos por WhatsApp.
+            </p>
+          </div>
+          <Button asChild className="w-full">
+            <a
+              href={SUPPORT_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Abrir chat de ayuda al cliente en WhatsApp"
+            >
+              <MessageCircle className="size-4" aria-hidden="true" />
+              Ayuda al cliente por WhatsApp
+            </a>
+          </Button>
+        </section>
 
         <SignOutDialog>
           <Button variant="outline" className="w-full">
