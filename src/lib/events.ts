@@ -50,3 +50,10 @@ export function formatEventDate(date: string): string {
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year}`;
 }
+
+/** Enlace de invitación a un evento: lleva al registro y luego al evento. */
+export function buildEventShareUrl(eventId: string, referralCode?: string): string {
+  const params = new URLSearchParams({ evento: eventId });
+  if (referralCode) params.set("ref", referralCode);
+  return `https://monstore.cu/?${params.toString()}`;
+}
