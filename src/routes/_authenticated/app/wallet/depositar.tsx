@@ -70,11 +70,32 @@ function DepositPage() {
     toast.success("Copiado al portapapeles");
   }
 
-  function submit(method: string, note?: string) {
+  async function submit(
+    method: "saldo_movil" | "tarjeta_cup",
+    hasProof: boolean,
+    note?: string,
+  ) {
+    if (parsed <= 0) {
+      toast.error("Escribe un importe válido.");
+      return;
+    }
+    if (sending) return;
+    setSending(true);
+    const { error } = await supabase.rpc("request_deposit", {
+      p_amount: parsed,
+      p_method: method,
+      p_reference: "",
+      p_has_proof: hasProof,
+    });
+    setSending(false);
+    if (error) {
+      toast.error("No pudimos enviar tu solicitud", { description: error.message });
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     toast.success("Solicitud de fondos enviada", {
       description:
-        note ??
-        `Tu solicitud por ${method} está siendo procesada y se acreditará en breve.`,
+        note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla.",
     });
     void navigate({ to: "/app/recargas" });
   }
@@ -82,7 +103,7 @@ function DepositPage() {
   function submitMobile() {
     if (mobileProof) {
       setMobileAttempts(0);
-      submit("Saldo móvil ETECSA");
+      void submit("saldo_movil", true);
       return;
     }
     if (mobileAttempts === 0) {
