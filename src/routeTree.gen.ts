@@ -14,6 +14,14 @@ import { Route as ComercioRouteImport } from './routes/comercio'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminG2bulkRouteImport } from './routes/admin/g2bulk'
+import { Route as AdminJuegosRouteImport } from './routes/admin/juegos'
+import { Route as AdminPagosRouteImport } from './routes/admin/pagos'
+import { Route as AdminPedidosRouteImport } from './routes/admin/pedidos'
+import { Route as AdminProductosRouteImport } from './routes/admin/productos'
+import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
+import { Route as AdminWalletsRouteImport } from './routes/admin/wallets'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppNotificacionesRouteImport } from './routes/app/notificaciones'
 import { Route as AppPerfilRouteImport } from './routes/app/perfil'
@@ -54,6 +62,46 @@ const RecargasRoute = RecargasRouteImport.update({
 const RegistroRoute = RegistroRouteImport.update({
   id: '/registro',
   path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminG2bulkRoute = AdminG2bulkRouteImport.update({
+  id: '/admin/g2bulk',
+  path: '/admin/g2bulk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJuegosRoute = AdminJuegosRouteImport.update({
+  id: '/admin/juegos',
+  path: '/admin/juegos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPagosRoute = AdminPagosRouteImport.update({
+  id: '/admin/pagos',
+  path: '/admin/pagos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPedidosRoute = AdminPedidosRouteImport.update({
+  id: '/admin/pedidos',
+  path: '/admin/pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductosRoute = AdminProductosRouteImport.update({
+  id: '/admin/productos',
+  path: '/admin/productos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/admin/usuarios',
+  path: '/admin/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWalletsRoute = AdminWalletsRouteImport.update({
+  id: '/admin/wallets',
+  path: '/admin/wallets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -144,10 +192,18 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/g2bulk': typeof AdminG2bulkRoute
+  '/admin/juegos': typeof AdminJuegosRoute
+  '/admin/pagos': typeof AdminPagosRoute
+  '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/productos': typeof AdminProductosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/referidos': typeof AppReferidosRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
@@ -167,10 +223,18 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/g2bulk': typeof AdminG2bulkRoute
+  '/admin/juegos': typeof AdminJuegosRoute
+  '/admin/pagos': typeof AdminPagosRoute
+  '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/productos': typeof AdminProductosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/referidos': typeof AppReferidosRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/juegos': typeof JuegosIndexRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
@@ -191,10 +255,18 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin/g2bulk': typeof AdminG2bulkRoute
+  '/admin/juegos': typeof AdminJuegosRoute
+  '/admin/pagos': typeof AdminPagosRoute
+  '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/productos': typeof AdminProductosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/app/notificaciones': typeof AppNotificacionesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/referidos': typeof AppReferidosRoute
   '/juegos/$slug': typeof JuegosSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
@@ -216,10 +288,18 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/g2bulk'
+    | '/admin/juegos'
+    | '/admin/pagos'
+    | '/admin/pedidos'
+    | '/admin/productos'
+    | '/admin/usuarios'
+    | '/admin/wallets'
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
     | '/juegos/$slug'
+    | '/admin/'
     | '/app/'
     | '/juegos/'
     | '/app/comercio/mis-publicaciones'
@@ -239,10 +319,18 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/g2bulk'
+    | '/admin/juegos'
+    | '/admin/pagos'
+    | '/admin/pedidos'
+    | '/admin/productos'
+    | '/admin/usuarios'
+    | '/admin/wallets'
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
     | '/juegos/$slug'
+    | '/admin'
     | '/app'
     | '/juegos'
     | '/app/comercio/mis-publicaciones'
@@ -262,10 +350,18 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin/g2bulk'
+    | '/admin/juegos'
+    | '/admin/pagos'
+    | '/admin/pedidos'
+    | '/admin/productos'
+    | '/admin/usuarios'
+    | '/admin/wallets'
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
     | '/juegos/$slug'
+    | '/admin/'
     | '/app/'
     | '/juegos/'
     | '/app/comercio/mis-publicaciones'
@@ -286,10 +382,18 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RecargasRoute: typeof RecargasRoute
   RegistroRoute: typeof RegistroRoute
+  AdminG2bulkRoute: typeof AdminG2bulkRoute
+  AdminJuegosRoute: typeof AdminJuegosRoute
+  AdminPagosRoute: typeof AdminPagosRoute
+  AdminPedidosRoute: typeof AdminPedidosRoute
+  AdminProductosRoute: typeof AdminProductosRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
+  AdminWalletsRoute: typeof AdminWalletsRoute
   AppNotificacionesRoute: typeof AppNotificacionesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppReferidosRoute: typeof AppReferidosRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
   AppComercioMisPublicacionesRoute: typeof AppComercioMisPublicacionesRoute
@@ -339,6 +443,62 @@ declare module '@tanstack/react-router' {
       path: '/registro'
       fullPath: '/registro'
       preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/g2bulk': {
+      id: '/admin/g2bulk'
+      path: '/admin/g2bulk'
+      fullPath: '/admin/g2bulk'
+      preLoaderRoute: typeof AdminG2bulkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/juegos': {
+      id: '/admin/juegos'
+      path: '/admin/juegos'
+      fullPath: '/admin/juegos'
+      preLoaderRoute: typeof AdminJuegosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/pagos': {
+      id: '/admin/pagos'
+      path: '/admin/pagos'
+      fullPath: '/admin/pagos'
+      preLoaderRoute: typeof AdminPagosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/pedidos': {
+      id: '/admin/pedidos'
+      path: '/admin/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AdminPedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/productos': {
+      id: '/admin/productos'
+      path: '/admin/productos'
+      fullPath: '/admin/productos'
+      preLoaderRoute: typeof AdminProductosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/wallets': {
+      id: '/admin/wallets'
+      path: '/admin/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AdminWalletsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -462,10 +622,18 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RecargasRoute: RecargasRoute,
   RegistroRoute: RegistroRoute,
+  AdminG2bulkRoute: AdminG2bulkRoute,
+  AdminJuegosRoute: AdminJuegosRoute,
+  AdminPagosRoute: AdminPagosRoute,
+  AdminPedidosRoute: AdminPedidosRoute,
+  AdminProductosRoute: AdminProductosRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
+  AdminWalletsRoute: AdminWalletsRoute,
   AppNotificacionesRoute: AppNotificacionesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppReferidosRoute: AppReferidosRoute,
   JuegosSlugRoute: JuegosSlugRoute,
+  AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   JuegosIndexRoute: JuegosIndexRoute,
   AppComercioMisPublicacionesRoute: AppComercioMisPublicacionesRoute,
