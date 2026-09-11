@@ -15,11 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockGames } from "@/data/mock/games";
-import { mockProducts } from "@/data/mock/products";
 import { formatCUP } from "@/lib/format";
+import { listCatalogOffers } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/recargas")({
+  loader: () => listCatalogOffers({ data: { search: "" } }),
   head: () => ({
     meta: [
       { title: "Recargas de videojuegos en CUP — MONSTORE" },
@@ -35,29 +35,45 @@ export const Route = createFileRoute("/recargas")({
       },
     ],
   }),
+  errorComponent: () => (
+    <AppShell>
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <h1 className="text-xl font-semibold">No pudimos cargar las recargas</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Inténtalo de nuevo en unos minutos.</p>
+      </div>
+    </AppShell>
+  ),
   component: RechargesPage,
 });
 
 function RechargesPage() {
+  const offers = Route.useLoaderData();
   const [query, setQuery] = useState("");
   const [game, setGame] = useState("todos");
   const [delivery, setDelivery] = useState("todos");
   const [availability, setAvailability] = useState("todos");
 
+  const games = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const offer of offers) {
+      if (offer.game_slug && !seen.has(offer.game_slug)) seen.set(offer.game_slug, offer.game_name);
+    }
+    return [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [offers]);
+
   const results = useMemo(() => {
-    return mockProducts.filter((product) => {
-      const gameName = mockGames.find((g) => g.id === product.game_id)?.name ?? "";
+    const term = query.trim().toLowerCase();
+    return offers.filter((offer) => {
       const matchesQuery =
-        query.trim() === "" ||
-        `${product.name} ${gameName}`.toLowerCase().includes(query.toLowerCase());
-      const matchesGame = game === "todos" || product.game_id === game;
-      const matchesDelivery = delivery === "todos" || product.delivery_method === delivery;
+        term === "" || `${offer.name} ${offer.game_name}`.toLowerCase().includes(term);
+      const matchesGame = game === "todos" || offer.game_slug === game;
+      const matchesDelivery = delivery === "todos" || offer.delivery_method === delivery;
       const matchesAvailability =
         availability === "todos" ||
-        (availability === "disponible" ? product.available : !product.available);
+        (availability === "disponible" ? offer.available : !offer.available);
       return matchesQuery && matchesGame && matchesDelivery && matchesAvailability;
     });
-  }, [query, game, delivery, availability]);
+  }, [offers, query, game, delivery, availability]);
 
   return (
     <AppShell>
@@ -92,9 +108,9 @@ function RechargesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los juegos</SelectItem>
-                {mockGames.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name}
+                {games.map(([slug, name]) => (
+                  <SelectItem key={slug} value={slug}>
+                    {name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -130,7 +146,9 @@ function RechargesPage() {
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">{results.length} ofertas encontradas</p>
+        <p className="text-sm text-muted-foreground">
+          {results.length === 1 ? "1 oferta encontrada" : `${results.length} ofertas encontradas`}
+        </p>
 
         {results.length === 0 ? (
           <EmptyState
@@ -139,44 +157,45 @@ function RechargesPage() {
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {results.map((product) => {
-              const productGame = mockGames.find((g) => g.id === product.game_id);
-              return (
-                <article key={product.id} className="surface-card flex gap-3 p-3">
-                  <img
-                    src={productGame?.image_url}
-                    alt={`Portada de ${productGame?.name ?? "juego"}`}
-                    loading="lazy"
-                    width={768}
-                    height={1024}
-                    className="size-20 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="text-xs text-muted-foreground">{productGame?.name}</p>
-                    <h2 className="truncate text-sm font-semibold">{product.name}</h2>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <StatusBadge status={product.available ? "disponible" : "no disponible"} />
-                      <span className="text-[11px] text-muted-foreground">
-                        {product.delivery_method === "via_id" ? "Por ID" : "Por cuenta"}
-                      </span>
-                    </div>
-                    <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                      <span className="font-display text-base font-bold text-primary">
-                        {formatCUP(product.sale_price)}
-                      </span>
-                      <Button asChild size="sm" variant="outline" disabled={!product.available}>
-                        <Link
-                          to="/app/recargas/$slug"
-                          params={{ slug: productGame?.slug ?? "free-fire" }}
-                        >
-                          Comprar
-                        </Link>
-                      </Button>
-                    </div>
+            {results.map((offer) => (
+              <article key={offer.id} className="surface-card flex gap-3 p-3">
+                <img
+                  src={offer.game_cover}
+                  alt={`Portada de ${offer.game_name}`}
+                  loading="lazy"
+                  className="size-20 shrink-0 rounded-lg bg-muted object-cover"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <p className="text-xs text-muted-foreground">{offer.game_name}</p>
+                  <h2 className="truncate text-sm font-semibold">{offer.name}</h2>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={offer.available ? "disponible" : "no disponible"} />
+                    <span className="text-[11px] text-muted-foreground">
+                      {offer.delivery_method === "via_id" ? "Por ID" : "Por cuenta"}
+                    </span>
                   </div>
-                </article>
-              );
-            })}
+                  <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                    <span className="font-display text-base font-bold text-primary">
+                      {formatCUP(offer.sale_price)}
+                    </span>
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      disabled={!offer.available || !offer.game_slug}
+                    >
+                      <Link
+                        to="/app/recargas/$slug"
+                        params={{ slug: offer.game_slug }}
+                        search={{ oferta: offer.id }}
+                      >
+                        Comprar
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </div>

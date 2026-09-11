@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { mockGames } from "@/data/mock/games";
+import { CardListSkeleton, EmptyState } from "@/components/common/states";
+import { Button } from "@/components/ui/button";
+import { listCatalogGames } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/juegos/")({
+  loader: () => listCatalogGames(),
   head: () => ({
     meta: [
       { title: "Juegos disponibles — MONSTORE" },
@@ -20,45 +22,72 @@ export const Route = createFileRoute("/juegos/")({
       },
     ],
   }),
+  errorComponent: () => (
+    <AppShell>
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <h1 className="text-xl font-semibold">No pudimos cargar los juegos</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Revisa tu conexión o inténtalo de nuevo en unos minutos.
+        </p>
+      </div>
+    </AppShell>
+  ),
   component: GamesPage,
 });
 
 function GamesPage() {
+  const games = Route.useLoaderData();
+
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8">
-        <PageHeader
-          title="Juegos"
-          description="Elige un juego para ver sus ofertas de recarga."
-        />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {mockGames.map((game) => (
-            <Link
-              key={game.id}
-              to="/juegos/$slug"
-              params={{ slug: game.slug }}
-              className="group surface-card overflow-hidden transition-transform duration-200 hover:-translate-y-1"
-            >
-              <img
-                src={game.image_url}
-                alt={`Portada de ${game.name}`}
-                loading="lazy"
-                width={768}
-                height={1024}
-                className="aspect-3/4 w-full object-cover"
-              />
-              <div className="space-y-1.5 p-3">
-                <div className="flex items-start justify-between gap-2">
+        <PageHeader title="Juegos" description="Elige un juego para ver sus ofertas de recarga." />
+
+        {games.length === 0 ? (
+          <EmptyState
+            title="Todavía no hay juegos activos"
+            description="El administrador activará los juegos disponibles en breve."
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {games.map((game) => (
+              <Link
+                key={game.id}
+                to="/juegos/$slug"
+                params={{ slug: game.slug }}
+                className="group surface-card overflow-hidden transition-transform duration-200 hover:-translate-y-1"
+              >
+                <img
+                  src={game.cover}
+                  alt={`Portada de ${game.name}`}
+                  loading="lazy"
+                  className="aspect-3/4 w-full bg-muted object-cover"
+                />
+                <div className="space-y-1.5 p-3">
                   <p className="text-sm font-semibold">{game.name}</p>
-                  <StatusBadge status={game.active ? "activo" : "pendiente"} />
+                  <p className="line-clamp-2 text-xs text-muted-foreground">{game.description}</p>
+                  <p className="text-xs text-primary">
+                    {game.offers === 1 ? "1 oferta" : `${game.offers} ofertas`}
+                  </p>
                 </div>
-                <p className="line-clamp-2 text-xs text-muted-foreground">{game.description}</p>
-                <p className="text-xs text-primary">{game.offers_count} ofertas</p>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 pt-2">
+          <Button asChild variant="outline">
+            <Link to="/recargas">Ver todas las ofertas</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/comercio">Cuentas en venta</Link>
+          </Button>
         </div>
       </div>
     </AppShell>
   );
+}
+
+export function GamesSkeleton() {
+  return <CardListSkeleton items={8} />;
 }
