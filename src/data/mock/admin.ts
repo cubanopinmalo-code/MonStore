@@ -125,6 +125,9 @@ export const mockPaymentSettings: PaymentSetting[] = [
     instructions:
       "Envía el saldo al número indicado y pulsa 'He pagado'. Verificamos en menos de 30 minutos.",
     active: true,
+    deposit_bonus_pct: 25,
+    withdrawal_fee_pct: 5,
+    withdrawal_conversion_pct: 30,
     updated_at: "2026-09-01T10:00:00Z",
   },
   {
