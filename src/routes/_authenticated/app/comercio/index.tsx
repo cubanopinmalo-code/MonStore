@@ -4,7 +4,17 @@ import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { mockGameAccounts } from "@/data/mock/marketplace";
 import { mockGames } from "@/data/mock/games";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCUP } from "@/lib/format";
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export const Route = createFileRoute("/_authenticated/app/comercio/")({
   head: () => ({
