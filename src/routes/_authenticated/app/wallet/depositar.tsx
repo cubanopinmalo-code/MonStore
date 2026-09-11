@@ -427,14 +427,14 @@ function DepositPage() {
               <span className="text-muted-foreground">Envías</span>
               <span>{isSaldo ? formatSaldo(parsed) : formatCUP(parsed)}</span>
             </div>
-            {isSaldo ? (
+            {isSaldo && !inSaldo ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Conversión (cada peso de saldo × {saldoRate})
                 </span>
-                <span>{formatCUP(creditedBaseCup)}</span>
+                <span>+ {formatCUP(Math.max(creditedBaseCup - parsed, 0))}</span>
               </div>
-            ) : bonusPct > 0 ? (
+            ) : !isSaldo && bonusPct > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Conversión (+{bonusPct}%)</span>
                 <span>+ {formatCUP(bonusCup)}</span>
