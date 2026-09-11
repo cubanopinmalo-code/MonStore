@@ -63,6 +63,9 @@ function PurchaseFlowPage() {
   const [payment, setPayment] = useState("wallet");
   const [status, setStatus] = useState<OrderStatus>("procesando");
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { data: wallet } = useWallet();
+  const balance = Number(wallet?.balance ?? 0);
 
   const [player, setPlayer] = useState<{
     loading: boolean;
