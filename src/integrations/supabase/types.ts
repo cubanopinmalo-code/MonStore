@@ -942,7 +942,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_referral_reward: { Args: never; Returns: Json }
+      claim_referral_reward: { Args: { p_user: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -970,11 +970,17 @@ export type Database = {
           p_has_proof: boolean
           p_method: Database["public"]["Enums"]["payment_method"]
           p_reference: string
+          p_user: string
         }
         Returns: Json
       }
       review_deposit: {
-        Args: { p_approve: boolean; p_deposit: string; p_reason: string }
+        Args: {
+          p_admin: string
+          p_approve: boolean
+          p_deposit: string
+          p_reason: string
+        }
         Returns: Json
       }
       top_recharged_games: {
