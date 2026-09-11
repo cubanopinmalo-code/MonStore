@@ -954,6 +954,19 @@ export type Database = {
         Args: { p_order: string; p_reason: string }
         Returns: Json
       }
+      request_deposit: {
+        Args: {
+          p_amount: number
+          p_has_proof: boolean
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_reference: string
+        }
+        Returns: Json
+      }
+      review_deposit: {
+        Args: { p_approve: boolean; p_deposit: string; p_reason: string }
+        Returns: Json
+      }
       top_recharged_games: {
         Args: { _limit?: number }
         Returns: {

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Copy, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -35,6 +37,7 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
 
 function DepositPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { necesario, metodo } = Route.useSearch();
   const { rate: saldoRate } = Route.useLoaderData();
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
@@ -53,6 +56,8 @@ function DepositPage() {
   const [tab, setTab] = useState(initialTab);
   const [mobileProof, setMobileProof] = useState<File | null>(null);
   const [mobileAttempts, setMobileAttempts] = useState(0);
+  const [cardProof, setCardProof] = useState<File | null>(null);
+  const [sending, setSending] = useState(false);
   const parsed = Number(amount) || 0;
   const isMobile = tab === "movil";
   // Saldo móvil: cada peso de saldo se multiplica por la base puesta en el panel.
@@ -70,11 +75,32 @@ function DepositPage() {
     toast.success("Copiado al portapapeles");
   }
 
-  function submit(method: string, note?: string) {
+  async function submit(
+    method: "saldo_movil" | "tarjeta_cup",
+    hasProof: boolean,
+    note?: string,
+  ) {
+    if (parsed <= 0) {
+      toast.error("Escribe un importe válido.");
+      return;
+    }
+    if (sending) return;
+    setSending(true);
+    const { error } = await supabase.rpc("request_deposit", {
+      p_amount: parsed,
+      p_method: method,
+      p_reference: "",
+      p_has_proof: hasProof,
+    });
+    setSending(false);
+    if (error) {
+      toast.error("No pudimos enviar tu solicitud", { description: error.message });
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     toast.success("Solicitud de fondos enviada", {
       description:
-        note ??
-        `Tu solicitud por ${method} está siendo procesada y se acreditará en breve.`,
+        note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla.",
     });
     void navigate({ to: "/app/recargas" });
   }
@@ -82,7 +108,7 @@ function DepositPage() {
   function submitMobile() {
     if (mobileProof) {
       setMobileAttempts(0);
-      submit("Saldo móvil ETECSA");
+      void submit("saldo_movil", true);
       return;
     }
     if (mobileAttempts === 0) {
@@ -93,8 +119,9 @@ function DepositPage() {
       return;
     }
     setMobileAttempts(0);
-    submit(
-      "Saldo móvil ETECSA",
+    void submit(
+      "saldo_movil",
+      false,
       "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
     );
   }
@@ -201,7 +228,7 @@ function DepositPage() {
                   </p>
                 ) : null}
               </div>
-              <Button className="w-full" onClick={submitMobile}>
+              <Button className="w-full" disabled={sending} onClick={submitMobile}>
                 He pagado
               </Button>
             </div>
@@ -234,11 +261,21 @@ function DepositPage() {
                   className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground"
                 >
                   <Upload className="size-4" aria-hidden="true" />
-                  Sube una foto de la transferencia
+                  {cardProof ? cardProof.name : "Sube una foto de la transferencia"}
                 </label>
-                <Input id="comprobante" type="file" accept="image/*" className="sr-only" />
+                <Input
+                  id="comprobante"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => setCardProof(event.target.files?.[0] ?? null)}
+                />
               </div>
-              <Button className="w-full" onClick={() => submit("Tarjeta CUP")}>
+              <Button
+                className="w-full"
+                disabled={sending}
+                onClick={() => void submit("tarjeta_cup", Boolean(cardProof))}
+              >
                 Enviar solicitud
               </Button>
             </div>

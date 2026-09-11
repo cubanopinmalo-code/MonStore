@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockDeposits } from "@/data/mock/admin";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
@@ -24,7 +25,57 @@ export const Route = createFileRoute("/_authenticated/admin/depositos")({
   component: AdminDepositsPage,
 });
 
+function useDeposits() {
+  return useQuery({
+    queryKey: ["admin-deposits"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("deposits")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const rows = data ?? [];
+      const ids = [...new Set(rows.map((row) => row.user_id))];
+      const names = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, name, phone")
+          .in("id", ids);
+        for (const profile of profiles ?? []) {
+          names.set(profile.id, profile.name || profile.phone || "Cliente");
+        }
+      }
+      return rows.map((row) => ({
+        ...row,
+        user_name: names.get(row.user_id) ?? "Cliente",
+      }));
+    },
+  });
+}
+
 function AdminDepositsPage() {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useDeposits();
+  const deposits = data ?? [];
+
+  const review = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+      const { error } = await supabase.rpc("review_deposit", {
+        p_deposit: id,
+        p_approve: approve,
+        p_reason: approve ? "" : "No se pudo verificar el pago.",
+      });
+      if (error) throw error;
+    },
+    onSuccess: async (_result, variables) => {
+      toast.success(variables.approve ? "Depósito aprobado" : "Depósito rechazado");
+      await queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <AdminShell title="Depósitos" description="Solicitudes de recarga de wallet.">
       <div className="surface-card overflow-x-auto">
@@ -32,7 +83,8 @@ function AdminDepositsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Usuario</TableHead>
-              <TableHead>Importe</TableHead>
+              <TableHead>Envía</TableHead>
+              <TableHead>Acredita</TableHead>
               <TableHead>Método</TableHead>
               <TableHead>Referencia</TableHead>
               <TableHead>Estado</TableHead>
@@ -41,52 +93,71 @@ function AdminDepositsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockDeposits.map((deposit) => (
-              <TableRow key={deposit.id}>
-                <TableCell className="font-medium">{deposit.user_name}</TableCell>
-                <TableCell>{formatCUP(deposit.amount)}</TableCell>
-                <TableCell className="text-xs">
-                  {deposit.payment_method === "saldo_movil" ? "Saldo móvil" : "Tarjeta CUP"}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {deposit.payment_reference}
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={deposit.status} />
-                  {deposit.rejection_reason ? (
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {deposit.rejection_reason}
-                    </span>
-                  ) : null}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                  {formatDateTime(deposit.created_at)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {deposit.status === "pendiente" ? (
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => toast.success("Depósito aprobado (simulado)")}
-                      >
-                        Aprobar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => toast.error("Depósito rechazado (simulado)")}
-                      >
-                        Rechazar
-                      </Button>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {deposit.reviewed_by ?? "—"}
-                    </span>
-                  )}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                  Cargando solicitudes…
                 </TableCell>
               </TableRow>
-            ))}
+            ) : deposits.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                  Todavía no hay solicitudes de fondos.
+                </TableCell>
+              </TableRow>
+            ) : (
+              deposits.map((deposit) => (
+                <TableRow key={deposit.id}>
+                  <TableCell className="font-medium">{deposit.user_name}</TableCell>
+                  <TableCell>{formatCUP(deposit.amount)}</TableCell>
+                  <TableCell className="text-primary">
+                    {formatCUP(deposit.credited_amount)}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {deposit.payment_method === "saldo_movil" ? "Saldo móvil" : "Tarjeta CUP"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {deposit.payment_reference}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={deposit.status} />
+                    {deposit.rejection_reason ? (
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {deposit.rejection_reason}
+                      </span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    {formatDateTime(deposit.created_at)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {deposit.status === "pendiente" ? (
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          disabled={review.isPending}
+                          onClick={() => review.mutate({ id: deposit.id, approve: true })}
+                        >
+                          Aprobar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={review.isPending}
+                          onClick={() => review.mutate({ id: deposit.id, approve: false })}
+                        >
+                          Rechazar
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {deposit.reviewed_at ? formatDateTime(deposit.reviewed_at) : "—"}
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
