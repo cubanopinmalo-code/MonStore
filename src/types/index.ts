@@ -247,6 +247,12 @@ export interface PaymentSetting {
   phone_number: string | null;
   instructions: string;
   active: boolean;
+  /** % extra que se acredita al depositar por este método (conversión). */
+  deposit_bonus_pct: number;
+  /** % de comisión al retirar por este método. */
+  withdrawal_fee_pct: number;
+  /** % de descuento por conversión al retirar por este método. */
+  withdrawal_conversion_pct: number;
   updated_at: string;
 }
 
