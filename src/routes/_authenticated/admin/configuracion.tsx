@@ -170,6 +170,9 @@ function AdminSettingsPage() {
           toast.success("Configuración guardada (simulado)");
         }}
       >
+        <UsdRateCard />
+        <SaldoRateCard />
+
         {mockPaymentSettings.map((setting) => (
           <section key={setting.id} className="surface-card space-y-4 p-5">
             <div className="flex items-center justify-between">
