@@ -93,14 +93,28 @@ function AdminProviderPage() {
               : "El catálogo ya se puede sincronizar. La clave solo hace falta para comprar."}
           </p>
         </div>
-        <Button onClick={handleSync} disabled={syncing}>
-          {syncing ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          Sincronizar catálogo
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleSync} disabled={syncing || loadingOffers}>
+            {syncing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            Sincronizar catálogo
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleOffers}
+            disabled={syncing || loadingOffers}
+          >
+            {loadingOffers ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            Cargar ofertas faltantes
+          </Button>
+        </div>
       </div>
 
       {lastRun ? (
