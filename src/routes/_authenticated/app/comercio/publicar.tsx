@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockGames } from "@/data/mock/games";
+import { getAccessMethods } from "@/lib/accountAccess";
 
 export const Route = createFileRoute("/_authenticated/app/comercio/publicar")({
   head: () => ({
