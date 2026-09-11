@@ -65,11 +65,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </nav>
               <div className="mt-6 grid gap-2">
-                <Button asChild variant="outline">
-                  <Link to="/login">Iniciar sesión</Link>
-                </Button>
                 <Button asChild>
-                  <Link to="/registro">Crear cuenta</Link>
+                  <Link to="/">Iniciar sesión o crear cuenta</Link>
                 </Button>
               </div>
             </SheetContent>
@@ -99,8 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="space-y-2 text-sm">
             <p className="font-semibold">Cuenta</p>
             <div className="grid gap-1.5 text-muted-foreground">
-              <Link to="/login" className="hover:text-foreground">Iniciar sesión</Link>
-              <Link to="/registro" className="hover:text-foreground">Crear cuenta</Link>
+              <Link to="/" className="hover:text-foreground">Iniciar sesión o crear cuenta</Link>
               <Link to="/app/wallet" className="hover:text-foreground">Wallet</Link>
               <Link to="/admin" className="hover:text-foreground">Panel admin</Link>
             </div>
