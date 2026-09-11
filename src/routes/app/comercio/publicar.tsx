@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, ImagePlus } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, Eye, EyeOff, ImagePlus, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,29 @@ export const Route = createFileRoute("/app/comercio/publicar")({
     meta: [
       { title: "Publicar cuenta — MONSTORE" },
       { name: "description", content: "Publica tu cuenta de videojuego para venderla." },
+      { property: "og:title", content: "Publicar cuenta — MONSTORE" },
+      { property: "og:description", content: "Envía una cuenta de videojuego para revisión." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PublishListingPage,
 });
 
 function PublishListingPage() {
+  const availableGames = mockGames.filter((game) => game.active);
+  const initialGameId = availableGames[0]?.id ?? "";
+  const [gameId, setGameId] = useState(initialGameId);
+  const [showPassword, setShowPassword] = useState(false);
+  const platformsByGame: Record<string, string[]> = {
+    gm_001: ["Android", "iOS"],
+    gm_002: ["Android", "iOS"],
+    gm_003: ["Android", "iOS", "PC"],
+    gm_004: ["Android", "iOS"],
+    gm_005: ["Android", "iOS"],
+  };
+  const platforms = platformsByGame[gameId] ?? ["Android", "iOS", "PC"];
+
   return (
     <UserShell>
       <div className="mx-auto max-w-xl space-y-5">
@@ -49,12 +67,12 @@ function PublishListingPage() {
         >
           <div className="space-y-1.5">
             <Label htmlFor="juego">Juego</Label>
-            <Select defaultValue={mockGames[0]!.id}>
+            <Select value={gameId} onValueChange={setGameId}>
               <SelectTrigger id="juego">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {mockGames.map((game) => (
+                {availableGames.map((game) => (
                   <SelectItem key={game.id} value={game.id}>
                     {game.name}
                   </SelectItem>
@@ -64,22 +82,32 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="titulo">Título</Label>
-            <Input id="titulo" placeholder="Cuenta Free Fire nivel 60 con skins" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="descripcion">Descripción</Label>
-            <Textarea
-              id="descripcion"
-              rows={5}
-              placeholder="Detalla nivel, skins, personajes y cualquier información importante."
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="precio">Precio (CUP)</Label>
-            <Input id="precio" inputMode="numeric" placeholder="25000" />
+            <Input id="precio" inputMode="numeric" placeholder="25000" required />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="region">Región de la cuenta</Label>
+            <Select defaultValue="Latinoamérica">
+              <SelectTrigger id="region"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["Latinoamérica", "Norteamérica", "Europa", "Brasil", "Asia"].map((region) => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="plataforma">Plataforma de acceso</Label>
+            <Select key={gameId} defaultValue={platforms[0]}>
+              <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {platforms.map((platform) => (
+                  <SelectItem key={platform} value={platform}>{platform}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
@@ -89,14 +117,37 @@ function PublishListingPage() {
               className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground"
             >
               <ImagePlus className="size-4" aria-hidden="true" />
-              Sube capturas de la cuenta
+              Selecciona la foto principal y las demás imágenes
             </label>
             <Input id="imagenes" type="file" accept="image/*" multiple className="sr-only" />
+            <p className="text-xs text-muted-foreground">La primera imagen será la foto principal pública.</p>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="extra">Información adicional (opcional)</Label>
-            <Textarea id="extra" rows={3} placeholder="Forma de entrega, garantía, etc." />
+          <div className="space-y-4 rounded-md border border-border bg-muted/30 p-4">
+            <div className="flex items-start gap-2">
+              <LockKeyhole className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+              <div>
+                <h2 className="text-sm font-semibold">Datos privados</h2>
+                <p className="text-xs text-muted-foreground">Solo serán visibles para el panel administrador.</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="correo-cuenta">Correo de la cuenta</Label>
+              <Input id="correo-cuenta" type="email" autoComplete="off" placeholder="cuenta@ejemplo.com" required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="contrasena-cuenta">Contraseña de la cuenta</Label>
+              <div className="relative">
+                <Input id="contrasena-cuenta" type={showPassword ? "text" : "password"} autoComplete="new-password" className="pr-10" required />
+                <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                  {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="acceso-admin">Descripción extra para acceder</Label>
+              <Textarea id="acceso-admin" rows={3} placeholder="Indica método de acceso, códigos o pasos que necesitará el administrador." required />
+            </div>
           </div>
 
           <Button type="submit" className="w-full">

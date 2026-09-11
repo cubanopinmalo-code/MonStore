@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { Bell, Gamepad2, Home, Store, User, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { mockWallet } from "@/data/mock/wallet";
+import { formatCUP } from "@/lib/format";
 
 const MAIN_NAV = [
   { to: "/app", label: "Inicio", icon: Home, exact: true },
@@ -47,6 +49,14 @@ export function UserShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <Link
+              to="/app/wallet"
+              className="flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary/50 sm:px-3"
+              aria-label={`Saldo disponible: ${formatCUP(mockWallet.balance)}`}
+            >
+              <Wallet className="size-4 shrink-0" aria-hidden="true" />
+              <span className="whitespace-nowrap">{formatCUP(mockWallet.balance)}</span>
+            </Link>
             <Button asChild variant="ghost" size="icon" className="relative">
               <Link to="/app/notificaciones" aria-label="Notificaciones">
                 <Bell className="size-5" aria-hidden="true" />
