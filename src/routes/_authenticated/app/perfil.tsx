@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useClearAccountCache, useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { signOut } from "@/lib/auth";
+import { getUsdRate } from "@/lib/catalog.functions";
 
 const REFERRAL_GOAL = 10;
 
@@ -23,11 +24,14 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
       { name: "description", content: "Datos personales y configuración de tu cuenta." },
     ],
   }),
+  loader: () => getUsdRate(),
   component: ProfilePage,
 });
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { rate: usdRate } = Route.useLoaderData();
+  const rewardCup = Math.round(usdRate);
   const queryClient = useQueryClient();
   const clearCache = useClearAccountCache();
   const { data: profile, isLoading } = useProfile();
@@ -140,7 +144,7 @@ function ProfilePage() {
             <div>
               <h2 className="text-base font-semibold">Referidos y recompensas</h2>
               <p className="text-xs text-muted-foreground">
-                Invita 10 personas y obtén una compra de 1 USD gratis.
+                Invita 10 personas y gana (valor de la base actual = {rewardCup} CUP) gratis.
               </p>
             </div>
             <span className="text-primary">
@@ -158,8 +162,8 @@ function ProfilePage() {
             <Progress value={progress} aria-label="Progreso hacia la recompensa" />
             <p className="text-xs text-muted-foreground">
               {remaining > 0
-                ? `Te faltan ${remaining} invitados para tu compra de 1 USD gratis.`
-                : "¡Recompensa desbloqueada! Tienes una compra de 1 USD gratis."}
+                ? `Te faltan ${remaining} invitados para ganar (valor de la base actual = ${rewardCup} CUP) Gratis.`
+                : `¡Recompensa desbloqueada! Tienes ${rewardCup} CUP gratis.`}
             </p>
           </div>
 
@@ -172,7 +176,7 @@ function ProfilePage() {
             {claiming
               ? "Entregando premio…"
               : canClaim
-                ? "Obtener premio (1 USD en tu wallet)"
+                ? `Obtener premio (${rewardCup} CUP en tu wallet)`
                 : "Premio disponible al llegar a 10 invitados"}
           </Button>
 
