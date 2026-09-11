@@ -5,12 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { ImagePlus, Pencil, RefreshCw, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -86,7 +84,7 @@ function emptyDraft(): GameDraft & { id?: string } {
     category: "",
     platforms: [],
     image_url: "",
-    active: false,
+    active: true,
   };
 }
 
@@ -100,7 +98,6 @@ export function AdminGamesPage() {
 
   const games = useQuery({ queryKey: ["admin-games"], queryFn: () => fetchGames() });
   const [search, setSearch] = useState("");
-  const [onlyVisible, setOnlyVisible] = useState(false);
   const [draft, setDraft] = useState<(GameDraft & { id?: string }) | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -110,7 +107,6 @@ export function AdminGamesPage() {
     const rows = games.data ?? [];
     const term = search.trim().toLowerCase();
     return rows.filter((game) => {
-      if (onlyVisible && !game.active) return false;
       if (!term) return true;
       return (
         game.name.toLowerCase().includes(term) ||
@@ -118,7 +114,7 @@ export function AdminGamesPage() {
         game.slug.includes(term)
       );
     });
-  }, [games.data, search, onlyVisible]);
+  }, [games.data, search]);
 
   function openNew() {
     setSlugTouched(false);
@@ -135,7 +131,7 @@ export function AdminGamesPage() {
       category: game.category,
       platforms: game.platforms,
       image_url: game.image_url,
-      active: game.active,
+      active: true,
     });
   }
 
@@ -151,29 +147,6 @@ export function AdminGamesPage() {
       toast.error(error instanceof Error ? error.message : "No se pudo guardar el juego.");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleToggle(game: CatalogGame, active: boolean) {
-    setBusyId(game.id);
-    try {
-      await save({
-        data: {
-          id: game.id,
-          name: game.name,
-          slug: game.slug,
-          description: game.description,
-          category: game.category,
-          platforms: game.platforms,
-          image_url: game.image_url,
-          active,
-        },
-      });
-      await queryClient.invalidateQueries({ queryKey: ["admin-games"] });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo cambiar la visibilidad.");
-    } finally {
-      setBusyId(null);
     }
   }
 
@@ -234,7 +207,7 @@ export function AdminGamesPage() {
   return (
     <AdminShell
       title="Juegos"
-      description="Lo que llega del proveedor queda inactivo hasta que tú lo actives."
+      description="Todos los juegos del proveedor se muestran en la tienda automáticamente."
       actions={
         <Button onClick={openNew} size="sm">
           Nuevo juego
@@ -254,10 +227,6 @@ export function AdminGamesPage() {
             className="pl-9"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Switch checked={onlyVisible} onCheckedChange={setOnlyVisible} />
-          Solo visibles
-        </label>
       </div>
 
       {games.isPending ? <GridSkeleton items={6} /> : null}
@@ -307,20 +276,12 @@ export function AdminGamesPage() {
                       {game.category || "Sin categoría"} · /{game.slug}
                     </p>
                   </div>
-                  <StatusBadge status={game.active ? "activo" : "inactivo"} />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {game.offers} ofertas · actualizado {formatDateTime(game.updated_at)}
                 </p>
                 <div className="flex items-center justify-between gap-2 pt-1">
-                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Switch
-                      checked={game.active}
-                      disabled={busyId === game.id}
-                      onCheckedChange={(checked) => handleToggle(game, checked)}
-                    />
-                    Visible
-                  </label>
+                  <span className="text-xs text-muted-foreground">Visible en la tienda</span>
                   <div className="flex items-center gap-1">
                     {isTopUp ? (
                       <Button
@@ -468,13 +429,6 @@ export function AdminGamesPage() {
                   <span className="text-xs text-muted-foreground">JPG, PNG o WEBP hasta 4 MB</span>
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <Switch
-                  checked={draft.active}
-                  onCheckedChange={(checked) => setDraft({ ...draft, active: checked })}
-                />
-                Visible en la tienda
-              </label>
             </div>
           ) : null}
           <DialogFooter>

@@ -121,13 +121,10 @@ function chunked<T>(items: T[], size = CHUNK): T[][] {
 async function withOffers(
   client: SupabaseClient<Database>,
   games: GameRow[],
-  onlyActive: boolean,
 ): Promise<CatalogGame[]> {
   const counts = new Map<string, number>();
   if (games.length > 0) {
-    let query = client.from("products").select("game_id");
-    if (onlyActive) query = query.eq("active", true);
-    const { data } = await query.in(
+    const { data } = await client.from("products").select("game_id").in(
       "game_id",
       games.map((game) => game.id),
     );
@@ -151,10 +148,9 @@ export const listCatalogGames = createServerFn({ method: "GET" }).handler(
     const { data, error } = await supabase
       .from("games")
       .select("*")
-      .eq("active", true)
       .order("name");
     if (error) throw new Error("No se pudo cargar el catálogo de juegos.");
-    return withOffers(supabase, data ?? [], true);
+    return withOffers(supabase, data ?? []);
   },
 );
 
@@ -171,7 +167,6 @@ export const getCatalogGame = createServerFn({ method: "GET" })
       .from("games")
       .select("*")
       .eq("slug", data.slug)
-      .eq("active", true)
       .maybeSingle();
     if (error) throw new Error("No se pudo cargar este juego.");
     if (!game) return null;
@@ -180,7 +175,6 @@ export const getCatalogGame = createServerFn({ method: "GET" })
       .from("products")
       .select("*")
       .eq("game_id", game.id)
-      .eq("active", true)
       .order("sale_price");
     const rows = products ?? [];
     const signed = await signCatalogImages([game.image_url, ...rows.map((row) => row.image_url)]);
@@ -207,7 +201,6 @@ export const listCatalogOffers = createServerFn({ method: "GET" })
     let query = supabase
       .from("products")
       .select("*, games(name, slug, image_url)")
-      .eq("active", true)
       .order("sale_price");
     if (data.search) query = query.ilike("name", `%${data.search}%`);
     const { data: rows, error } = await query.limit(300);
@@ -244,7 +237,7 @@ export const listGamesAdmin = createServerFn({ method: "GET" })
     await requireAdmin(context);
     const { data, error } = await context.supabase.from("games").select("*").order("name");
     if (error) throw new Error("No se pudieron cargar los juegos.");
-    return withOffers(context.supabase, data ?? [], false);
+    return withOffers(context.supabase, data ?? []);
   });
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
@@ -520,7 +513,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         category: "Tarjetas y códigos",
         platforms: [],
         image_url: (category.image_url ?? "").trim(),
-        active: false,
+        active: true,
         g2bulk_id: ref,
       });
     }
@@ -534,7 +527,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         category: "Recarga directa",
         platforms: [],
         image_url: (game.image_url ?? "").trim(),
-        active: false,
+        active: true,
         g2bulk_id: ref,
       });
     }
@@ -581,7 +574,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_cuenta",
-        active: false,
+        active: true,
         available: Number(product.stock ?? 0) > 0,
         metadata: { fields: [] },
         image_url: (product.image_url ?? "").trim(),
@@ -673,7 +666,7 @@ export const syncGameOffers = createServerFn({ method: "POST" })
         sale_price: priceFromCost(Number(offer.amount ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_id" as const,
-        active: false,
+        active: true,
         available: true,
         metadata: { fields, game_code: code },
         image_url: "",
