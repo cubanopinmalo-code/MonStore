@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
@@ -6,23 +6,33 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/states";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mockGames } from "@/data/mock/games";
+import { listCatalogGames } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/_authenticated/app/recargas/")({
+  loader: () => listCatalogGames(),
   head: () => ({
     meta: [
       { title: "Recargas — MONSTORE" },
       { name: "description", content: "Elige el juego que quieres recargar." },
     ],
   }),
+  errorComponent: () => (
+    <UserShell>
+      <p className="text-sm text-muted-foreground">No pudimos cargar los juegos.</p>
+    </UserShell>
+  ),
   component: UserRechargesPage,
 });
 
 function UserRechargesPage() {
+  const games = Route.useLoaderData();
   const [query, setQuery] = useState("");
-  const games = mockGames.filter((game) =>
-    game.name.toLowerCase().includes(query.toLowerCase()),
-  );
+
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return games;
+    return games.filter((game) => game.name.toLowerCase().includes(term));
+  }, [games, query]);
 
   return (
     <UserShell>
@@ -46,11 +56,11 @@ function UserRechargesPage() {
           </div>
         </div>
 
-        {games.length === 0 ? (
+        {visible.length === 0 ? (
           <EmptyState title="Sin resultados" description="No encontramos ese juego." />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {games.map((game) => (
+            {visible.map((game) => (
               <Link
                 key={game.id}
                 to="/app/recargas/$slug"
@@ -58,16 +68,16 @@ function UserRechargesPage() {
                 className="surface-card overflow-hidden transition-transform hover:-translate-y-1"
               >
                 <img
-                  src={game.image_url}
+                  src={game.cover}
                   alt={`Portada de ${game.name}`}
                   loading="lazy"
-                  width={768}
-                  height={1024}
-                  className="aspect-3/4 w-full object-cover"
+                  className="aspect-3/4 w-full bg-muted object-cover"
                 />
                 <div className="space-y-0.5 p-3">
                   <p className="text-sm font-semibold">{game.name}</p>
-                  <p className="text-xs text-muted-foreground">{game.offers_count} ofertas</p>
+                  <p className="text-xs text-muted-foreground">
+                    {game.offers === 1 ? "1 oferta" : `${game.offers} ofertas`}
+                  </p>
                 </div>
               </Link>
             ))}

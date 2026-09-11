@@ -71,10 +71,12 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminShell({
   title,
   description,
+  actions,
   children,
 }: {
   title: string;
   description?: string;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -122,19 +124,16 @@ export function AdminShell({
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <span className="ml-auto hidden items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground sm:flex">
-              <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-              Datos simulados
-            </span>
           </div>
         </header>
 
         <main className="min-w-0 flex-1 space-y-6 p-4 md:p-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">{title}</h1>
-            {description ? (
-              <p className="text-sm text-muted-foreground">{description}</p>
-            ) : null}
+          {description ? (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          ) : null}
+          {actions ? <div className="flex flex-wrap items-center gap-2 pt-2">{actions}</div> : null}
           </div>
           {children}
         </main>

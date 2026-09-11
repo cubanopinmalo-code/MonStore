@@ -11,3 +11,4 @@
 - [ ] Comercio de cuentas con datos privados solo para el administrador
 - [ ] Eventos e inscripciones reales
 - [ ] Integración G2Bulk desde el servidor (pedir API key al usuario en ese momento)
+- [ ] Sincronizar juegos y productos automáticamente desde api.g2bulk.com (botón "Sincronizar" en el panel)
