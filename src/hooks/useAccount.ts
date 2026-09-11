@@ -129,3 +129,39 @@ export function useClearAccountCache() {
     queryClient.clear();
   };
 }
+
+export function useDeposits() {
+  const { data: user } = useCurrentUser();
+  return useQuery({
+    queryKey: ["deposits", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("deposits")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useWithdrawals() {
+  const { data: user } = useCurrentUser();
+  return useQuery({
+    queryKey: ["withdrawals", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}

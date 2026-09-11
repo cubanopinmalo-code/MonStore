@@ -4,7 +4,12 @@ import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { useWallet, useWalletTransactions } from "@/hooks/useAccount";
+import {
+  useDeposits,
+  useWallet,
+  useWalletTransactions,
+  useWithdrawals,
+} from "@/hooks/useAccount";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/wallet/")({
@@ -17,10 +22,41 @@ export const Route = createFileRoute("/_authenticated/app/wallet/")({
   component: WalletPage,
 });
 
+const METHOD_LABEL: Record<string, string> = {
+  saldo_movil: "Saldo móvil",
+  tarjeta_cup: "Tarjeta CUP",
+  wallet: "Wallet",
+};
+
 function WalletPage() {
   const { data: wallet } = useWallet();
   const { data: txData } = useWalletTransactions();
+  const { data: depositsData } = useDeposits();
+  const { data: withdrawalsData } = useWithdrawals();
   const transactions = txData ?? [];
+
+  const requests = [
+    ...(depositsData ?? []).map((d) => ({
+      id: `d-${d.id}`,
+      kind: "Agregar fondos" as const,
+      amount: Number(d.credited_amount ?? d.amount),
+      sent: Number(d.amount),
+      status: d.status as string,
+      method: d.payment_method as string,
+      reason: d.rejection_reason,
+      created_at: d.created_at,
+    })),
+    ...(withdrawalsData ?? []).map((w) => ({
+      id: `w-${w.id}`,
+      kind: "Retiro" as const,
+      amount: Number(w.net_amount ?? w.amount),
+      sent: Number(w.amount),
+      status: w.status as string,
+      method: w.payment_method as string,
+      reason: w.rejection_reason,
+      created_at: w.created_at,
+    })),
+  ].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
   return (
     <UserShell>
@@ -58,6 +94,38 @@ function WalletPage() {
             </div>
           </div>
         </section>
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-bold">Solicitudes de fondos</h2>
+          {requests.length === 0 ? (
+            <EmptyState title="Sin solicitudes todavía" />
+          ) : (
+            <div className="grid gap-2">
+              {requests.map((req) => (
+                <div key={req.id} className="surface-card space-y-1 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">
+                      {req.kind} · {METHOD_LABEL[req.method] ?? req.method}
+                    </p>
+                    <StatusBadge status={req.status} />
+                  </div>
+                  <p className="text-sm">
+                    Enviaste {formatCUP(req.sent)} ·{" "}
+                    {req.kind === "Retiro" ? "recibes" : "se acreditan"} {formatCUP(req.amount)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDateTime(req.created_at)}
+                    {req.status === "pendiente" ? " · en revisión" : ""}
+                  </p>
+                  {req.reason ? (
+                    <p className="text-xs text-destructive">Motivo: {req.reason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
 
         <section className="space-y-3">
           <h2 className="text-lg font-bold">Movimientos</h2>
