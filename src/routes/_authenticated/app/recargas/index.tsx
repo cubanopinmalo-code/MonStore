@@ -8,6 +8,7 @@ import { GameCover } from "@/components/common/GameCover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listCatalogGames } from "@/lib/catalog.functions";
+import { isGiftCard } from "@/lib/giftcards";
 
 export const Route = createFileRoute("/_authenticated/app/recargas/")({
   loader: () => listCatalogGames(),
@@ -31,8 +32,9 @@ function UserRechargesPage() {
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) return games;
-    return games.filter((game) => game.name.toLowerCase().includes(term));
+    return games
+      .filter((game) => !isGiftCard(game))
+      .filter((game) => (term ? game.name.toLowerCase().includes(term) : true));
   }, [games, query]);
 
   return (
