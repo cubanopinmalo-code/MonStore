@@ -84,7 +84,7 @@ function toDraft(product: OfferRow): ProductDraft {
     sale_price: product.sale_price,
     currency: product.currency,
     delivery_method: product.delivery_method,
-    active: product.active,
+    active: true,
     available: product.available,
     image_url: product.image_url,
     fields: fieldsOf(product),
@@ -98,7 +98,7 @@ export const Route = createFileRoute("/_authenticated/admin/productos")({
       {
         name: "description",
         content:
-          "Revisa el costo del proveedor, pon el precio de venta en CUP y decide qué ofertas están activas.",
+          "Revisa el costo del proveedor y ajusta el precio de venta en CUP.",
       },
       { property: "og:title", content: "Ofertas — Panel MONSTORE" },
       {
@@ -123,7 +123,6 @@ function AdminProductsPage() {
 
   const [search, setSearch] = useState("");
   const [gameFilter, setGameFilter] = useState("todas");
-  const [stateFilter, setStateFilter] = useState("todas");
   const [page, setPage] = useState(0);
   const [draft, setDraft] = useState<ProductDraft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -133,8 +132,6 @@ function AdminProductsPage() {
     const term = search.trim().toLowerCase();
     return rows.filter((row) => {
       if (gameFilter !== "todas" && row.game_id !== gameFilter) return false;
-      if (stateFilter === "activas" && !row.active) return false;
-      if (stateFilter === "inactivas" && row.active) return false;
       if (!term) return true;
       return (
         row.name.toLowerCase().includes(term) ||
@@ -142,7 +139,7 @@ function AdminProductsPage() {
         row.g2bulk_product_id.toLowerCase().includes(term)
       );
     });
-  }, [offers.data, search, gameFilter, stateFilter]);
+  }, [offers.data, search, gameFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -247,19 +244,6 @@ function AdminProductsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={stateFilter} onValueChange={(value) => {
-          setStateFilter(value);
-          setPage(0);
-        }}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas</SelectItem>
-            <SelectItem value="activas">Visibles</SelectItem>
-            <SelectItem value="inactivas">Ocultas</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {offers.isPending ? <CardListSkeleton items={6} /> : null}
@@ -288,7 +272,6 @@ function AdminProductsPage() {
                 <TableHead>Costo proveedor</TableHead>
                 <TableHead>Venta</TableHead>
                 <TableHead>Disponible</TableHead>
-                <TableHead>Visible</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -311,12 +294,6 @@ function AdminProductsPage() {
                   <TableCell>{formatCUP(product.sale_price)}</TableCell>
                   <TableCell>
                     <StatusBadge status={product.available ? "disponible" : "no disponible"} />
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={product.active}
-                      onCheckedChange={(checked) => handleQuickSave(product, { active: checked })}
-                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -518,13 +495,6 @@ function AdminProductsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-6">
-                <label className="flex items-center gap-2 text-sm">
-                  <Switch
-                    checked={draft.active}
-                    onCheckedChange={(checked) => setDraft({ ...draft, active: checked })}
-                  />
-                  Visible en la tienda
-                </label>
                 <label className="flex items-center gap-2 text-sm">
                   <Switch
                     checked={draft.available}
