@@ -124,7 +124,10 @@ function AuthPage() {
     goToApp();
   };
 
+  if (checking) return <RouteLoading />;
+
   return (
+
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
