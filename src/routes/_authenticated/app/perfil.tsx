@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, Copy, Gift, Share2 } from "lucide-react";
+import { Camera, Copy, Gift, Pencil, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
