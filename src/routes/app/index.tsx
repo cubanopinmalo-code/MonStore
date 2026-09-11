@@ -9,7 +9,7 @@ import { mockOrders } from "@/data/mock/orders";
 import { mockGames } from "@/data/mock/games";
 import { mockProducts } from "@/data/mock/products";
 import { mockEvents } from "@/data/mock/events";
-import { EventCard } from "@/routes/app/eventos/index";
+import { EventCard } from "@/components/events/EventCard";
 import { formatCUP, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/app/")({
