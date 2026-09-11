@@ -75,8 +75,16 @@ function PublishListingPage() {
           }}
         >
           <div className="space-y-1.5">
-            <Label htmlFor="juego">Juego</Label>
-            <Select value={gameId} onValueChange={setGameId}>
+            <Label htmlFor="juego">
+              Juego <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={gameId}
+              onValueChange={(value) => {
+                setGameId(value);
+                setPlatform("");
+              }}
+            >
               <SelectTrigger id="juego">
                 <SelectValue />
               </SelectTrigger>
@@ -96,8 +104,10 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="region">Región de la cuenta</Label>
-            <Select defaultValue="Latinoamérica">
+            <Label htmlFor="region">
+              Región de la cuenta <span className="text-destructive">*</span>
+            </Label>
+            <Select value={region} onValueChange={setRegion}>
               <SelectTrigger id="region"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["Latinoamérica", "Norteamérica", "Europa", "Brasil", "Asia"].map((region) => (
@@ -108,8 +118,13 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="plataforma">Plataforma de acceso</Label>
-            <Select key={gameId} defaultValue={platforms[0] ?? "Google"}>
+            <Label htmlFor="plataforma">
+              Plataforma de acceso <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={platforms.includes(platform) ? platform : (platforms[0] ?? "")}
+              onValueChange={setPlatform}
+            >
               <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {platforms.map((platform) => (
@@ -123,15 +138,39 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="imagenes">Imágenes</Label>
+            <Label htmlFor="imagenes">
+              Imágenes <span className="text-destructive">*</span>
+            </Label>
             <label
               htmlFor="imagenes"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground"
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-8 text-sm ${
+                imageError
+                  ? "border-destructive text-destructive"
+                  : "border-border text-muted-foreground"
+              }`}
             >
               <ImagePlus className="size-4" aria-hidden="true" />
-              Selecciona la foto principal y las demás imágenes
+              {imageCount > 0
+                ? `${imageCount} imagen(es) seleccionada(s)`
+                : "Selecciona la foto principal y las demás imágenes"}
             </label>
-            <Input id="imagenes" type="file" accept="image/*" multiple className="hidden" />
+            <Input
+              id="imagenes"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                const count = event.target.files?.length ?? 0;
+                setImageCount(count);
+                if (count > 0) setImageError(false);
+              }}
+            />
+            {imageError ? (
+              <p role="alert" className="text-xs font-medium text-destructive">
+                Debes enviar al menos 1 foto antes de mandar la cuenta a revisión.
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">La primera imagen será la foto principal pública.</p>
           </div>
 
