@@ -160,7 +160,7 @@ function AdminProviderPage() {
             ofertas se leen del proveedor sin clave: nada de tu información sale hacia fuera.
           </li>
           <li>
-            <span className="font-medium text-foreground">Nada se publica solo.</span> Lo nuevo
+            <span className="font-medium text-foreground">Todo se publica solo.</span> Lo nuevo
             se muestra en la tienda automáticamente con su precio en CUP calculado.
           </li>
           <li>
