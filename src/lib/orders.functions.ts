@@ -296,7 +296,8 @@ export const listOrdersAdmin = createServerFn({ method: "GET" })
     }
 
     return rows.map((row) => ({
-      ...toList([row])[0],
+      ...(toList([row as unknown as OrderRow & { products?: unknown; games?: unknown }])[0] as
+        OrderListItem),
       user_phone: phones.get(row.user_id) ?? "",
     }));
   });
