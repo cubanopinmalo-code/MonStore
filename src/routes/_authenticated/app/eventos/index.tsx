@@ -1,9 +1,27 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/events/EventCard";
 import { EmptyState } from "@/components/common/states";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockEvents } from "@/data/mock/events";
+import type { EventStatus } from "@/types";
+
+const TABS: { value: string; label: string; statuses: EventStatus[] }[] = [
+  {
+    value: "todos",
+    label: "Todos",
+    statuses: ["inscripciones_abiertas", "meta_alcanzada", "sala_activa", "proximamente"],
+  },
+  {
+    value: "abiertas",
+    label: "Inscripciones abiertas",
+    statuses: ["inscripciones_abiertas", "meta_alcanzada"],
+  },
+  { value: "sala", label: "Sala activa", statuses: ["sala_activa"] },
+  { value: "proximamente", label: "Próximamente", statuses: ["proximamente"] },
+];
 
 export const Route = createFileRoute("/_authenticated/app/eventos/")({
   head: () => ({
