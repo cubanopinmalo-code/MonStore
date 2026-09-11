@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useClearAccountCache, useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { signOut } from "@/lib/auth";
-import { getUsdRate } from "@/lib/catalog.functions";
+import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
 
 const REFERRAL_GOAL = 10;
 
