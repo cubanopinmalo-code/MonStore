@@ -73,6 +73,55 @@ function ProfilePage() {
           </div>
         </div>
 
+        <section className="surface-card space-y-4 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Referidos y recompensas</h2>
+              <p className="text-xs text-muted-foreground">
+                Invita 10 personas y obtén una compra de 1 USD gratis.
+              </p>
+            </div>
+            <span className="text-primary">
+              <Gift className="size-5" aria-hidden="true" />
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">
+                {invited} de {REFERRAL_GOAL} invitados
+              </span>
+              <span className="text-muted-foreground">{Math.round(progress)}%</span>
+            </div>
+            <Progress value={progress} aria-label="Progreso hacia la recompensa" />
+            <p className="text-xs text-muted-foreground">
+              {remaining > 0
+                ? `Te faltan ${remaining} invitados para tu compra de 1 USD gratis.`
+                : "¡Recompensa desbloqueada! Tienes una compra de 1 USD gratis."}
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="enlace-referido">Tu enlace de referidos</Label>
+            <Input id="enlace-referido" readOnly value={referralLink} />
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => void copyLink()}>
+                <Copy className="size-4" aria-hidden="true" />
+                Copiar
+              </Button>
+              <Button className="flex-1" onClick={() => void shareLink()}>
+                <Share2 className="size-4" aria-hidden="true" />
+                Compartir
+              </Button>
+            </div>
+          </div>
+
+          <Button asChild variant="ghost" size="sm" className="w-full">
+            <Link to="/app/referidos">Ver mis referidos</Link>
+          </Button>
+        </section>
+
+
         <form
           className="surface-card space-y-4 p-5"
           onSubmit={(event) => {
