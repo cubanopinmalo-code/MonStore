@@ -50,6 +50,8 @@ function DepositPage() {
     : "2000";
   const [amount, setAmount] = useState(initialAmount);
   const [tab, setTab] = useState(initialTab);
+  const [mobileProof, setMobileProof] = useState<File | null>(null);
+  const [mobileAttempts, setMobileAttempts] = useState(0);
   const parsed = Number(amount) || 0;
   const isMobile = tab === "movil";
   // Saldo móvil: cada peso de saldo se multiplica por la base puesta en el panel.
@@ -67,9 +69,30 @@ function DepositPage() {
     toast.success("Copiado al portapapeles");
   }
 
-  function submit(method: string) {
+  function submit(method: string, note?: string) {
     toast.success(`Solicitud creada (pendiente) · ${method}`, {
-      description: "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+      description:
+        note ?? "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+    });
+  }
+
+  function submitMobile() {
+    if (mobileProof) {
+      setMobileAttempts(0);
+      submit("Saldo móvil ETECSA");
+      return;
+    }
+    if (mobileAttempts === 0) {
+      setMobileAttempts(1);
+      toast.error("Falta la captura de pantalla del pago", {
+        description: "Sube la captura para que podamos verificar tu depósito más rápido.",
+      });
+      return;
+    }
+    setMobileAttempts(0);
+    toast.warning("Enviado sin captura de pantalla", {
+      description:
+        "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
     });
   }
 
@@ -152,7 +175,30 @@ function DepositPage() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">{mobile?.instructions}</p>
-              <Button className="w-full" onClick={() => submit("Saldo móvil ETECSA")}>
+              <div className="space-y-1.5">
+                <Label htmlFor="comprobante-movil">Captura de pantalla del pago</Label>
+                <label
+                  htmlFor="comprobante-movil"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground"
+                >
+                  <Upload className="size-4" aria-hidden="true" />
+                  {mobileProof ? mobileProof.name : "Sube la captura de la transferencia"}
+                </label>
+                <Input
+                  id="comprobante-movil"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => setMobileProof(event.target.files?.[0] ?? null)}
+                />
+                {!mobileProof && mobileAttempts > 0 ? (
+                  <p className="text-xs text-destructive">
+                    Sin captura puede demorar hasta 24 horas en agregar sus fondos. Pulsa otra
+                    vez para enviarla igual.
+                  </p>
+                ) : null}
+              </div>
+              <Button className="w-full" onClick={submitMobile}>
                 He pagado
               </Button>
             </div>
