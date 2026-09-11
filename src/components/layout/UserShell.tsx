@@ -5,6 +5,7 @@ import { Logo } from "@/components/brand/Logo";
 import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
 import { useNotifications, useWallet } from "@/hooks/useAccount";
+import { useMoneyDisplay } from "@/hooks/useCurrency";
 import { formatCUP } from "@/lib/format";
 
 
