@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Copy, Gift, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -6,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { mockProfile } from "@/data/mock/account";
+import { mockProfile, mockReferrals } from "@/data/mock/account";
+
+const REFERRAL_GOAL = 10;
 
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({
