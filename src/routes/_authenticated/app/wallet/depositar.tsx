@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
@@ -151,8 +152,9 @@ function DepositPage() {
   const [proof, setProof] = useState<File | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [sending, setSending] = useState(false);
-  // Número desde el que el cliente hará la transferencia de saldo móvil.
   const [fromNumber, setFromNumber] = useState("");
+  const [senderError, setSenderError] = useState(false);
+  const senderRef = useRef<HTMLInputElement>(null);
 
   const parsed = Number(amount) || 0;
   const isSaldo = current?.payment_method === "saldo_movil";
@@ -169,6 +171,7 @@ function DepositPage() {
     setSelected(method.payment_method);
     setProof(null);
     setAttempts(0);
+    setSenderError(false);
     setAmount((previous) =>
       necesario
         ? String(neededFor(method, necesario, saldoRate))
@@ -186,19 +189,29 @@ function DepositPage() {
     toast.success("Copiado al portapapeles");
   }
 
+  /** Saldo móvil exige número de origen: resalta la pregunta y enfoca el campo. */
+  function requireSender() {
+    const sender = fromNumber.replace(/\D/g, "");
+    if (!isSaldo || sender.length >= 8) return true;
+    setSenderError(true);
+    if (typeof window !== "undefined") {
+      senderRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    senderRef.current?.focus({ preventScroll: true });
+    toast.error("Escribe desde qué número realizaste la transferencia de saldo", {
+      description: "Sin ese número no podemos verificar tu depósito.",
+    });
+    return false;
+  }
+
   async function submit(hasProof: boolean, note?: string) {
     if (!current) return;
     if (parsed <= 0) {
       toast.error("Escribe un importe válido.");
       return;
     }
+    if (!requireSender()) return;
     const sender = fromNumber.replace(/\D/g, "");
-    if (isSaldo && sender.length < 8) {
-      toast.error("Falta el número desde donde vas a transferir", {
-        description: "Escribe el número de tu saldo móvil (al menos 8 dígitos).",
-      });
-      return;
-    }
     if (sending) return;
     setSending(true);
     try {
@@ -227,13 +240,7 @@ function DepositPage() {
   }
 
   function submitPaid() {
-    const sender = fromNumber.replace(/\D/g, "");
-    if (isSaldo && sender.length < 8) {
-      toast.error("Falta el número desde donde vas a transferir", {
-        description: "Escribe el número de tu saldo móvil (al menos 8 dígitos).",
-      });
-      return;
-    }
+    if (!requireSender()) return;
     if (proof) {
       setAttempts(0);
       void submit(true);
@@ -442,22 +449,59 @@ function DepositPage() {
 
           {isSaldo ? (
             <div className="space-y-1.5">
-              <Label htmlFor="numero-origen">
-                ¿Desde qué número vas a transferir el saldo móvil?
+              <Label
+                htmlFor="numero-origen"
+                className={cn(
+                  "flex flex-wrap items-center gap-1.5",
+                  senderError && "text-destructive",
+                )}
+              >
+                <span>¿Desde qué número realizaste la transferencia de saldo?</span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    senderError
+                      ? "border-destructive text-destructive"
+                      : "border-border text-muted-foreground",
+                  )}
+                >
+                  Obligatorio
+                </span>
               </Label>
               <Input
+                ref={senderRef}
                 id="numero-origen"
                 inputMode="tel"
                 autoComplete="tel"
                 placeholder="Escribe tu número, ej. 53000000"
+                aria-invalid={senderError}
+                aria-describedby={senderError ? "numero-origen-error" : undefined}
+                className={cn(
+                  "transition-colors",
+                  senderError &&
+                    "border-destructive ring-2 ring-destructive/30 focus-visible:ring-destructive/50",
+                )}
                 value={fromNumber}
-                onChange={(event) =>
-                  setFromNumber(event.target.value.replace(/[^\d]/g, "").slice(0, 11))
-                }
+                onChange={(event) => {
+                  setFromNumber(event.target.value.replace(/[^\d]/g, "").slice(0, 11));
+                  setSenderError(false);
+                }}
               />
-              <p className="text-xs text-muted-foreground">
-                Con ese número ubicamos rápido tu transferencia.
-              </p>
+              {senderError ? (
+                <p
+                  id="numero-origen-error"
+                  role="alert"
+                  className="text-xs font-semibold text-destructive"
+                >
+                  Escribe desde qué número realizaste la transferencia de saldo (al menos 8
+                  dígitos).
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Con ese número ubicamos rápido tu transferencia.
+                </p>
+              )}
             </div>
           ) : null}
 
