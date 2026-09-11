@@ -278,10 +278,8 @@ function DepositPage() {
           <ShortageNotice />
 
           <section className="surface-card space-y-4 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-base font-semibold">Método de pago a usar</h2>
-              <StepBadge step={1} />
-            </div>
+            <StepBadge step={1} />
+            <h2 className="text-base font-semibold">Método de pago a usar</h2>
             <p className="text-sm text-muted-foreground">
               Elige cómo vas a enviar el dinero y después verás el importe y los datos para
               transferir.
@@ -360,17 +358,17 @@ function DepositPage() {
           </Button>
         </section>
 
-        <div className="surface-card space-y-1.5 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="surface-card space-y-3 p-5">
+          <StepBadge step={2} />
+          <div className="space-y-1.5">
             <Label htmlFor="monto">Importe a depositar (CUP)</Label>
-            <StepBadge step={2} />
+            <Input
+              id="monto"
+              inputMode="numeric"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ""))}
+            />
           </div>
-          <Input
-            id="monto"
-            inputMode="numeric"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ""))}
-          />
           <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Envías</span>
