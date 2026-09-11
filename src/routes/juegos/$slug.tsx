@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
+import { GameCover } from "@/components/common/GameCover";
 import { formatCUP } from "@/lib/format";
 import { getCatalogGame } from "@/lib/catalog.functions";
 
