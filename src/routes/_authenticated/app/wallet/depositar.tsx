@@ -75,32 +75,31 @@ function StepBadge({ step }: { step: 1 | 2 }) {
     { id: 2, label: "Importe" },
   ];
   return (
-    <ol className="flex items-center gap-1.5 text-[11px] font-medium">
-      {steps.map((item, index) => (
-        <li key={item.id} className="flex items-center gap-1.5">
-          {index > 0 ? (
-            <span className="h-px w-3 bg-border" aria-hidden="true" />
-          ) : null}
-          <span
-            className={`flex items-center gap-1 rounded-full border px-2 py-0.5 ${
-              item.id === step
+    <ol className="flex w-full items-center gap-2">
+      {steps.map((item) => {
+        const isActive = item.id === step;
+        return (
+          <li
+            key={item.id}
+            className={`flex min-w-0 flex-1 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium ${
+              isActive
                 ? "border-primary bg-primary/10 text-foreground"
                 : "border-border bg-muted/30 text-muted-foreground"
             }`}
           >
             <span
-              className={`grid size-4 place-items-center rounded-full text-[10px] font-bold ${
-                item.id === step
+              className={`grid size-4 shrink-0 place-items-center rounded-full text-[10px] font-bold ${
+                isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
               }`}
             >
               {item.id}
             </span>
-            {item.label}
-          </span>
-        </li>
-      ))}
+            <span className="truncate">{item.label}</span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
