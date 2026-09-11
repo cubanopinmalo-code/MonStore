@@ -279,36 +279,20 @@ function ProfilePage() {
         </section>
 
         {isLoading ? null : (
-          <form className="surface-card space-y-4 p-5" onSubmit={(e) => void handleSave(e)}>
-            <div className="space-y-1.5">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" name="name" defaultValue={profile?.name ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" value={profile?.phone ?? ""} readOnly disabled />
+          <section className="surface-card space-y-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold">Datos personales</h2>
               <p className="text-xs text-muted-foreground">
-                El teléfono de registro no se puede cambiar.
+                Nombre, provincia y municipio de tu cuenta.
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="provincia">Provincia</Label>
-                <Input id="provincia" name="province" defaultValue={profile?.province ?? ""} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="municipio">Municipio</Label>
-                <Input
-                  id="municipio"
-                  name="municipality"
-                  defaultValue={profile?.municipality ?? ""}
-                />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar cambios"}
+            <Button asChild className="w-full">
+              <Link to="/app/editar-perfil">
+                <Pencil className="size-4" aria-hidden="true" />
+                Editar perfil
+              </Link>
             </Button>
-          </form>
+          </section>
         )}
 
         <SignOutDialog>

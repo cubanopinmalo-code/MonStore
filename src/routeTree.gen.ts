@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminRetirosRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
 import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated/admin/wallets'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
+import { Route as AuthenticatedAppEditarPerfilRouteImport } from './routes/_authenticated/app/editar-perfil'
 import { Route as AuthenticatedAppNotificacionesRouteImport } from './routes/_authenticated/app/notificaciones'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app/perfil'
 import { Route as AuthenticatedAppReferidosRouteImport } from './routes/_authenticated/app/referidos'
@@ -189,6 +190,12 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppEditarPerfilRoute =
+  AuthenticatedAppEditarPerfilRouteImport.update({
+    id: '/app/editar-perfil',
+    path: '/app/editar-perfil',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppNotificacionesRoute =
   AuthenticatedAppNotificacionesRouteImport.update({
     id: '/app/notificaciones',
@@ -314,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/admin/retiros': typeof AuthenticatedAdminRetirosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/app/editar-perfil': typeof AuthenticatedAppEditarPerfilRoute
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
@@ -356,6 +364,7 @@ export interface FileRoutesByTo {
   '/admin/retiros': typeof AuthenticatedAdminRetirosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/app/editar-perfil': typeof AuthenticatedAppEditarPerfilRoute
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
@@ -401,6 +410,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/retiros': typeof AuthenticatedAdminRetirosRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/wallets': typeof AuthenticatedAdminWalletsRoute
+  '/_authenticated/app/editar-perfil': typeof AuthenticatedAppEditarPerfilRoute
   '/_authenticated/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/referidos': typeof AuthenticatedAppReferidosRoute
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/admin/retiros'
     | '/admin/usuarios'
     | '/admin/wallets'
+    | '/app/editar-perfil'
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/admin/retiros'
     | '/admin/usuarios'
     | '/admin/wallets'
+    | '/app/editar-perfil'
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
@@ -532,6 +544,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/retiros'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/wallets'
+    | '/_authenticated/app/editar-perfil'
     | '/_authenticated/app/notificaciones'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/referidos'
@@ -741,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/editar-perfil': {
+      id: '/_authenticated/app/editar-perfil'
+      path: '/app/editar-perfil'
+      fullPath: '/app/editar-perfil'
+      preLoaderRoute: typeof AuthenticatedAppEditarPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/notificaciones': {
       id: '/_authenticated/app/notificaciones'
       path: '/app/notificaciones'
@@ -907,6 +927,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedAppEditarPerfilRoute: typeof AuthenticatedAppEditarPerfilRoute
   AuthenticatedAppNotificacionesRoute: typeof AuthenticatedAppNotificacionesRoute
   AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
   AuthenticatedAppReferidosRoute: typeof AuthenticatedAppReferidosRoute
@@ -929,6 +950,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedAppEditarPerfilRoute: AuthenticatedAppEditarPerfilRoute,
   AuthenticatedAppNotificacionesRoute: AuthenticatedAppNotificacionesRoute,
   AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
   AuthenticatedAppReferidosRoute: AuthenticatedAppReferidosRoute,
