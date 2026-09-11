@@ -19,6 +19,7 @@ import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
