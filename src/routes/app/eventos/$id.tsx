@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { mockEvents, mockEventSubscriptions } from "@/data/mock/events";
 import { mockGames } from "@/data/mock/games";
+import { mockProfile } from "@/data/mock/account";
 import { mockWallet } from "@/data/mock/wallet";
 import {
   EVENT_STATUS_LABEL,
@@ -149,6 +150,22 @@ function EventDetail({ event }: { event: GameEvent }) {
       });
     }, 700);
   }
+
+  async function handleShare() {
+    const url = `https://monstore.cu/?ref=${mockProfile.referral_code}&evento=${event.id}`;
+    const text = `Participa conmigo en ${event.name} — premio ${event.prize}. Crea tu cuenta y suscríbete:`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.name, text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      toast.success("Enlace del evento copiado para compartir.");
+    } catch {
+      toast.error("No se pudo compartir el enlace.");
+    }
+  }
+
 
   return (
     <UserShell>
