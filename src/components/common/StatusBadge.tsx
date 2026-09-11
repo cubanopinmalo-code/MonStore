@@ -23,6 +23,16 @@ const TONES: Record<string, Tone> = {
   rechazada: "danger",
   reembolsado: "info",
   "no disponible": "danger",
+  próximamente: "warning",
+  "inscripciones abiertas": "info",
+  "meta alcanzada": "success",
+  "sala activa": "success",
+  finalizado: "neutral",
+  "meta no alcanzada": "danger",
+  inscrito: "info",
+  participando: "success",
+  "no asistió": "neutral",
+  pagado: "success",
 };
 
 const toneClass: Record<Tone, string> = {

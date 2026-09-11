@@ -15,6 +15,7 @@ const MAIN_NAV = [
 ] as const;
 
 const DESKTOP_EXTRA = [
+  { to: "/app/eventos", label: "Eventos" },
   { to: "/app/pedidos", label: "Mis pedidos" },
   { to: "/app/referidos", label: "Referidos" },
 ] as const;

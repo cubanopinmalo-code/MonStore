@@ -275,3 +275,56 @@ export interface AdminStats {
   provider_cost_month: number;
   margin_month: number;
 }
+
+export type EventType = "sala_personalizada";
+
+export type EventStatus =
+  | "proximamente"
+  | "inscripciones_abiertas"
+  | "meta_alcanzada"
+  | "sala_activa"
+  | "finalizado"
+  | "cancelado"
+  | "meta_no_alcanzada";
+
+export type SubscriptionPaymentStatus = "pending" | "paid" | "refunded" | "cancelled";
+
+export interface GameEvent {
+  id: string;
+  name: string;
+  game_id: string;
+  event_type: EventType;
+  prize: string;
+  region: string;
+  min_participants: number;
+  max_participants: number;
+  participants_count: number;
+  event_date: string;
+  event_time: string;
+  entry_price: number;
+  currency: Currency;
+  status: EventStatus;
+  room_id: string | null;
+  room_password: string | null;
+  room_activated_at: string | null;
+  entry_window_minutes: number;
+  description: string;
+  banner_url: string | null;
+  created_at: string;
+  updated_at: string;
+  finished_at: string | null;
+}
+
+export interface EventSubscription {
+  id: string;
+  event_id: string;
+  user_id: string;
+  user_name: string;
+  user_phone: string;
+  game_account_id: string;
+  g2bulk_account_name: string | null;
+  status: "inscrito" | "participando" | "no_asistio" | "cancelado";
+  payment_status: SubscriptionPaymentStatus;
+  entered_at: string | null;
+  created_at: string;
+}
