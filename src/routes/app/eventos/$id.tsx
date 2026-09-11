@@ -6,7 +6,6 @@ import {
   Copy,
   Globe2,
   Lock,
-  Share2,
   Ticket,
   Trophy,
   Users,
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/dialog";
 import { mockEvents, mockEventSubscriptions } from "@/data/mock/events";
 import { mockGames } from "@/data/mock/games";
-import { mockProfile } from "@/data/mock/account";
 import { mockWallet } from "@/data/mock/wallet";
 import {
   EVENT_STATUS_LABEL,
@@ -151,22 +149,6 @@ function EventDetail({ event }: { event: GameEvent }) {
     }, 700);
   }
 
-  async function handleShare() {
-    const url = `https://monstore.cu/?ref=${mockProfile.referral_code}&evento=${event.id}`;
-    const text = `Participa conmigo en ${event.name} — premio ${event.prize}. Crea tu cuenta y suscríbete:`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: event.name, text, url });
-        return;
-      }
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      toast.success("Enlace del evento copiado para compartir.");
-    } catch {
-      toast.error("No se pudo compartir el enlace.");
-    }
-  }
-
-
   return (
     <UserShell>
       <div className="mx-auto max-w-3xl space-y-5">
@@ -186,10 +168,6 @@ function EventDetail({ event }: { event: GameEvent }) {
             <StatusBadge status={EVENT_STATUS_LABEL[event.status]} />
           </div>
           <p className="text-sm text-muted-foreground">{event.description}</p>
-          <Button variant="outline" size="sm" onClick={() => void handleShare()}>
-            <Share2 className="size-4" aria-hidden="true" />
-            Compartir evento
-          </Button>
         </div>
 
         <section className="surface-card grid gap-3 p-5 sm:grid-cols-2">
