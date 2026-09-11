@@ -159,7 +159,7 @@ function ProfilePage() {
       .from("profiles")
       .update({
         name: String(form.get("name") ?? ""),
-        phone: String(form.get("phone") ?? ""),
+        
         province: String(form.get("province") ?? ""),
         municipality: String(form.get("municipality") ?? ""),
       })
