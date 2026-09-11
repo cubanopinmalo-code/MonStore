@@ -102,6 +102,38 @@ function WalletPage() {
         </section>
 
         <section className="space-y-3">
+          <h2 className="text-lg font-bold">Solicitudes de fondos</h2>
+          {requests.length === 0 ? (
+            <EmptyState title="Sin solicitudes todavía" />
+          ) : (
+            <div className="grid gap-2">
+              {requests.map((req) => (
+                <div key={req.id} className="surface-card space-y-1 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">
+                      {req.kind} · {METHOD_LABEL[req.method] ?? req.method}
+                    </p>
+                    <StatusBadge status={STATUS_NOTE[req.status] ?? req.status} />
+                  </div>
+                  <p className="text-sm">
+                    Enviaste {formatCUP(req.sent)} ·{" "}
+                    {req.kind === "Retiro" ? "recibes" : "se acreditan"} {formatCUP(req.amount)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDateTime(req.created_at)}
+                    {req.status === "pendiente" ? " · en revisión" : ""}
+                  </p>
+                  {req.reason ? (
+                    <p className="text-xs text-destructive">Motivo: {req.reason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+
+        <section className="space-y-3">
           <h2 className="text-lg font-bold">Movimientos</h2>
           {transactions.length === 0 ? (
             <EmptyState title="Sin movimientos todavía" />
