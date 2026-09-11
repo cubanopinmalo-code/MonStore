@@ -724,6 +724,7 @@ export type Database = {
           referred_user_id: string
           referrer_user_id: string
           reward_amount: number
+          reward_claimed_at: string | null
           status: string
         }
         Insert: {
@@ -732,6 +733,7 @@ export type Database = {
           referred_user_id: string
           referrer_user_id: string
           reward_amount?: number
+          reward_claimed_at?: string | null
           status?: string
         }
         Update: {
@@ -740,6 +742,7 @@ export type Database = {
           referred_user_id?: string
           referrer_user_id?: string
           reward_amount?: number
+          reward_claimed_at?: string | null
           status?: string
         }
         Relationships: []
@@ -933,6 +936,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_referral_reward: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
