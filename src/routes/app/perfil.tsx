@@ -39,8 +39,7 @@ function ProfilePage() {
           </Avatar>
           <div>
             <p className="text-base font-semibold">{mockProfile.name}</p>
-            <p className="text-sm text-muted-foreground">{mockProfile.email}</p>
-            <p className="text-xs text-primary">Código: {mockProfile.referral_code}</p>
+            <p className="text-sm text-muted-foreground">{mockProfile.phone}</p>
           </div>
         </div>
 

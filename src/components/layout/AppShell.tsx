@@ -32,11 +32,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="ml-auto hidden items-center gap-2 md:flex">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login">Iniciar sesión</Link>
-            </Button>
             <Button asChild size="sm">
-              <Link to="/registro">Crear cuenta</Link>
+              <Link to="/">Iniciar sesión</Link>
             </Button>
           </div>
           <Sheet>
