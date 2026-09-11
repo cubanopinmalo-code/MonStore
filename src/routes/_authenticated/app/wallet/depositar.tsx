@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, Copy, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -34,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
 });
 
 function DepositPage() {
+  const navigate = useNavigate();
   const { necesario, metodo } = Route.useSearch();
   const { rate: saldoRate } = Route.useLoaderData();
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
@@ -70,10 +71,12 @@ function DepositPage() {
   }
 
   function submit(method: string, note?: string) {
-    toast.success(`Solicitud creada (pendiente) · ${method}`, {
+    toast.success("Solicitud de fondos enviada", {
       description:
-        note ?? "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+        note ??
+        `Tu solicitud por ${method} está siendo procesada y se acreditará en breve.`,
     });
+    void navigate({ to: "/app/recargas" });
   }
 
   function submitMobile() {
@@ -90,10 +93,10 @@ function DepositPage() {
       return;
     }
     setMobileAttempts(0);
-    toast.warning("Enviado sin captura de pantalla", {
-      description:
-        "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
-    });
+    submit(
+      "Saldo móvil ETECSA",
+      "Sin captura puede demorar hasta 24 horas en agregar sus fondos. La solicitud llegó al panel marcada como “Sin captura de pantalla”.",
+    );
   }
 
   return (
