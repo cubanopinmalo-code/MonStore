@@ -21,7 +21,7 @@ export const Route = createFileRoute("/app/referidos")({
 });
 
 function ReferralsPage() {
-  const link = `https://monstore.cu/registro?ref=${mockProfile.referral_code}`;
+  const link = `https://monstore.cu/?ref=${mockProfile.referral_code}`;
   const rewards = mockReferrals.reduce((total, item) => total + item.reward_amount, 0);
 
   function copy(value: string, label: string) {
@@ -51,23 +51,9 @@ function ReferralsPage() {
           />
         </div>
 
-        <div className="surface-card space-y-4 p-5">
+        <div className="surface-card space-y-3 p-5">
           <div className="space-y-1.5">
-            <Label htmlFor="codigo">Tu código</Label>
-            <div className="flex gap-2">
-              <Input id="codigo" readOnly value={mockProfile.referral_code} />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copy(mockProfile.referral_code, "Código")}
-                aria-label="Copiar código"
-              >
-                <Copy className="size-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="enlace">Tu enlace</Label>
+            <Label htmlFor="enlace">Tu enlace de invitación</Label>
             <div className="flex gap-2">
               <Input id="enlace" readOnly value={link} />
               <Button
@@ -80,6 +66,10 @@ function ReferralsPage() {
               </Button>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Comparte este enlace: quien entre por él queda registrado como tu invitado
+            automáticamente. No hay códigos para escribir a mano.
+          </p>
         </div>
 
         <section className="space-y-3">
