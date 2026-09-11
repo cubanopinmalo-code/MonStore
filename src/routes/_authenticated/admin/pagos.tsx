@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { mockPayments } from "@/data/mock/admin";
-import { formatCUP, formatDateTime } from "@/lib/format";
+import { formatBaseCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/pagos")({
   head: () => ({
@@ -50,7 +50,7 @@ function AdminPaymentsPage() {
                 <TableCell className="font-medium">{payment.reference}</TableCell>
                 <TableCell>{payment.user_name}</TableCell>
                 <TableCell>{METHOD_LABEL[payment.method] ?? payment.method}</TableCell>
-                <TableCell>{formatCUP(payment.amount)}</TableCell>
+                <TableCell>{formatBaseCUP(payment.amount)}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {payment.order_id ?? "—"}
                 </TableCell>

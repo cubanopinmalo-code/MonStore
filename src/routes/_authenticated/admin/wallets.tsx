@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { mockUsers } from "@/data/mock/account";
 import { mockWallet, mockWalletTransactions } from "@/data/mock/wallet";
-import { formatCUP, formatDateTime } from "@/lib/format";
+import { formatBaseCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/wallets")({
   head: () => ({
@@ -32,7 +32,7 @@ function AdminWalletsPage() {
   return (
     <AdminShell title="Wallets" description="Saldos y movimientos de la plataforma.">
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Saldo total en wallets" value={formatCUP(total)} />
+        <StatCard label="Saldo total en wallets" value={formatBaseCUP(total)} />
         <StatCard label="Wallets activas" value={String(BALANCES.length)} />
         <StatCard label="Movimientos recientes" value={String(mockWalletTransactions.length)} />
       </div>
@@ -51,7 +51,7 @@ function AdminWalletsPage() {
             {mockUsers.map((user, index) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{formatCUP(BALANCES[index] ?? 0)}</TableCell>
+                <TableCell>{formatBaseCUP(BALANCES[index] ?? 0)}</TableCell>
                 <TableCell>{mockWallet.currency}</TableCell>
                 <TableCell>
                   <StatusBadge status={user.status === "activo" ? "activa" : "suspendido"} />
@@ -82,9 +82,9 @@ function AdminWalletsPage() {
                   <TableCell className="capitalize">{tx.type}</TableCell>
                   <TableCell className={tx.amount > 0 ? "text-success" : undefined}>
                     {tx.amount > 0 ? "+" : "−"}
-                    {formatCUP(Math.abs(tx.amount))}
+                    {formatBaseCUP(Math.abs(tx.amount))}
                   </TableCell>
-                  <TableCell>{formatCUP(tx.balance_after)}</TableCell>
+                  <TableCell>{formatBaseCUP(tx.balance_after)}</TableCell>
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                     {formatDateTime(tx.created_at)}
                   </TableCell>
