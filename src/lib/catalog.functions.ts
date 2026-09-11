@@ -616,6 +616,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         .from("products")
         .update({
           g2bulk_cost: Number(product.unit_price ?? 0),
+          sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
           available: Number(product.stock ?? 0) > 0,
           last_synced_at: new Date().toISOString(),
         })
