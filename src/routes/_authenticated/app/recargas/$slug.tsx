@@ -281,6 +281,7 @@ function PurchaseFlowPage() {
                     value={values[field.key] || "—"}
                   />
                 ))}
+                {player.name ? <Row label="Personaje" value={player.name} /> : null}
                 <Row label="Precio" value={formatCUP(product.sale_price)} />
               </dl>
             </div>
