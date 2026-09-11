@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockGames } from "@/data/mock/games";
+import { getAccessMethods } from "@/lib/accountAccess";
 
 export const Route = createFileRoute("/_authenticated/app/comercio/publicar")({
   head: () => ({
@@ -35,14 +36,8 @@ function PublishListingPage() {
   const initialGameId = availableGames[0]?.id ?? "";
   const [gameId, setGameId] = useState(initialGameId);
   const [showPassword, setShowPassword] = useState(false);
-  const platformsByGame: Record<string, string[]> = {
-    gm_001: ["Android", "iOS"],
-    gm_002: ["Android", "iOS"],
-    gm_003: ["Android", "iOS", "PC"],
-    gm_004: ["Android", "iOS"],
-    gm_005: ["Android", "iOS"],
-  };
-  const platforms = platformsByGame[gameId] ?? ["Android", "iOS", "PC"];
+  const selectedGame = availableGames.find((game) => game.id === gameId);
+  const platforms = getAccessMethods(selectedGame?.name);
 
   return (
     <UserShell>
@@ -100,7 +95,7 @@ function PublishListingPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="plataforma">Plataforma de acceso</Label>
-            <Select key={gameId} defaultValue={platforms[0] ?? "Android"}>
+            <Select key={gameId} defaultValue={platforms[0] ?? "Google"}>
               <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {platforms.map((platform) => (
@@ -108,6 +103,9 @@ function PublishListingPage() {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Opciones según el juego seleccionado{selectedGame ? `: ${selectedGame.name}` : ""}.
+            </p>
           </div>
 
           <div className="space-y-1.5">
