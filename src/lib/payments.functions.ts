@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
 
 /** Dato de transferencia escrito por el administrador (nombre + valor). */
 export interface TransferField {
@@ -39,8 +42,8 @@ function parseFields(value: unknown): TransferField[] {
   return value
     .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
     .map((item) => ({
-      label: typeof item.label === "string" ? item.label : "",
-      value: typeof item.value === "string" ? item.value : "",
+      label: typeof item["label"] === "string" ? item["label"] : "",
+      value: typeof item["value"] === "string" ? item["value"] : "",
     }));
 }
 
@@ -128,7 +131,7 @@ export const savePaymentMethod = createServerFn({ method: "POST" })
         withdrawal_conversion_pct: data.withdrawal_conversion_pct,
         transfer_fields: data.transfer_fields,
       })
-      .eq("payment_method", data.payment_method);
+      .eq("payment_method", data.payment_method as DbPaymentMethod);
     if (error) throw new Error("No se pudo guardar el método de pago.");
     return { saved: true };
   });
@@ -167,7 +170,7 @@ export const requestDeposit = createServerFn({ method: "POST" })
     const { data: settings, error: settingsError } = await context.supabase
       .from("payment_settings")
       .select("active")
-      .eq("payment_method", data.method)
+      .eq("payment_method", data.method as DbPaymentMethod)
       .maybeSingle();
     if (settingsError) throw new Error("No se pudo verificar el método de pago.");
     if (!settings || !settings.active) {
@@ -178,7 +181,7 @@ export const requestDeposit = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.rpc("request_deposit", {
       p_user: context.userId,
       p_amount: data.amount,
-      p_method: data.method,
+      p_method: data.method as DbPaymentMethod,
       p_reference: data.reference,
       p_has_proof: data.hasProof,
     });
