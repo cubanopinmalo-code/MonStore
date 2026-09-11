@@ -33,8 +33,7 @@ function WithdrawPage() {
   const [destination, setDestination] = useState("");
 
   const parsed = Number(amount) || 0;
-  const fee = Math.round((parsed * WITHDRAWAL_FEE_PCT) / 100);
-  const net = Math.max(parsed - fee, 0);
+  const breakdown = calculateWithdrawal(parsed, method);
   const tooMuch = parsed > mockWallet.balance;
 
   return (
