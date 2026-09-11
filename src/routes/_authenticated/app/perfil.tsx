@@ -42,7 +42,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useProfile();
   const { data: referrals } = useReferrals();
-  const [saving, setSaving] = useState(false);
+  
   const [claiming, setClaiming] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
