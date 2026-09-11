@@ -63,36 +63,50 @@ function slugify(value: string, used: Set<string>): string {
   return slug;
 }
 
-export const DEFAULT_USD_RATE = 1150;
+export const DEFAULT_USD_RATE = 1000;
+export const DEFAULT_USD_MARGIN = 150;
 
-/** Precio de venta en CUP a partir del costo en USD del proveedor. */
-export function priceFromCost(costUsd: number, rate: number): number {
-  return Math.round(Number(costUsd ?? 0) * rate * 100) / 100;
+export type Pricing = { rate: number; margin: number };
+
+/** Precio de venta en CUP: costo USD × (base del dólar + ganancia por dólar). */
+export function priceFromCost(costUsd: number, pricing: Pricing): number {
+  const cost = Number(costUsd ?? 0);
+  return Math.round(cost * (pricing.rate + pricing.margin) * 100) / 100;
 }
 
-async function readUsdRate(client: SupabaseClient<Database>): Promise<number> {
-  const { data } = await client.from("platform_settings").select("usd_to_cup").maybeSingle();
+async function readPricing(client: SupabaseClient<Database>): Promise<Pricing> {
+  const { data } = await client
+    .from("platform_settings")
+    .select("usd_to_cup,usd_margin_cup")
+    .maybeSingle();
   const rate = Number(data?.usd_to_cup ?? DEFAULT_USD_RATE);
-  return Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_USD_RATE;
+  const margin = Number(data?.usd_margin_cup ?? DEFAULT_USD_MARGIN);
+  return {
+    rate: Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_USD_RATE,
+    margin: Number.isFinite(margin) && margin >= 0 ? margin : DEFAULT_USD_MARGIN,
+  };
 }
 
-export const getUsdRate = createServerFn({ method: "GET" }).handler(async (): Promise<number> => {
-  return readUsdRate(publishableClient());
+export const getUsdRate = createServerFn({ method: "GET" }).handler(async (): Promise<Pricing> => {
+  return readPricing(publishableClient());
 });
 
 export const setUsdRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { rate: number }) => {
+  .inputValidator((data: { rate: number; margin: number }) => {
     const rate = Number(data?.rate);
+    const margin = Number(data?.margin);
     if (!Number.isFinite(rate) || rate <= 0) throw new Error("El valor del dólar no es válido.");
     if (rate > 100000) throw new Error("Ese valor del dólar es demasiado alto.");
-    return { rate: Math.round(rate * 100) / 100 };
+    if (!Number.isFinite(margin) || margin < 0) throw new Error("La ganancia no es válida.");
+    if (margin > 100000) throw new Error("Esa ganancia es demasiado alta.");
+    return { rate: Math.round(rate * 100) / 100, margin: Math.round(margin * 100) / 100 };
   })
-  .handler(async ({ data, context }): Promise<{ rate: number; updated: number }> => {
+  .handler(async ({ data, context }): Promise<{ rate: number; margin: number; updated: number }> => {
     await requireAdmin(context);
     const { error } = await context.supabase
       .from("platform_settings")
-      .upsert({ id: true, usd_to_cup: data.rate });
+      .upsert({ id: true, usd_to_cup: data.rate, usd_margin_cup: data.margin });
     if (error) throw new Error("No se pudo guardar el valor del dólar.");
 
     const { data: rows, error: readError } = await context.supabase
@@ -105,11 +119,11 @@ export const setUsdRate = createServerFn({ method: "POST" })
     for (const row of rows ?? []) {
       const { error: updateError } = await context.supabase
         .from("products")
-        .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data.rate) })
+        .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data) })
         .eq("id", row.id);
       if (!updateError) updated += 1;
     }
-    return { rate: data.rate, updated };
+    return { rate: data.rate, margin: data.margin, updated };
   });
 
 function chunked<T>(items: T[], size = CHUNK): T[][] {
