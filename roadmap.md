@@ -8,10 +8,11 @@
 - [x] Panel: juegos, ofertas, proveedor — datos reales, precios de venta en CUP
 - [x] Catálogo público real: /juegos, /juegos/:slug, /recargas y /app/recargas
 - [x] Compra con saldo: descuento atómico, pedidos duplicados imposibles, reembolsos solo del administrador
+- [x] Agregar fondos: métodos de pago (saldo móvil, tarjeta CUP, USDT, Zelle) con datos de transferencia que escribe el administrador y aprobación del administrador
+- [ ] Retiros con comisión y conversión por método, con aprobación del administrador
 - [ ] Pantalla de compra conectada a la compra real (formulario de 4 pasos + saldo real)
 - [ ] Mis pedidos y detalle de pedido con datos reales
 - [ ] Panel: pedidos (ver, completar, reembolsar)
-- [ ] Depósitos y retiros con aprobación del administrador
 - [ ] Comercio (cuentas) con datos reales
 - [ ] Eventos con datos reales
 - [ ] Conectar la clave del proveedor cuando el administrador la entregue
