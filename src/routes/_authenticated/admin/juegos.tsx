@@ -207,7 +207,7 @@ export function AdminGamesPage() {
   return (
     <AdminShell
       title="Juegos"
-      description="Lo que llega del proveedor queda inactivo hasta que tú lo actives."
+      description="Todos los juegos del proveedor se muestran en la tienda automáticamente."
       actions={
         <Button onClick={openNew} size="sm">
           Nuevo juego
