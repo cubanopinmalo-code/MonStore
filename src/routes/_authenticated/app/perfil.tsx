@@ -1,18 +1,18 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Copy, Gift, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
+import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useClearAccountCache, useProfile, useReferrals } from "@/hooks/useAccount";
+import { useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
-import { signOut } from "@/lib/auth";
 import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
 
 const REFERRAL_GOAL = 10;
@@ -35,11 +35,9 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
 });
 
 function ProfilePage() {
-  const navigate = useNavigate();
   const { rate: usdRate } = Route.useLoaderData();
   const rewardCup = Math.round(usdRate);
   const queryClient = useQueryClient();
-  const clearCache = useClearAccountCache();
   const { data: profile, isLoading } = useProfile();
   const { data: referrals } = useReferrals();
   const [saving, setSaving] = useState(false);
@@ -171,12 +169,6 @@ function ProfilePage() {
     }
     await queryClient.invalidateQueries({ queryKey: ["profile"] });
     toast.success("Cambios guardados");
-  }
-
-  async function handleSignOut() {
-    await clearCache();
-    await signOut();
-    void navigate({ to: "/", replace: true });
   }
 
   return (
@@ -312,9 +304,11 @@ function ProfilePage() {
           </form>
         )}
 
-        <Button variant="outline" className="w-full" onClick={() => void handleSignOut()}>
-          Cerrar sesión
-        </Button>
+        <SignOutDialog>
+          <Button variant="outline" className="w-full">
+            Cerrar sesión
+          </Button>
+        </SignOutDialog>
       </div>
     </UserShell>
   );
