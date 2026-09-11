@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/Logo";
@@ -129,6 +129,15 @@ function AuthPage() {
             </form>
           </TabsContent>
         </Tabs>
+
+        <div className="border-t border-border/70 pt-5 text-center">
+          <p className="mb-3 text-xs text-muted-foreground">
+            Acceso temporal mientras terminamos MONSTORE
+          </p>
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/app">Entrar como usuario de prueba</Link>
+          </Button>
+        </div>
 
         <ProtectedNotice area="el acceso a la cuenta" />
       </div>
