@@ -79,6 +79,11 @@ function WalletPage() {
               {formatCUP(Number(wallet?.balance ?? 0))}
             </p>
 
+            <div className="pt-2">
+              <CurrencyToggle />
+            </div>
+
+
             <div className="flex flex-wrap gap-2 pt-3">
               <Button asChild>
                 <Link to="/app/wallet/depositar">
