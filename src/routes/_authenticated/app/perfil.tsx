@@ -25,7 +25,7 @@ const SUPPORT_WHATSAPP_URL =
   "?text=" +
   encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.");
 
-function openSupportChat(event: React.MouseEvent<HTMLAnchorElement>) {
+function openSupportChat(event: MouseEvent<HTMLAnchorElement>) {
   // In some embedded previews target="_blank" is blocked, so fall back to direct navigation.
   event.preventDefault();
   const opened = window.open(
