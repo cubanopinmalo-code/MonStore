@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
+import { listPaymentMethods, reviewDeposit } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
