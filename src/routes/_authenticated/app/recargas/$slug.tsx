@@ -236,6 +236,21 @@ function PurchaseFlowPage() {
                 )}
               </div>
             ))}
+            {playerKey ? (
+              player.loading ? (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  Verificando el ID en el juego…
+                </p>
+              ) : player.name ? (
+                <div className="rounded-lg border border-success/40 bg-success/10 p-3">
+                  <p className="text-xs text-muted-foreground">Personaje encontrado</p>
+                  <p className="text-sm font-semibold text-success">{player.name}</p>
+                </div>
+              ) : player.message ? (
+                <p className="text-xs text-warning">{player.message}</p>
+              ) : null
+            ) : null}
             {missing.length > 0 ? (
               <p className="text-xs text-warning">
                 Completa los campos obligatorios para continuar.
