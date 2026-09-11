@@ -704,6 +704,93 @@ export const syncGameOffers = createServerFn({ method: "POST" })
     return { gamesCreated: 0, offersCreated, offersUpdated: 0, notes };
   });
 
+export type BulkOffersResult = SyncResult & { processed: number; remaining: number };
+
+/**
+ * Trae las ofertas de los juegos de recarga que todavía no tienen ninguna.
+ * Se procesa en tandas para no agotar el tiempo del servidor.
+ */
+export const syncMissingGameOffers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data?: { batch?: number }) => ({
+    batch: Math.min(Math.max(Number(data?.batch ?? 20), 1), 40),
+  }))
+  .handler(async ({ data, context }): Promise<BulkOffersResult> => {
+    await requireAdmin(context);
+    const pricing = await readPricing(context.supabase);
+
+    const { data: games } = await context.supabase
+      .from("games")
+      .select("id,g2bulk_id")
+      .like("g2bulk_id", "game:%")
+      .order("name");
+    const all = games ?? [];
+
+    const withOffers = new Set<string>();
+    for (const group of chunked(all.map((game) => game.id))) {
+      const { data: rows } = await context.supabase
+        .from("products")
+        .select("game_id")
+        .in("game_id", group);
+      for (const row of rows ?? []) if (row.game_id) withOffers.add(row.game_id);
+    }
+
+    const pending = all.filter((game) => !withOffers.has(game.id));
+    const slice = pending.slice(0, data.batch);
+
+    let offersCreated = 0;
+    let processed = 0;
+    const notes: string[] = [];
+
+    for (const game of slice) {
+      const code = game.g2bulk_id.slice(5);
+      processed += 1;
+      let offers: Awaited<ReturnType<typeof gameCatalogue>> = [];
+      try {
+        offers = await gameCatalogue(code);
+      } catch {
+        continue;
+      }
+      if (offers.length === 0) continue;
+      const fields = await gameFields(code);
+
+      const rows = offers.map((offer) => ({
+        game_id: game.id,
+        name: offer.name.trim(),
+        description: "",
+        g2bulk_product_id: `topup:${code}:${offer.id}`,
+        g2bulk_cost: Number(offer.amount ?? 0),
+        sale_price: priceFromCost(Number(offer.amount ?? 0), pricing),
+        currency: "CUP",
+        delivery_method: "via_id" as const,
+        active: true,
+        available: true,
+        metadata: { fields, game_code: code },
+        image_url: "",
+        last_synced_at: new Date().toISOString(),
+      }));
+
+      for (const group of chunked(rows)) {
+        const { data: inserted, error } = await context.supabase
+          .from("products")
+          .insert(group)
+          .select("id");
+        if (error) {
+          notes.push(`No se pudieron añadir las ofertas de ${code}.`);
+          break;
+        }
+        offersCreated += (inserted ?? []).length;
+      }
+    }
+
+    const remaining = Math.max(pending.length - processed, 0);
+    if (processed === 0) notes.push("Todos los juegos ya tienen sus ofertas.");
+
+    return { gamesCreated: 0, offersCreated, offersUpdated: 0, notes, processed, remaining };
+  });
+
+
+
 export const getProviderStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ProviderStatus> => {
