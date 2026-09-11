@@ -45,8 +45,73 @@ export const Route = createFileRoute("/")({
 
 function AuthPage() {
   const { ref, evento } = Route.useSearch();
-  const sharedEvent = evento ? mockEvents.find((item) => item.id === evento) : undefined;
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "registro">("login");
+  const [loading, setLoading] = useState(false);
+
+  const goToApp = () => {
+    if (evento) {
+      void navigate({ to: "/app/eventos/$id", params: { id: evento } });
+    } else {
+      void navigate({ to: "/app" });
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) goToApp();
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setLoading(true);
+    const { error } = await signInWithPhone(
+      String(form.get("phone") ?? ""),
+      String(form.get("password") ?? ""),
+    );
+    setLoading(false);
+    if (error) {
+      toast.error("No pudimos entrar. Revisa el teléfono y la contraseña.");
+      return;
+    }
+    toast.success("¡Bienvenido de vuelta!");
+    goToApp();
+  };
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") ?? "");
+    if (password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await signUpWithPhone({
+      phone: String(form.get("phone") ?? ""),
+      password,
+      name: String(form.get("name") ?? ""),
+      referralCode: ref,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(
+        error.message.toLowerCase().includes("registered")
+          ? "Ese número ya tiene una cuenta. Inicia sesión."
+          : "No pudimos crear la cuenta. Intenta de nuevo.",
+      );
+      return;
+    }
+    toast.success("Cuenta creada. ¡Bienvenido a MONSTORE!");
+    goToApp();
+  };
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
@@ -65,13 +130,11 @@ function AuthPage() {
           </p>
         </div>
 
-        {sharedEvent ? (
+        {evento ? (
           <div className="surface-card space-y-1 p-4 text-center">
-            <p className="text-sm font-semibold text-primary">
-              Te invitaron al evento {sharedEvent.name}
-            </p>
+            <p className="text-sm font-semibold text-primary">Te invitaron a un evento</p>
             <p className="text-xs text-muted-foreground">
-              Crea tu cuenta o inicia sesión y te llevamos directo a este evento.
+              Crea tu cuenta o inicia sesión y te llevamos directo al evento.
             </p>
           </div>
         ) : null}
@@ -83,90 +146,86 @@ function AuthPage() {
           </TabsList>
 
           <TabsContent value="login">
-            <form
-              className="surface-card mt-4 space-y-4 p-5"
-              onSubmit={(event) => {
-                event.preventDefault();
-                toast.info("Prototipo visual: el acceso real llega en la próxima fase.");
-              }}
-            >
+            <form className="surface-card mt-4 space-y-4 p-5" onSubmit={handleLogin}>
               <div className="space-y-1.5">
                 <Label htmlFor="login-telefono">Número de teléfono</Label>
                 <Input
                   id="login-telefono"
+                  name="phone"
                   type="tel"
                   inputMode="tel"
                   placeholder="+53 5 000 0000"
                   autoComplete="tel"
                   maxLength={20}
+                  required
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="login-clave">Contraseña</Label>
-                <Input id="login-clave" type="password" autoComplete="current-password" />
+                <Input
+                  id="login-clave"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
               </div>
-              <Button type="submit" className="w-full">
-                Entrar
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Entrando…" : "Entrar"}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="registro">
-            <form
-              className="surface-card mt-4 space-y-4 p-5"
-              onSubmit={(event) => {
-                event.preventDefault();
-                toast.info("Prototipo visual: el registro real llega en la próxima fase.");
-              }}
-            >
+            <form className="surface-card mt-4 space-y-4 p-5" onSubmit={handleSignUp}>
               <div className="space-y-1.5">
                 <Label htmlFor="reg-nombre">Nombre completo</Label>
-                <Input id="reg-nombre" placeholder="Tu nombre" autoComplete="name" maxLength={100} />
+                <Input
+                  id="reg-nombre"
+                  name="name"
+                  placeholder="Tu nombre"
+                  autoComplete="name"
+                  maxLength={100}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="reg-telefono">Número de teléfono</Label>
                 <Input
                   id="reg-telefono"
+                  name="phone"
                   type="tel"
                   inputMode="tel"
                   placeholder="+53 5 000 0000"
                   autoComplete="tel"
                   maxLength={20}
+                  required
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="reg-clave">Contraseña</Label>
-                <Input id="reg-clave" type="password" autoComplete="new-password" />
+                <Input
+                  id="reg-clave"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
               </div>
               {ref ? (
                 <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
                   Te invitó el enlace de referido <span className="font-semibold">{ref}</span>.
                 </p>
               ) : null}
-              <Button type="submit" className="w-full">
-                Crear cuenta
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creando cuenta…" : "Crear cuenta"}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
-
-        <div className="border-t border-border/70 pt-5 text-center">
-          <p className="mb-3 text-xs text-muted-foreground">
-            Acceso temporal mientras terminamos MONSTORE
-          </p>
-          <Button asChild variant="outline" className="w-full">
-            {sharedEvent ? (
-              <Link to="/app/eventos/$id" params={{ id: sharedEvent.id }}>
-                Entrar como usuario de prueba
-              </Link>
-            ) : (
-              <Link to="/app">Entrar como usuario de prueba</Link>
-            )}
-          </Button>
-        </div>
-
-        <ProtectedNotice area="el acceso a la cuenta" />
       </div>
     </main>
   );
 }
+
