@@ -72,7 +72,7 @@ function UserHome() {
           </div>
         </section>
 
-        <section className="grid grid-cols-3 gap-3">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {SHORTCUTS.map((shortcut) => (
             <Link
               key={shortcut.to}
@@ -98,6 +98,34 @@ function UserHome() {
             ))}
           </div>
         </section>
+
+        {giftCards.length > 0 ? (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">🎁 Tarjetas de regalo</h2>
+              <Link to="/app/tarjetas" className="flex items-center gap-1 text-sm text-primary">
+                Ver todas <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {giftCards.map((card) => (
+                <Link
+                  key={card.id}
+                  to="/app/recargas/$slug"
+                  params={{ slug: card.slug }}
+                  className="surface-card overflow-hidden transition-transform hover:-translate-y-1"
+                >
+                  <GameCover
+                    src={card.cover || giftCardImage(card.name)}
+                    name={card.name}
+                    className="aspect-square w-full"
+                  />
+                  <p className="truncate p-2 text-xs font-medium">{card.name}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
