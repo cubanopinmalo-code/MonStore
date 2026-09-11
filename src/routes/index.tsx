@@ -1,15 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProtectedNotice } from "@/components/common/states";
-import { mockEvents } from "@/data/mock/events";
+import { supabase } from "@/integrations/supabase/client";
+import { signInWithPhone, signUpWithPhone } from "@/lib/auth";
 
 type AuthSearch = { ref?: string; evento?: string };
+
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): AuthSearch => {
