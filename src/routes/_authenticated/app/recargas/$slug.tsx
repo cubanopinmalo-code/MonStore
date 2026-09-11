@@ -64,8 +64,51 @@ function PurchaseFlowPage() {
   const [status, setStatus] = useState<OrderStatus>("procesando");
   const [submitting, setSubmitting] = useState(false);
 
+  const [player, setPlayer] = useState<{
+    loading: boolean;
+    name: string | null;
+    message: string | null;
+  }>({ loading: false, name: null, message: null });
+
   const fields = product ? fieldsFor(product) : [];
   const missing = fields.filter((field) => field.required && !values[field.key]?.trim());
+
+  const gameCode = codeFor(product, game.g2bulk_id);
+  const playerKey = fields.find((field) => PLAYER_KEYS.includes(field.key))?.key ?? null;
+  const playerId = playerKey ? (values[playerKey] ?? "").trim() : "";
+  const serverId = (values["server_id"] ?? "").trim();
+  const needsServer = fields.some((field) => field.key === "server_id" && field.required);
+
+  useEffect(() => {
+    if (!gameCode || !playerId || playerId.length < 4 || (needsServer && !serverId)) {
+      setPlayer({ loading: false, name: null, message: null });
+      return;
+    }
+    let active = true;
+    setPlayer({ loading: true, name: null, message: null });
+    const timer = window.setTimeout(() => {
+      void checkGamePlayer({
+        data: { gameCode, playerId, ...(serverId ? { serverId } : {}) },
+      })
+        .then((result) => {
+          if (!active) return;
+          setPlayer({ loading: false, name: result.name, message: result.message });
+        })
+        .catch(() => {
+          if (!active) return;
+          setPlayer({
+            loading: false,
+            name: null,
+            message: "No pudimos verificar el ID ahora mismo.",
+          });
+        });
+    }, 600);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [gameCode, playerId, serverId, needsServer]);
+
 
   function selectProduct(item: CatalogProduct) {
     setProduct(item);
