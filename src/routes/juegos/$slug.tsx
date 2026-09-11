@@ -58,10 +58,10 @@ function GameDetailPage() {
     <AppShell>
       <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
         <div className="grid gap-6 md:grid-cols-[220px_1fr] md:items-start">
-          <img
+          <GameCover
             src={game.cover}
-            alt={`Portada de ${game.name}`}
-            className="aspect-3/4 w-full max-w-[220px] rounded-xl border border-border bg-muted object-cover"
+            name={game.name}
+            className="aspect-3/4 w-full max-w-[220px] rounded-xl border border-border"
           />
           <div className="space-y-3">
             {game.category ? (
