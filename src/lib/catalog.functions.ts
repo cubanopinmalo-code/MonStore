@@ -578,7 +578,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         description: (product.description ?? "").trim(),
         g2bulk_product_id: ref,
         g2bulk_cost: Number(product.unit_price ?? 0),
-        sale_price: 0,
+        sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
         delivery_method: "via_cuenta",
         active: false,
