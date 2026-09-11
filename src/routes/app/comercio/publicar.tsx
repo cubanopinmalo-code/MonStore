@@ -119,7 +119,7 @@ function PublishListingPage() {
               <ImagePlus className="size-4" aria-hidden="true" />
               Selecciona la foto principal y las demás imágenes
             </label>
-            <Input id="imagenes" type="file" accept="image/*" multiple className="sr-only" />
+            <Input id="imagenes" type="file" accept="image/*" multiple className="hidden" />
             <p className="text-xs text-muted-foreground">La primera imagen será la foto principal pública.</p>
           </div>
 
