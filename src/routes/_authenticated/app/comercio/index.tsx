@@ -49,7 +49,7 @@ function UserMarketplacePage() {
           </div>
         </section>
 
-        <div className="sticky top-16 z-30 -mx-4 border-y border-border/70 bg-background/85 px-4 py-3 backdrop-blur">
+        <div className="sticky top-16 z-30 -mx-4 border-y border-border/70 bg-background/95 px-4 py-3 shadow-[0_10px_24px_-20px_oklch(0_0_0/0.9)] backdrop-blur">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground sm:hidden">
               <span className="font-semibold text-foreground">{total}</span>{" "}
