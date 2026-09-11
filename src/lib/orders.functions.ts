@@ -85,7 +85,9 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const { data: product, error } = await supabase
       .from("products")
-      .select("id, name, sale_price, active, available, metadata, delivery_method, game_id")
+      .select(
+        "id, name, sale_price, active, available, metadata, delivery_method, game_id, g2bulk_product_id",
+      )
       .eq("id", data.product_id)
       .maybeSingle();
     if (error) throw new Error("No se pudo comprobar esta oferta.");
