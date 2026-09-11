@@ -35,14 +35,8 @@ function PublishListingPage() {
   const initialGameId = availableGames[0]?.id ?? "";
   const [gameId, setGameId] = useState(initialGameId);
   const [showPassword, setShowPassword] = useState(false);
-  const platformsByGame: Record<string, string[]> = {
-    gm_001: ["Android", "iOS"],
-    gm_002: ["Android", "iOS"],
-    gm_003: ["Android", "iOS", "PC"],
-    gm_004: ["Android", "iOS"],
-    gm_005: ["Android", "iOS"],
-  };
-  const platforms = platformsByGame[gameId] ?? ["Android", "iOS", "PC"];
+  const selectedGame = availableGames.find((game) => game.id === gameId);
+  const platforms = getAccessMethods(selectedGame?.name);
 
   return (
     <UserShell>
