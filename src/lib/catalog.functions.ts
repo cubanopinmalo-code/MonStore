@@ -138,12 +138,21 @@ async function withOffers(
 ): Promise<CatalogGame[]> {
   const counts = new Map<string, number>();
   if (games.length > 0) {
-    const { data } = await client.from("products").select("game_id").in(
-      "game_id",
-      games.map((game) => game.id),
-    );
-    for (const row of data ?? []) counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
+    const ids = games.map((game) => game.id);
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data } = await client
+        .from("products")
+        .select("game_id")
+        .in("game_id", ids)
+        .order("game_id")
+        .range(from, from + pageSize - 1);
+      const rows = data ?? [];
+      for (const row of rows) counts.set(row.game_id, (counts.get(row.game_id) ?? 0) + 1);
+      if (rows.length < pageSize) break;
+    }
   }
+
   const signed = await signCatalogImages(games.map((game) => game.image_url));
   return games.map((game) => ({
     ...game,
