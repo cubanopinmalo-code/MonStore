@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/events/EventCard";
-import { EmptyState } from "@/components/common/states";
-import { mockEvents } from "@/data/mock/events";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/states";
+import { useEvents } from "@/hooks/useEvents";
 
 export const Route = createFileRoute("/_authenticated/app/eventos/")({
   head: () => ({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
 });
 
 function EventsPage() {
-  const events = mockEvents.filter((event) => event.status !== "finalizado");
+  const { data: events, isLoading, isError, refetch } = useEvents();
 
   return (
     <UserShell>
@@ -37,7 +37,11 @@ function EventsPage() {
           description="Salas personalizadas con premios. El pago se realiza solo al entrar a la sala."
         />
 
-        {events.length === 0 ? (
+        {isLoading ? (
+          <LoadingState />
+        ) : isError ? (
+          <ErrorState onRetry={() => void refetch()} />
+        ) : !events || events.length === 0 ? (
           <EmptyState
             title="Todavía no hay eventos"
             description="Cuando el equipo publique un evento aparecerá aquí."
@@ -45,7 +49,7 @@ function EventsPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {events.map((event) => (
-              <EventCard key={event.id} eventId={event.id} />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}
