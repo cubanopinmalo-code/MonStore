@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -18,7 +18,8 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
-import { mockWallet } from "@/data/mock/wallet";
+import { toast } from "sonner";
+import { useWallet } from "@/hooks/useAccount";
 import {
   checkGamePlayer,
   getCatalogGame,
@@ -63,6 +64,9 @@ function PurchaseFlowPage() {
   const [payment, setPayment] = useState("wallet");
   const [status, setStatus] = useState<OrderStatus>("procesando");
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { data: wallet } = useWallet();
+  const balance = Number(wallet?.balance ?? 0);
 
   const [player, setPlayer] = useState<{
     loading: boolean;
@@ -113,11 +117,23 @@ function PurchaseFlowPage() {
   function selectProduct(item: CatalogProduct) {
     setProduct(item);
     setValues({});
+    setPlayer({ loading: false, name: null, message: null });
     setStep(1);
   }
 
   function confirm() {
-    if (submitting) return;
+    if (submitting || !product) return;
+    if (balance < product.sale_price) {
+      const missingAmount = Math.ceil(product.sale_price - balance);
+      toast.info("Te falta saldo para esta compra", {
+        description: `Necesitas ${formatCUP(missingAmount)} más. Te llevamos a agregar fondos por saldo móvil.`,
+      });
+      void navigate({
+        to: "/app/wallet/depositar",
+        search: { necesario: missingAmount, metodo: "movil" },
+      });
+      return;
+    }
     setSubmitting(true);
     setStatus("procesando");
     setStep(3);
@@ -298,7 +314,7 @@ function PurchaseFlowPage() {
                   <span className="flex-1">
                     Wallet MONSTORE
                     <span className="block text-xs text-muted-foreground">
-                      Saldo disponible: {formatCUP(mockWallet.balance)}
+                      Saldo disponible: {formatCUP(balance)}
                     </span>
                   </span>
                 </label>

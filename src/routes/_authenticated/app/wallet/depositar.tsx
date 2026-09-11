@@ -11,7 +11,17 @@ import { mockPaymentSettings } from "@/data/mock/admin";
 import { calculateDeposit } from "@/services/wallet";
 import { formatCUP } from "@/lib/format";
 
+type DepositSearch = { necesario?: number; metodo?: string };
+
 export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
+  validateSearch: (search: Record<string, unknown>): DepositSearch => {
+    const needed = Number(search["necesario"]);
+    const method = String(search["metodo"] ?? "");
+    return {
+      ...(Number.isFinite(needed) && needed > 0 ? { necesario: Math.ceil(needed) } : {}),
+      ...(method === "movil" || method === "tarjeta" ? { metodo: method } : {}),
+    };
+  },
   head: () => ({
     meta: [
       { title: "Agregar fondos — MONSTORE" },
@@ -22,10 +32,24 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
 });
 
 function DepositPage() {
-  const [amount, setAmount] = useState("2000");
-  const [tab, setTab] = useState("movil");
+  const { necesario, metodo } = Route.useSearch();
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
   const card = mockPaymentSettings.find((s) => s.payment_method === "tarjeta_cup");
+  const initialTab = metodo ?? "movil";
+  const initialAmount = necesario
+    ? String(
+        Math.ceil(
+          necesario /
+            (1 +
+              (initialTab === "movil"
+                ? (mobile?.deposit_bonus_pct ?? 0)
+                : (card?.deposit_bonus_pct ?? 0)) /
+                100),
+        ),
+      )
+    : "2000";
+  const [amount, setAmount] = useState(initialAmount);
+  const [tab, setTab] = useState(initialTab);
   const parsed = Number(amount) || 0;
   const breakdown = calculateDeposit(parsed, tab === "movil" ? "saldo_movil" : "tarjeta_cup");
 
@@ -51,6 +75,15 @@ function DepositPage() {
           </Button>
           <h1 className="text-xl font-bold">Agregar fondos</h1>
         </div>
+
+        {necesario ? (
+          <div className="surface-card border-primary/40 p-4">
+            <p className="text-sm">
+              Te faltan <span className="font-semibold text-primary">{formatCUP(necesario)}</span>{" "}
+              para completar tu compra. Ya pusimos el importe justo a pagar.
+            </p>
+          </div>
+        ) : null}
 
         <div className="surface-card space-y-1.5 p-5">
           <Label htmlFor="monto">Importe a depositar (CUP)</Label>
