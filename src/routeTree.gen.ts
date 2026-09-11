@@ -15,6 +15,7 @@ import { Route as ComercioRouteImport } from './routes/comercio'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
 import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -78,6 +79,11 @@ const RegistroRoute = RegistroRouteImport.update({
   path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const JuegosIndexRoute = JuegosIndexRouteImport.update({
   id: '/juegos/',
   path: '/juegos/',
@@ -89,86 +95,86 @@ const JuegosSlugRoute = JuegosSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
 const AuthenticatedAdminComercioRoute =
   AuthenticatedAdminComercioRouteImport.update({
-    id: '/admin/comercio',
-    path: '/admin/comercio',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/comercio',
+    path: '/comercio',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminConfiguracionRoute =
   AuthenticatedAdminConfiguracionRouteImport.update({
-    id: '/admin/configuracion',
-    path: '/admin/configuracion',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/configuracion',
+    path: '/configuracion',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminDepositosRoute =
   AuthenticatedAdminDepositosRouteImport.update({
-    id: '/admin/depositos',
-    path: '/admin/depositos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/depositos',
+    path: '/depositos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminEventosRoute =
   AuthenticatedAdminEventosRouteImport.update({
-    id: '/admin/eventos',
-    path: '/admin/eventos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/eventos',
+    path: '/eventos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminG2bulkRoute =
   AuthenticatedAdminG2bulkRouteImport.update({
-    id: '/admin/g2bulk',
-    path: '/admin/g2bulk',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/g2bulk',
+    path: '/g2bulk',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminJuegosRoute =
   AuthenticatedAdminJuegosRouteImport.update({
-    id: '/admin/juegos',
-    path: '/admin/juegos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/juegos',
+    path: '/juegos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminPagosRoute = AuthenticatedAdminPagosRouteImport.update({
-  id: '/admin/pagos',
-  path: '/admin/pagos',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
 const AuthenticatedAdminPedidosRoute =
   AuthenticatedAdminPedidosRouteImport.update({
-    id: '/admin/pedidos',
-    path: '/admin/pedidos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminProductosRoute =
   AuthenticatedAdminProductosRouteImport.update({
-    id: '/admin/productos',
-    path: '/admin/productos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/productos',
+    path: '/productos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminReferidosRoute =
   AuthenticatedAdminReferidosRouteImport.update({
-    id: '/admin/referidos',
-    path: '/admin/referidos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/referidos',
+    path: '/referidos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminRetirosRoute =
   AuthenticatedAdminRetirosRouteImport.update({
-    id: '/admin/retiros',
-    path: '/admin/retiros',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/retiros',
+    path: '/retiros',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminUsuariosRoute =
   AuthenticatedAdminUsuariosRouteImport.update({
-    id: '/admin/usuarios',
-    path: '/admin/usuarios',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminWalletsRoute =
   AuthenticatedAdminWalletsRouteImport.update({
-    id: '/admin/wallets',
-    path: '/admin/wallets',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/wallets',
+    path: '/wallets',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/app/',
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
   '/admin/comercio': typeof AuthenticatedAdminComercioRoute
@@ -359,6 +366,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/juegos/$slug': typeof JuegosSlugRoute
   '/juegos/': typeof JuegosIndexRoute
   '/_authenticated/admin/comercio': typeof AuthenticatedAdminComercioRoute
@@ -401,6 +409,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/admin'
     | '/juegos/$slug'
     | '/juegos/'
     | '/admin/comercio'
@@ -482,6 +491,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/recargas'
     | '/registro'
+    | '/_authenticated/admin'
     | '/juegos/$slug'
     | '/juegos/'
     | '/_authenticated/admin/comercio'
@@ -572,6 +582,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegistroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/juegos/': {
       id: '/juegos/'
       path: '/juegos'
@@ -588,101 +605,101 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/comercio': {
       id: '/_authenticated/admin/comercio'
-      path: '/admin/comercio'
+      path: '/comercio'
       fullPath: '/admin/comercio'
       preLoaderRoute: typeof AuthenticatedAdminComercioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/configuracion': {
       id: '/_authenticated/admin/configuracion'
-      path: '/admin/configuracion'
+      path: '/configuracion'
       fullPath: '/admin/configuracion'
       preLoaderRoute: typeof AuthenticatedAdminConfiguracionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/depositos': {
       id: '/_authenticated/admin/depositos'
-      path: '/admin/depositos'
+      path: '/depositos'
       fullPath: '/admin/depositos'
       preLoaderRoute: typeof AuthenticatedAdminDepositosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/eventos': {
       id: '/_authenticated/admin/eventos'
-      path: '/admin/eventos'
+      path: '/eventos'
       fullPath: '/admin/eventos'
       preLoaderRoute: typeof AuthenticatedAdminEventosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/g2bulk': {
       id: '/_authenticated/admin/g2bulk'
-      path: '/admin/g2bulk'
+      path: '/g2bulk'
       fullPath: '/admin/g2bulk'
       preLoaderRoute: typeof AuthenticatedAdminG2bulkRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/juegos': {
       id: '/_authenticated/admin/juegos'
-      path: '/admin/juegos'
+      path: '/juegos'
       fullPath: '/admin/juegos'
       preLoaderRoute: typeof AuthenticatedAdminJuegosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/pagos': {
       id: '/_authenticated/admin/pagos'
-      path: '/admin/pagos'
+      path: '/pagos'
       fullPath: '/admin/pagos'
       preLoaderRoute: typeof AuthenticatedAdminPagosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/pedidos': {
       id: '/_authenticated/admin/pedidos'
-      path: '/admin/pedidos'
+      path: '/pedidos'
       fullPath: '/admin/pedidos'
       preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/productos': {
       id: '/_authenticated/admin/productos'
-      path: '/admin/productos'
+      path: '/productos'
       fullPath: '/admin/productos'
       preLoaderRoute: typeof AuthenticatedAdminProductosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/referidos': {
       id: '/_authenticated/admin/referidos'
-      path: '/admin/referidos'
+      path: '/referidos'
       fullPath: '/admin/referidos'
       preLoaderRoute: typeof AuthenticatedAdminReferidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/retiros': {
       id: '/_authenticated/admin/retiros'
-      path: '/admin/retiros'
+      path: '/retiros'
       fullPath: '/admin/retiros'
       preLoaderRoute: typeof AuthenticatedAdminRetirosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/usuarios': {
       id: '/_authenticated/admin/usuarios'
-      path: '/admin/usuarios'
+      path: '/usuarios'
       fullPath: '/admin/usuarios'
       preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/wallets': {
       id: '/_authenticated/admin/wallets'
-      path: '/admin/wallets'
+      path: '/wallets'
       fullPath: '/admin/wallets'
       preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
@@ -806,7 +823,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
+interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminComercioRoute: typeof AuthenticatedAdminComercioRoute
   AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
   AuthenticatedAdminDepositosRoute: typeof AuthenticatedAdminDepositosRoute
@@ -820,10 +837,37 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRetirosRoute: typeof AuthenticatedAdminRetirosRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminWalletsRoute: typeof AuthenticatedAdminWalletsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminComercioRoute: AuthenticatedAdminComercioRoute,
+    AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
+    AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,
+    AuthenticatedAdminEventosRoute: AuthenticatedAdminEventosRoute,
+    AuthenticatedAdminG2bulkRoute: AuthenticatedAdminG2bulkRoute,
+    AuthenticatedAdminJuegosRoute: AuthenticatedAdminJuegosRoute,
+    AuthenticatedAdminPagosRoute: AuthenticatedAdminPagosRoute,
+    AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
+    AuthenticatedAdminProductosRoute: AuthenticatedAdminProductosRoute,
+    AuthenticatedAdminReferidosRoute: AuthenticatedAdminReferidosRoute,
+    AuthenticatedAdminRetirosRoute: AuthenticatedAdminRetirosRoute,
+    AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
+    AuthenticatedAdminWalletsRoute: AuthenticatedAdminWalletsRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedAppNotificacionesRoute: typeof AuthenticatedAppNotificacionesRoute
   AuthenticatedAppPerfilRoute: typeof AuthenticatedAppPerfilRoute
   AuthenticatedAppReferidosRoute: typeof AuthenticatedAppReferidosRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppComercioIdRoute: typeof AuthenticatedAppComercioIdRoute
   AuthenticatedAppComercioMisPublicacionesRoute: typeof AuthenticatedAppComercioMisPublicacionesRoute
@@ -841,23 +885,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminComercioRoute: AuthenticatedAdminComercioRoute,
-  AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
-  AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,
-  AuthenticatedAdminEventosRoute: AuthenticatedAdminEventosRoute,
-  AuthenticatedAdminG2bulkRoute: AuthenticatedAdminG2bulkRoute,
-  AuthenticatedAdminJuegosRoute: AuthenticatedAdminJuegosRoute,
-  AuthenticatedAdminPagosRoute: AuthenticatedAdminPagosRoute,
-  AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
-  AuthenticatedAdminProductosRoute: AuthenticatedAdminProductosRoute,
-  AuthenticatedAdminReferidosRoute: AuthenticatedAdminReferidosRoute,
-  AuthenticatedAdminRetirosRoute: AuthenticatedAdminRetirosRoute,
-  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
-  AuthenticatedAdminWalletsRoute: AuthenticatedAdminWalletsRoute,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedAppNotificacionesRoute: AuthenticatedAppNotificacionesRoute,
   AuthenticatedAppPerfilRoute: AuthenticatedAppPerfilRoute,
   AuthenticatedAppReferidosRoute: AuthenticatedAppReferidosRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppComercioIdRoute: AuthenticatedAppComercioIdRoute,
   AuthenticatedAppComercioMisPublicacionesRoute:

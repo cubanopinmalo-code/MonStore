@@ -4,7 +4,7 @@ import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { mockWallet, mockWalletTransactions } from "@/data/mock/wallet";
+import { useWallet, useWalletTransactions } from "@/hooks/useAccount";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/wallet/")({
@@ -18,7 +18,9 @@ export const Route = createFileRoute("/_authenticated/app/wallet/")({
 });
 
 function WalletPage() {
-  const transactions = mockWalletTransactions;
+  const { data: wallet } = useWallet();
+  const { data: txData } = useWalletTransactions();
+  const transactions = txData ?? [];
 
   return (
     <UserShell>
@@ -34,9 +36,12 @@ function WalletPage() {
           <div className="relative space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Saldo disponible</p>
-              <StatusBadge status={mockWallet.status} />
+              <StatusBadge status={wallet?.status ?? "activa"} />
             </div>
-            <p className="font-display text-4xl font-bold">{formatCUP(mockWallet.balance)}</p>
+            <p className="font-display text-4xl font-bold">
+              {formatCUP(Number(wallet?.balance ?? 0))}
+            </p>
+
             <div className="flex flex-wrap gap-2 pt-3">
               <Button asChild>
                 <Link to="/app/wallet/depositar">
