@@ -24,7 +24,8 @@ function AdminMarketplacePage() {
         {mockGameAccounts.map((listing) => {
           const game = mockGames.find((item) => item.id === listing.game_id);
           return (
-            <article key={listing.id} className="surface-card flex gap-3 p-3">
+            <article key={listing.id} className="surface-card space-y-3 p-3">
+              <div className="flex gap-3">
               <img
                 src={listing.images[0]}
                 alt={listing.title}
@@ -39,29 +40,31 @@ function AdminMarketplacePage() {
                   <StatusBadge status={listing.status} />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {game?.name} · {listing.seller_name} · {formatDateTime(listing.created_at)}
+                  {game?.name} · {listing.seller_name} · {listing.region} · {listing.platform}
                 </p>
+                <p className="text-xs text-muted-foreground">{formatDateTime(listing.created_at)}</p>
                 <p className="line-clamp-2 text-xs text-muted-foreground">
                   {listing.description}
                 </p>
                 <p className="font-display text-base font-bold text-primary">
                   {formatCUP(listing.price)}
                 </p>
-                {listing.status === "pendiente" ? (
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" onClick={() => toast.success("Publicación aprobada (simulado)")}>
-                      Aprobar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => toast.error("Publicación rechazada (simulado)")}
-                    >
-                      Rechazar
-                    </Button>
-                  </div>
-                ) : null}
               </div>
+              </div>
+              <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
+                <p className="mb-2 font-semibold text-warning">Datos privados — solo administración</p>
+                <dl className="space-y-1">
+                  <div><dt className="inline text-muted-foreground">Correo: </dt><dd className="inline">{listing.account_email}</dd></div>
+                  <div><dt className="inline text-muted-foreground">Contraseña: </dt><dd className="inline">{listing.account_password}</dd></div>
+                  <div><dt className="inline text-muted-foreground">Acceso: </dt><dd className="inline">{listing.admin_access_notes}</dd></div>
+                </dl>
+              </div>
+              {listing.status === "pendiente" ? (
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => toast.success("Publicación aprobada (simulado)")}>Aprobar</Button>
+                  <Button size="sm" variant="outline" onClick={() => toast.error("Publicación rechazada (simulado)")}>Rechazar</Button>
+                </div>
+              ) : null}
             </article>
           );
         })}

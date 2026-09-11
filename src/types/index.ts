@@ -211,9 +211,14 @@ export interface GameAccount {
   game_id: string;
   title: string;
   description: string;
+  region: string;
+  platform: string;
   price: number;
   currency: Currency;
   images: string[];
+  account_email: string;
+  account_password: string;
+  admin_access_notes: string;
   status: ListingStatus;
   rejection_reason: string | null;
   created_at: string;
