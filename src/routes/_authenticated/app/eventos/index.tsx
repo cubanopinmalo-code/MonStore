@@ -57,10 +57,20 @@ function EventsPage() {
           description="Salas personalizadas con premios. El pago se realiza solo al entrar a la sala."
         />
 
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+            {TABS.map((item) => (
+              <TabsTrigger key={item.value} value={item.value} className="text-xs">
+                {item.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
         {events.length === 0 ? (
           <EmptyState
-            title="Todavía no hay eventos"
-            description="Cuando el equipo publique un evento aparecerá aquí."
+            title="No hay eventos en esta categoría"
+            description="Prueba con otra pestaña o vuelve más tarde."
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
