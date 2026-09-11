@@ -299,6 +299,7 @@ function ProfilePage() {
           </div>
           <Button asChild className="w-full">
             <a
+              onClick={openSupportChat}
               href={SUPPORT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
