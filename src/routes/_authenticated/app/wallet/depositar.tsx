@@ -175,7 +175,30 @@ function DepositPage() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">{mobile?.instructions}</p>
-              <Button className="w-full" onClick={() => submit("Saldo móvil ETECSA")}>
+              <div className="space-y-1.5">
+                <Label htmlFor="comprobante-movil">Captura de pantalla del pago</Label>
+                <label
+                  htmlFor="comprobante-movil"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground"
+                >
+                  <Upload className="size-4" aria-hidden="true" />
+                  {mobileProof ? mobileProof.name : "Sube la captura de la transferencia"}
+                </label>
+                <Input
+                  id="comprobante-movil"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => setMobileProof(event.target.files?.[0] ?? null)}
+                />
+                {!mobileProof && mobileAttempts > 0 ? (
+                  <p className="text-xs text-destructive">
+                    Sin captura puede demorar hasta 24 horas en agregar sus fondos. Pulsa otra
+                    vez para enviarla igual.
+                  </p>
+                ) : null}
+              </div>
+              <Button className="w-full" onClick={submitMobile}>
                 He pagado
               </Button>
             </div>
