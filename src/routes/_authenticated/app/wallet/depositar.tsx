@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockPaymentSettings } from "@/data/mock/admin";
 import { calculateDeposit } from "@/services/wallet";
+import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 
 type DepositSearch = { necesario?: number; metodo?: string };
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
       ...(method === "movil" || method === "tarjeta" ? { metodo: method } : {}),
     };
   },
+  loader: () => getSaldoRate(),
   head: () => ({
     meta: [
       { title: "Agregar fondos — MONSTORE" },
@@ -33,25 +35,32 @@ export const Route = createFileRoute("/_authenticated/app/wallet/depositar")({
 
 function DepositPage() {
   const { necesario, metodo } = Route.useSearch();
+  const { rate: saldoRate } = Route.useLoaderData();
   const mobile = mockPaymentSettings.find((s) => s.payment_method === "saldo_movil");
   const card = mockPaymentSettings.find((s) => s.payment_method === "tarjeta_cup");
   const initialTab = metodo ?? "movil";
   const initialAmount = necesario
     ? String(
         Math.ceil(
-          necesario /
-            (1 +
-              (initialTab === "movil"
-                ? (mobile?.deposit_bonus_pct ?? 0)
-                : (card?.deposit_bonus_pct ?? 0)) /
-                100),
+          initialTab === "movil"
+            ? necesario / saldoRate
+            : necesario / (1 + (card?.deposit_bonus_pct ?? 0) / 100),
         ),
       )
     : "2000";
   const [amount, setAmount] = useState(initialAmount);
   const [tab, setTab] = useState(initialTab);
   const parsed = Number(amount) || 0;
-  const breakdown = calculateDeposit(parsed, tab === "movil" ? "saldo_movil" : "tarjeta_cup");
+  const isMobile = tab === "movil";
+  // Saldo móvil: cada peso de saldo se multiplica por la base puesta en el panel.
+  const breakdown = isMobile
+    ? {
+        amount: parsed,
+        bonusPct: 0,
+        bonus: Math.round(parsed * saldoRate) - parsed,
+        credited: Math.round(parsed * saldoRate),
+      }
+    : calculateDeposit(parsed, "tarjeta_cup");
 
   function copy(value: string) {
     void navigator.clipboard?.writeText(value);
@@ -98,7 +107,14 @@ function DepositPage() {
               <span className="text-muted-foreground">Envías</span>
               <span>{formatCUP(breakdown.amount)}</span>
             </div>
-            {breakdown.bonusPct > 0 ? (
+            {isMobile ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Conversión (cada peso de saldo × {saldoRate})
+                </span>
+                <span>+ {formatCUP(breakdown.bonus)}</span>
+              </div>
+            ) : breakdown.bonusPct > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Conversión (+{breakdown.bonusPct}%)

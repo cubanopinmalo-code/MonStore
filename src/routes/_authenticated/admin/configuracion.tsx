@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { mockPaymentSettings } from "@/data/mock/admin";
-import { getUsdRate, setUsdRate } from "@/lib/catalog.functions";
+import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
@@ -19,7 +19,10 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
       { name: "description", content: "Métodos de pago, comisiones y ajustes generales." },
     ],
   }),
-  loader: () => getUsdRate(),
+  loader: async () => {
+    const [pricing, saldo] = await Promise.all([getUsdRate(), getSaldoRate()]);
+    return { pricing, saldo };
+  },
   errorComponent: () => (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
       <p className="surface-card p-5 text-sm text-muted-foreground">
@@ -32,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
 });
 
 function UsdRateCard() {
-  const initial = Route.useLoaderData();
+  const { pricing: initial } = Route.useLoaderData();
   const router = useRouter();
   const save = useServerFn(setUsdRate);
   const [value, setValue] = useState(String(initial.rate));
@@ -96,6 +99,62 @@ function UsdRateCard() {
         }}
       >
         {saving ? "Guardando…" : "Guardar y recalcular precios"}
+      </Button>
+    </section>
+  );
+}
+
+function SaldoRateCard() {
+  const { saldo } = Route.useLoaderData();
+  const router = useRouter();
+  const save = useServerFn(setSaldoRate);
+  const [value, setValue] = useState(String(saldo.rate));
+  const [saving, setSaving] = useState(false);
+  const rate = Number(value) > 0 ? Number(value) : 0;
+
+  return (
+    <section className="surface-card space-y-4 p-5 lg:col-span-2">
+      <div>
+        <h2 className="text-base font-semibold">Base de conversión del saldo móvil</h2>
+        <p className="text-xs text-muted-foreground">
+          Cada peso de saldo móvil que envía el cliente se multiplica por esta base para acreditar
+          su wallet.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="saldo-rate">Multiplicador por cada peso de saldo</Label>
+          <Input
+            id="saldo-rate"
+            inputMode="decimal"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Ejemplo</Label>
+          <p className="rounded-md border border-border/60 px-3 py-2 text-sm">
+            1000 CUP de saldo acreditan {formatCUP(Math.round(1000 * rate))}
+          </p>
+        </div>
+      </div>
+      <Button
+        type="button"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            const result = await save({ data: { rate: Number(value) } });
+            toast.success(`Base de conversión guardada: × ${result.rate}`);
+            await router.invalidate();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        {saving ? "Guardando…" : "Guardar base de conversión"}
       </Button>
     </section>
   );
