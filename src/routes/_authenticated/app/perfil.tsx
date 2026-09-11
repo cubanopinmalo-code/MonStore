@@ -155,28 +155,6 @@ function ProfilePage() {
     await copyLink();
   }
 
-  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    const form = new FormData(event.currentTarget);
-    setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        name: String(form.get("name") ?? ""),
-        
-        province: String(form.get("province") ?? ""),
-        municipality: String(form.get("municipality") ?? ""),
-      })
-      .eq("id", profile.id);
-    setSaving(false);
-    if (error) {
-      toast.error("No pudimos guardar los cambios.");
-      return;
-    }
-    await queryClient.invalidateQueries({ queryKey: ["profile"] });
-    toast.success("Cambios guardados");
-  }
 
   return (
     <UserShell>
