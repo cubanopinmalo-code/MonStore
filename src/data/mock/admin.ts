@@ -140,6 +140,9 @@ export const mockPaymentSettings: PaymentSetting[] = [
     instructions:
       "Transfiere a la tarjeta, sube el comprobante y espera la confirmación del equipo.",
     active: true,
+    deposit_bonus_pct: 0,
+    withdrawal_fee_pct: 5,
+    withdrawal_conversion_pct: 0,
     updated_at: "2026-09-01T10:00:00Z",
   },
 ];
