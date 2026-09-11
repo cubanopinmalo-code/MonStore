@@ -70,10 +70,12 @@ function DepositPage() {
   }
 
   function submit(method: string, note?: string) {
-    toast.success(`Solicitud creada (pendiente) · ${method}`, {
+    toast.success("Solicitud de fondos enviada", {
       description:
-        note ?? "El equipo verificará tu pago. Prototipo: no se acredita saldo real.",
+        note ??
+        `Tu solicitud por ${method} está siendo procesada y se acreditará en breve.`,
     });
+    void navigate({ to: "/app/recargas" });
   }
 
   function submitMobile() {
