@@ -30,6 +30,8 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { rate: usdRate } = Route.useLoaderData();
+  const rewardCup = Math.round(usdRate);
   const queryClient = useQueryClient();
   const clearCache = useClearAccountCache();
   const { data: profile, isLoading } = useProfile();
