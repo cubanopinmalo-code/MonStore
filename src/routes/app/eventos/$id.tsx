@@ -6,6 +6,7 @@ import {
   Copy,
   Globe2,
   Lock,
+  Share2,
   Ticket,
   Trophy,
   Users,
@@ -168,6 +169,10 @@ function EventDetail({ event }: { event: GameEvent }) {
             <StatusBadge status={EVENT_STATUS_LABEL[event.status]} />
           </div>
           <p className="text-sm text-muted-foreground">{event.description}</p>
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share2 className="size-4" aria-hidden="true" />
+            Compartir evento
+          </Button>
         </div>
 
         <section className="surface-card grid gap-3 p-5 sm:grid-cols-2">
