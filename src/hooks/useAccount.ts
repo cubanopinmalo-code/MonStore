@@ -1,7 +1,17 @@
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useCurrentUser() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      queryClient.setQueryData(["auth-user"], session?.user ?? null);
+    });
+    return () => data.subscription.unsubscribe();
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["auth-user"],
     // Sesión local: evita una petición de red cada vez que se monta una pantalla.
