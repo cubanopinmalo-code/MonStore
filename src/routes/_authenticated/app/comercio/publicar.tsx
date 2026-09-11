@@ -59,6 +59,16 @@ function PublishListingPage() {
           className="surface-card space-y-4 p-5"
           onSubmit={(event) => {
             event.preventDefault();
+            if (!gameId || !region || !platform) {
+              toast.error("Completa el juego, la región y la plataforma de acceso");
+              return;
+            }
+            if (imageCount < 1) {
+              setImageError(true);
+              toast.error("Debes enviar al menos 1 foto de la cuenta");
+              return;
+            }
+            setImageError(false);
             toast.success("Publicación enviada (pendiente de revisión)", {
               description: "El equipo la revisará antes de mostrarla en el comercio.",
             });
