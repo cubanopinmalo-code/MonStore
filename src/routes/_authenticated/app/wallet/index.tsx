@@ -28,12 +28,6 @@ const METHOD_LABEL: Record<string, string> = {
   wallet: "Wallet",
 };
 
-const STATUS_NOTE: Record<string, string> = {
-  pendiente: "En revisión",
-  aprobado: "Aprobada",
-  rechazado: "Rechazada",
-};
-
 function WalletPage() {
   const { data: wallet } = useWallet();
   const { data: txData } = useWalletTransactions();
@@ -113,7 +107,7 @@ function WalletPage() {
                     <p className="text-sm font-medium">
                       {req.kind} · {METHOD_LABEL[req.method] ?? req.method}
                     </p>
-                    <StatusBadge status={STATUS_NOTE[req.status] ?? req.status} />
+                    <StatusBadge status={req.status} />
                   </div>
                   <p className="text-sm">
                     Enviaste {formatCUP(req.sent)} ·{" "}
