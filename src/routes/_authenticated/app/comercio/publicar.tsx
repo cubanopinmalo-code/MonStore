@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Eye, EyeOff, ImagePlus, LockKeyhole } from "lucide-react";
+import { AlertTriangle, ChevronLeft, Eye, EyeOff, ImagePlus, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,10 @@ function PublishListingPage() {
   const initialGameId = availableGames[0]?.id ?? "";
   const [gameId, setGameId] = useState(initialGameId);
   const [showPassword, setShowPassword] = useState(false);
+  const [region, setRegion] = useState("Latinoamérica");
+  const [platform, setPlatform] = useState("");
+  const [imageCount, setImageCount] = useState(0);
+  const [imageError, setImageError] = useState(false);
   const selectedGame = availableGames.find((game) => game.id === gameId);
   const platforms = getAccessMethods(selectedGame?.name);
 
