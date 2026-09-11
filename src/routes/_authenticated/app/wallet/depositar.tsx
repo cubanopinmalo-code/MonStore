@@ -53,6 +53,8 @@ function DepositPage() {
   const [tab, setTab] = useState(initialTab);
   const [mobileProof, setMobileProof] = useState<File | null>(null);
   const [mobileAttempts, setMobileAttempts] = useState(0);
+  const [cardProof, setCardProof] = useState<File | null>(null);
+  const [sending, setSending] = useState(false);
   const parsed = Number(amount) || 0;
   const isMobile = tab === "movil";
   // Saldo móvil: cada peso de saldo se multiplica por la base puesta en el panel.
