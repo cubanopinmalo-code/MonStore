@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, Images, MapPin, Monitor, ShieldCheck, UserRound } from "lucide-react";
+import { ChevronLeft, Clock, Images, MapPin, Monitor, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
-import { mockGameAccounts } from "@/data/mock/marketplace";
-import { mockGames } from "@/data/mock/games";
-import { mockWallet } from "@/data/mock/wallet";
+import { useWallet } from "@/hooks/useAccount";
+import { usePublicListing, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
 import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/comercio/$id")({
@@ -25,24 +24,34 @@ export const Route = createFileRoute("/_authenticated/app/comercio/$id")({
 
 function ListingDetailPage() {
   const { id } = Route.useParams();
-  const listing = mockGameAccounts.find((item) => item.id === id && item.status === "aprobada");
+  const { data: listing, isLoading } = usePublicListing(id);
+  const { data: wallet } = useWallet();
+  const images = useSignedImages((listing?.images as string[] | undefined) ?? []);
   const [selectedImage, setSelectedImage] = useState(0);
 
   if (!listing) {
     return (
       <UserShell>
         <div className="mx-auto max-w-xl space-y-4 py-12 text-center">
-          <h1 className="text-2xl font-bold">Publicación no disponible</h1>
-          <p className="text-sm text-muted-foreground">Esta cuenta ya no está publicada o sigue en revisión.</p>
-          <Button asChild><Link to="/app/comercio">Volver al comercio</Link></Button>
+          <h1 className="text-2xl font-bold">
+            {isLoading ? "Cargando publicación…" : "Publicación no disponible"}
+          </h1>
+          {!isLoading ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Esta cuenta ya no está publicada, venció su tiempo contratado o sigue en revisión.
+              </p>
+              <Button asChild><Link to="/app/comercio">Volver al comercio</Link></Button>
+            </>
+          ) : null}
         </div>
       </UserShell>
     );
   }
 
-  const game = mockGames.find((item) => item.id === listing.game_id);
-  const activeImage = listing.images[selectedImage] ?? listing.images[0];
-  const canAfford = mockWallet.balance >= listing.price;
+  const activeImage = images[selectedImage] ?? images[0];
+  const canAfford = Number(wallet?.balance ?? 0) >= Number(listing.price);
+  const remaining = remainingLabel(listing.expires_at);
 
   return (
     <UserShell>
@@ -52,7 +61,7 @@ function ListingDetailPage() {
             <Link to="/app/comercio" aria-label="Volver al comercio"><ChevronLeft aria-hidden="true" /></Link>
           </Button>
           <div>
-            <p className="text-xs text-muted-foreground">{game?.name}</p>
+            <p className="text-xs text-muted-foreground">{listing.games?.name}</p>
             <h1 className="text-xl font-bold">{listing.title}</h1>
           </div>
         </div>
@@ -60,10 +69,14 @@ function ListingDetailPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)]">
           <section className="space-y-3" aria-label="Galería de imágenes">
             <div className="surface-card overflow-hidden">
-              <img src={activeImage} alt={`${listing.title}, imagen ${selectedImage + 1}`} width={1200} height={900} className="aspect-4/3 w-full object-cover" />
+              {activeImage ? (
+                <img src={activeImage} alt={`${listing.title}, imagen ${selectedImage + 1}`} width={1200} height={900} className="aspect-4/3 w-full object-cover" />
+              ) : (
+                <div className="aspect-4/3 w-full bg-muted" aria-hidden="true" />
+              )}
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {listing.images.map((image, index) => (
+              {images.map((image, index) => (
                 <Button key={`${image}-${index}`} type="button" variant="outline" className={`h-auto overflow-hidden p-0 ${selectedImage === index ? "ring-2 ring-primary" : ""}`} onClick={() => setSelectedImage(index)} aria-label={`Ver imagen ${index + 1}`}>
                   <img src={image} alt="" width={240} height={180} className="aspect-4/3 w-full object-cover" />
                 </Button>
@@ -77,7 +90,9 @@ function ListingDetailPage() {
               <div className="flex items-center gap-2 text-sm"><MapPin className="text-primary" aria-hidden="true" /><span><span className="text-muted-foreground">Región:</span> {listing.region}</span></div>
               <div className="flex items-center gap-2 text-sm"><Monitor className="text-primary" aria-hidden="true" /><span><span className="text-muted-foreground">Plataforma:</span> {listing.platform}</span></div>
               <div className="flex items-center gap-2 text-sm"><Images className="text-primary" aria-hidden="true" /><span>{listing.images.length} imágenes del vendedor</span></div>
-              <p className="border-t border-border pt-4 text-sm text-muted-foreground">{listing.description}</p>
+              {remaining ? (
+                <div className="flex items-center gap-2 text-sm"><Clock className="text-primary" aria-hidden="true" /><span>{remaining}</span></div>
+              ) : null}
               <div className="border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground">Precio</p>
                 <p className="font-display text-3xl font-bold text-primary">{formatCUP(listing.price)}</p>

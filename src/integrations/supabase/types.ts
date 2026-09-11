@@ -273,11 +273,15 @@ export type Database = {
           created_at: string
           currency: string
           description: string
+          duration_days: number
+          expires_at: string | null
           game_id: string | null
           id: string
           images: string[]
           platform: string
           price: number
+          publish_fee: number
+          published_at: string | null
           region: string
           rejection_reason: string | null
           seller_id: string
@@ -290,11 +294,15 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string
+          duration_days?: number
+          expires_at?: string | null
           game_id?: string | null
           id?: string
           images?: string[]
           platform?: string
           price?: number
+          publish_fee?: number
+          published_at?: string | null
           region?: string
           rejection_reason?: string | null
           seller_id: string
@@ -307,11 +315,15 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string
+          duration_days?: number
+          expires_at?: string | null
           game_id?: string | null
           id?: string
           images?: string[]
           platform?: string
           price?: number
+          publish_fee?: number
+          published_at?: string | null
           region?: string
           rejection_reason?: string | null
           seller_id?: string
@@ -585,6 +597,7 @@ export type Database = {
         Row: {
           created_at: string
           id: boolean
+          listing_fee_per_day: number
           saldo_conversion_rate: number
           updated_at: string
           usd_margin_cup: number
@@ -593,6 +606,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: boolean
+          listing_fee_per_day?: number
           saldo_conversion_rate?: number
           updated_at?: string
           usd_margin_cup?: number
@@ -601,6 +615,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: boolean
+          listing_fee_per_day?: number
           saldo_conversion_rate?: number
           updated_at?: string
           usd_margin_cup?: number
@@ -960,6 +975,21 @@ export type Database = {
         }
         Returns: Json
       }
+      publish_game_account: {
+        Args: {
+          p_days: number
+          p_email: string
+          p_game: string
+          p_images: string[]
+          p_notes: string
+          p_password: string
+          p_platform: string
+          p_price: number
+          p_region: string
+          p_title: string
+        }
+        Returns: Json
+      }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }
         Returns: Json
@@ -981,6 +1011,10 @@ export type Database = {
           p_deposit: string
           p_reason: string
         }
+        Returns: Json
+      }
+      review_game_account: {
+        Args: { p_approve: boolean; p_listing: string; p_reason: string }
         Returns: Json
       }
       top_recharged_games: {
