@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/states";
+import { GameCover } from "@/components/common/GameCover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listCatalogGames } from "@/lib/catalog.functions";
@@ -67,11 +68,10 @@ function UserRechargesPage() {
                 params={{ slug: game.slug }}
                 className="surface-card overflow-hidden transition-transform hover:-translate-y-1"
               >
-                <img
+                <GameCover
                   src={game.cover}
-                  alt={`Portada de ${game.name}`}
-                  loading="lazy"
-                  className="aspect-3/4 w-full bg-muted object-cover"
+                  name={game.name}
+                  className="aspect-3/4 w-full"
                 />
                 <div className="space-y-0.5 p-3">
                   <p className="text-sm font-semibold">{game.name}</p>
