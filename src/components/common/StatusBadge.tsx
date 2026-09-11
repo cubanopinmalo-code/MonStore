@@ -33,7 +33,6 @@ const TONES: Record<string, Tone> = {
   participando: "success",
   "no asistió": "neutral",
   pagado: "success",
-  reembolsado: "info",
 };
 
 const toneClass: Record<Tone, string> = {
