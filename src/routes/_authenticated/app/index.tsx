@@ -16,6 +16,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { formatCUP, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/")({
+  loader: () => listCatalogGames(),
   head: () => ({
     meta: [
       { title: "Mi cuenta — MONSTORE" },
@@ -27,12 +28,15 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 const SHORTCUTS = [
   { to: "/app/recargas", label: "Recargar", icon: Gamepad2 },
+  { to: "/app/tarjetas", label: "Tarjetas", icon: Gift },
   { to: "/app/wallet/depositar", label: "Agregar saldo", icon: Plus },
   { to: "/app/comercio", label: "Comercio", icon: Store },
 ] as const;
 
 function UserHome() {
   const { data: wallet } = useWallet();
+  const catalog = Route.useLoaderData();
+  const giftCards = catalog.filter((game) => isGiftCard(game)).slice(0, 6);
   const orders = mockOrders.filter((order) => order.user_id === "us_001").slice(0, 3);
   const currentEvents = mockEvents
     .filter((event) => event.status !== "finalizado" && event.status !== "cancelado")
