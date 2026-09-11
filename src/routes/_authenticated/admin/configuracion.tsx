@@ -402,14 +402,11 @@ function AdminSettingsPage() {
         <div className="lg:col-span-2">
           <Button
             type="button"
-            onClick={() => {
-              setLimitsSaved(true);
+            onClick={() =>
               toast.info(
-                limitsSaved
-                  ? "Estos ajustes todavía se guardan manualmente."
-                  : "Los límites y el estado de la plataforma aún no se guardan en el servidor.",
-              );
-            }}
+                "Los límites y el estado de la plataforma aún no se guardan en el servidor.",
+              )
+            }
           >
             Guardar cambios
           </Button>
