@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -18,7 +18,8 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
-import { mockWallet } from "@/data/mock/wallet";
+import { toast } from "sonner";
+import { useWallet } from "@/hooks/useAccount";
 import {
   checkGamePlayer,
   getCatalogGame,
@@ -116,6 +117,7 @@ function PurchaseFlowPage() {
   function selectProduct(item: CatalogProduct) {
     setProduct(item);
     setValues({});
+    setPlayer({ loading: false, name: null, message: null });
     setStep(1);
   }
 
@@ -312,7 +314,7 @@ function PurchaseFlowPage() {
                   <span className="flex-1">
                     Wallet MONSTORE
                     <span className="block text-xs text-muted-foreground">
-                      Saldo disponible: {formatCUP(mockWallet.balance)}
+                      Saldo disponible: {formatCUP(balance)}
                     </span>
                   </span>
                 </label>
