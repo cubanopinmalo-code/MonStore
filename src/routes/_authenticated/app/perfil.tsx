@@ -33,6 +33,7 @@ function ProfilePage() {
   const { data: profile, isLoading } = useProfile();
   const { data: referrals } = useReferrals();
   const [saving, setSaving] = useState(false);
+  const [claiming, setClaiming] = useState(false);
 
   const name = profile?.name || "Mi cuenta";
   const initials = name
