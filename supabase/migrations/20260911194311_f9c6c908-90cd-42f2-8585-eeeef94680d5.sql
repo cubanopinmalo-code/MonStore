@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.keep_profile_phone() FROM PUBLIC, anon, authenticated;
