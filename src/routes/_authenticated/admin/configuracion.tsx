@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { mockPaymentSettings } from "@/data/mock/admin";
 import { getUsdRate, setUsdRate } from "@/lib/catalog.functions";
-import { formatCup } from "@/lib/format";
+import { formatCUP } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracion")({
   head: () => ({
@@ -61,7 +61,7 @@ function UsdRateCard() {
         <div className="space-y-1.5">
           <Label>Ejemplo</Label>
           <p className="rounded-md border border-border/60 px-3 py-2 text-sm">
-            Una oferta de 1 USD se vende en {formatCup(preview)}
+            Una oferta de 1 USD se vende en {formatCUP(preview)}
           </p>
         </div>
       </div>
