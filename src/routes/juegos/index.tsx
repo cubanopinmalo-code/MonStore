@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CardListSkeleton, EmptyState } from "@/components/common/states";
+import { GameCover } from "@/components/common/GameCover";
 import { Button } from "@/components/ui/button";
 import { listCatalogGames } from "@/lib/catalog.functions";
 
