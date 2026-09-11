@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, Minus, Plus } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
+import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import { Button } from "@/components/ui/button";
 import {
   useDeposits,
@@ -97,6 +98,7 @@ function WalletPage() {
 
         <section className="space-y-3">
           <h2 className="text-lg font-bold">Solicitudes de fondos</h2>
+          <PaymentHoursNotice compact />
           {requests.length === 0 ? (
             <EmptyState title="Sin solicitudes todavía" />
           ) : (
