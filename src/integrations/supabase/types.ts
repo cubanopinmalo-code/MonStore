@@ -575,6 +575,27 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          created_at: string
+          id: boolean
+          updated_at: string
+          usd_to_cup: number
+        }
+        Insert: {
+          created_at?: string
+          id?: boolean
+          updated_at?: string
+          usd_to_cup?: number
+        }
+        Update: {
+          created_at?: string
+          id?: boolean
+          updated_at?: string
+          usd_to_cup?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           active: boolean
