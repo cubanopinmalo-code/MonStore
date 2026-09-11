@@ -34,6 +34,7 @@ import { Route as AppReferidosRouteImport } from './routes/app/referidos'
 import { Route as JuegosIndexRouteImport } from './routes/juegos/index'
 import { Route as JuegosSlugRouteImport } from './routes/juegos/$slug'
 import { Route as AppComercioIndexRouteImport } from './routes/app/comercio/index'
+import { Route as AppComercioIdRouteImport } from './routes/app/comercio/$id'
 import { Route as AppComercioMisPublicacionesRouteImport } from './routes/app/comercio/mis-publicaciones'
 import { Route as AppComercioPublicarRouteImport } from './routes/app/comercio/publicar'
 import { Route as AppPedidosIndexRouteImport } from './routes/app/pedidos/index'
@@ -169,6 +170,11 @@ const AppComercioIndexRoute = AppComercioIndexRouteImport.update({
   path: '/app/comercio/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppComercioIdRoute = AppComercioIdRouteImport.update({
+  id: '/app/comercio/$id',
+  path: '/app/comercio/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppComercioMisPublicacionesRoute =
   AppComercioMisPublicacionesRouteImport.update({
     id: '/app/comercio/mis-publicaciones',
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/juegos': typeof JuegosIndexRoute
+  '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/juegos/': typeof JuegosIndexRoute
+  '/app/comercio/$id': typeof AppComercioIdRoute
   '/app/comercio/mis-publicaciones': typeof AppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AppComercioPublicarRoute
   '/app/pedidos/$id': typeof AppPedidosIdRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/juegos/'
+    | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
     | '/app/pedidos/$id'
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/juegos'
+    | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
     | '/app/pedidos/$id'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/juegos/'
+    | '/app/comercio/$id'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
     | '/app/pedidos/$id'
@@ -461,6 +473,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
+  AppComercioIdRoute: typeof AppComercioIdRoute
   AppComercioMisPublicacionesRoute: typeof AppComercioMisPublicacionesRoute
   AppComercioPublicarRoute: typeof AppComercioPublicarRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
@@ -650,6 +663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComercioIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/comercio/$id': {
+      id: '/app/comercio/$id'
+      path: '/app/comercio/$id'
+      fullPath: '/app/comercio/$id'
+      preLoaderRoute: typeof AppComercioIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/comercio/mis-publicaciones': {
       id: '/app/comercio/mis-publicaciones'
       path: '/app/comercio/mis-publicaciones'
@@ -741,6 +761,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   JuegosIndexRoute: JuegosIndexRoute,
+  AppComercioIdRoute: AppComercioIdRoute,
   AppComercioMisPublicacionesRoute: AppComercioMisPublicacionesRoute,
   AppComercioPublicarRoute: AppComercioPublicarRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
