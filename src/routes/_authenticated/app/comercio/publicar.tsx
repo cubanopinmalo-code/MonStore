@@ -95,7 +95,7 @@ function PublishListingPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="plataforma">Plataforma de acceso</Label>
-            <Select key={gameId} defaultValue={platforms[0] ?? "Android"}>
+            <Select key={gameId} defaultValue={platforms[0]}>
               <SelectTrigger id="plataforma"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {platforms.map((platform) => (
@@ -103,6 +103,9 @@ function PublishListingPage() {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Opciones según el juego seleccionado{selectedGame ? `: ${selectedGame.name}` : ""}.
+            </p>
           </div>
 
           <div className="space-y-1.5">
