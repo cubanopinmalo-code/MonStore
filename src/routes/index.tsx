@@ -7,14 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProtectedNotice } from "@/components/common/states";
+import { mockEvents } from "@/data/mock/events";
 
-type AuthSearch = { ref?: string };
+type AuthSearch = { ref?: string; evento?: string };
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): AuthSearch =>
-    typeof search['ref'] === "string" && search['ref'].length > 0
-      ? { ref: search['ref'] }
-      : {},
+  validateSearch: (search: Record<string, unknown>): AuthSearch => {
+    const result: AuthSearch = {};
+    if (typeof search['ref'] === "string" && search['ref'].length > 0) {
+      result.ref = search['ref'];
+    }
+    if (typeof search['evento'] === "string" && search['evento'].length > 0) {
+      result.evento = search['evento'];
+    }
+    return result;
+  },
   head: () => ({
     meta: [
       { title: "MONSTORE — Inicia sesión o crea tu cuenta" },
@@ -36,7 +43,8 @@ export const Route = createFileRoute("/")({
 });
 
 function AuthPage() {
-  const { ref } = Route.useSearch();
+  const { ref, evento } = Route.useSearch();
+  const sharedEvent = evento ? mockEvents.find((item) => item.id === evento) : undefined;
   const [tab, setTab] = useState<"login" | "registro">("login");
 
   return (
@@ -55,6 +63,17 @@ function AuthPage() {
             Recargas de videojuegos y wallet en CUP. Entra con tu número de teléfono.
           </p>
         </div>
+
+        {sharedEvent ? (
+          <div className="surface-card space-y-1 p-4 text-center">
+            <p className="text-sm font-semibold text-primary">
+              Te invitaron al evento {sharedEvent.name}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Crea tu cuenta o inicia sesión y te llevamos directo a este evento.
+            </p>
+          </div>
+        ) : null}
 
         <Tabs value={tab} onValueChange={(value) => setTab(value as "login" | "registro")}>
           <TabsList className="grid w-full grid-cols-2">
@@ -135,7 +154,13 @@ function AuthPage() {
             Acceso temporal mientras terminamos MONSTORE
           </p>
           <Button asChild variant="outline" className="w-full">
-            <Link to="/app">Entrar como usuario de prueba</Link>
+            {sharedEvent ? (
+              <Link to="/app/eventos/$id" params={{ id: sharedEvent.id }}>
+                Entrar como usuario de prueba
+              </Link>
+            ) : (
+              <Link to="/app">Entrar como usuario de prueba</Link>
+            )}
           </Button>
         </div>
 
