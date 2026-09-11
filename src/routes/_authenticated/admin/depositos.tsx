@@ -97,7 +97,7 @@ function AdminDepositsPage() {
               <TableHead>Envía</TableHead>
               <TableHead>Acredita</TableHead>
               <TableHead>Método</TableHead>
-              <TableHead>Referencia</TableHead>
+              <TableHead>Número de origen</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
