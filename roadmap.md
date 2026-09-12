@@ -9,6 +9,7 @@
 - [x] Catálogo público real: /juegos, /juegos/:slug, /recargas y /app/recargas
 - [x] Compra con saldo: descuento atómico, pedidos duplicados imposibles, reembolsos solo del administrador
 - [x] Agregar fondos: métodos de pago (saldo móvil, tarjeta CUP, USDT, Zelle) con datos de transferencia que escribe el administrador y aprobación del administrador
+- [x] Asignación automática de líneas de recepción (3 números), bloqueo mientras hay pago en revisión, liberación al aprobar/rechazar o a mano, con historial
 - [ ] Retiros con comisión y conversión por método, con aprobación del administrador
 - [ ] Pantalla de compra conectada a la compra real (formulario de 4 pasos + saldo real)
 - [ ] Mis pedidos y detalle de pedido con datos reales
