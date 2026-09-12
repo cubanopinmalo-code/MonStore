@@ -231,3 +231,197 @@ export const claimReferralReward = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return data as { amount: number; balance: number };
   });
+
+// ── Líneas de recepción de saldo móvil ──────────────────────────────────────
+
+export interface PaymentLine {
+  id: string;
+  payment_method: string;
+  line_number: number;
+  label: string;
+  phone_number: string;
+  active: boolean;
+  busy: boolean;
+  busy_deposit_id: string | null;
+  busy_since: string | null;
+}
+
+/** Líneas configuradas y si tienen una solicitud pendiente ocupándolas (admin). */
+export const listPaymentLines = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PaymentLine[]> => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    const { data, error } = await context.supabase
+      .from("payment_lines")
+      .select("id, payment_method, line_number, label, phone_number, active")
+      .order("line_number", { ascending: true });
+    if (error) throw new Error("No se pudieron cargar las líneas.");
+    const { data: pending } = await context.supabase
+      .from("deposits")
+      .select("id, line_id, line_assigned_at")
+      .eq("status", "pendiente")
+      .is("line_released_at", null);
+    const busy = new Map<string, { id: string; since: string | null }>();
+    for (const row of pending ?? []) {
+      if (row.line_id) busy.set(row.line_id, { id: row.id, since: row.line_assigned_at });
+    }
+    return (data ?? []).map((row) => {
+      const hold = busy.get(row.id);
+      return {
+        id: row.id,
+        payment_method: String(row.payment_method),
+        line_number: Number(row.line_number),
+        label: String(row.label ?? ""),
+        phone_number: String(row.phone_number ?? ""),
+        active: Boolean(row.active),
+        busy: Boolean(hold),
+        busy_deposit_id: hold?.id ?? null,
+        busy_since: hold?.since ?? null,
+      };
+    });
+  });
+
+export interface PaymentLineDraft {
+  id: string;
+  label: string;
+  phone_number: string;
+  active: boolean;
+}
+
+/** El administrador cambia el número, el nombre o el estado de una línea. */
+export const savePaymentLine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: PaymentLineDraft) => {
+    const id = String(data?.id ?? "");
+    if (id.length === 0) throw new Error("No se indicó la línea.");
+    return {
+      id,
+      label: String(data?.label ?? "").trim().slice(0, 40),
+      phone_number: String(data?.phone_number ?? "").replace(/\D/g, "").slice(0, 15),
+      active: Boolean(data?.active),
+    };
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    if (data.phone_number.length < 8) {
+      throw new Error("Escribe un número de línea válido (al menos 8 dígitos).");
+    }
+    const { error } = await context.supabase
+      .from("payment_lines")
+      .update({
+        label: data.label,
+        phone_number: data.phone_number,
+        active: data.active,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error("No se pudo guardar la línea.");
+    return { saved: true };
+  });
+
+/** Política: permitir o no reutilizar una línea con solicitud pendiente. */
+export const setLineReusePolicy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { allow: boolean }) => ({ allow: Boolean(data?.allow) }))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    const { error } = await context.supabase
+      .from("platform_settings")
+      .update({ allow_line_reuse: data.allow })
+      .eq("id", true);
+    if (error) throw new Error("No se pudo guardar la política de líneas.");
+    return { allow: data.allow };
+  });
+
+export interface LinePolicy {
+  allow_line_reuse: boolean;
+}
+
+export const getLinePolicy = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<LinePolicy> => {
+    const { data } = await context.supabase
+      .from("platform_settings")
+      .select("allow_line_reuse")
+      .maybeSingle();
+    return { allow_line_reuse: Boolean(data?.allow_line_reuse) };
+  });
+
+export interface LinePreview {
+  available: boolean;
+  line_number: number | null;
+  phone_number: string;
+  label: string;
+}
+
+/**
+ * Línea que se asignará al cliente si envía la solicitud ahora mismo.
+ * Si todas están ocupadas devuelve `available: false`.
+ */
+export const previewPaymentLine = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { method: string }) => ({ method: String(data?.method ?? "") }))
+  .handler(async ({ data, context }): Promise<LinePreview> => {
+    const empty: LinePreview = {
+      available: false,
+      line_number: null,
+      phone_number: "",
+      label: "",
+    };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lines } = await supabaseAdmin
+      .from("payment_lines")
+      .select("id, line_number, label, phone_number")
+      .eq("payment_method", data.method as DbPaymentMethod)
+      .eq("active", true)
+      .order("line_number", { ascending: true });
+    if (!lines || lines.length === 0) return { ...empty, available: true };
+
+    const { data: pending } = await supabaseAdmin
+      .from("deposits")
+      .select("line_id")
+      .eq("status", "pendiente")
+      .is("line_released_at", null);
+    const taken = new Set((pending ?? []).map((row) => row.line_id).filter(Boolean));
+    const free = lines.find((line) => !taken.has(line.id));
+    if (free) {
+      return {
+        available: true,
+        line_number: Number(free.line_number),
+        phone_number: String(free.phone_number ?? ""),
+        label: String(free.label ?? ""),
+      };
+    }
+
+    const { data: settings } = await supabaseAdmin
+      .from("platform_settings")
+      .select("allow_line_reuse")
+      .maybeSingle();
+    if (settings?.allow_line_reuse) {
+      const first = lines[0]!;
+      return {
+        available: true,
+        line_number: Number(first.line_number),
+        phone_number: String(first.phone_number ?? ""),
+        label: String(first.label ?? ""),
+      };
+    }
+    void context;
+    return empty;
+  });
+
+/** El administrador libera a mano la línea de una solicitud. */
+export const releaseDepositLine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { depositId: string; reason?: string }) => {
+    const depositId = String(data?.depositId ?? "");
+    if (depositId.length === 0) throw new Error("No se indicó la solicitud.");
+    return { depositId, reason: String(data?.reason ?? "").trim().slice(0, 300) };
+  })
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("release_payment_line", {
+      p_deposit: data.depositId,
+      p_reason: data.reason,
+    });
+    if (error) throw new Error(error.message);
+    return { released: true };
+  });
