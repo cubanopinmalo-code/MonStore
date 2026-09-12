@@ -167,6 +167,18 @@ function DepositPage() {
     (field) => field.value.trim().length > 0,
   );
 
+  // Línea de recepción que el sistema asignará a esta solicitud.
+  const lineQuery = useQuery({
+    queryKey: ["payment-line", current?.payment_method ?? "none"],
+    enabled: Boolean(current),
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
+    queryFn: () => previewLine({ data: { method: current!.payment_method } }),
+  });
+  const line = lineQuery.data ?? null;
+  const linesBusy = Boolean(line && !line.available);
+  const hasLine = Boolean(line?.available && line.line_number != null);
+
   function chooseMethod(method: PaymentMethodInfo) {
     setSelected(method.payment_method);
     setProof(null);
