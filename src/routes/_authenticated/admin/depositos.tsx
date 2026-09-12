@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
-import { listPaymentMethods, reviewDeposit } from "@/lib/payments.functions";
+import {
+  listPaymentMethods,
+  releaseDepositLine,
+  reviewDeposit,
+} from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
@@ -60,6 +64,7 @@ function useDeposits() {
 function AdminDepositsPage() {
   const queryClient = useQueryClient();
   const reviewFn = useServerFn(reviewDeposit);
+  const releaseFn = useServerFn(releaseDepositLine);
   const { data, isLoading } = useDeposits();
   const methods = useQuery({
     queryKey: ["payment-methods"],
@@ -87,6 +92,17 @@ function AdminDepositsPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const release = useMutation({
+    mutationFn: async (id: string) => {
+      await releaseFn({ data: { depositId: id, reason: "Liberada manualmente." } });
+    },
+    onSuccess: async () => {
+      toast.success("Línea liberada");
+      await queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <AdminShell title="Depósitos" description="Solicitudes de recarga de wallet.">
       <div className="surface-card overflow-x-auto">
@@ -97,6 +113,7 @@ function AdminDepositsPage() {
               <TableHead>Envía</TableHead>
               <TableHead>Acredita</TableHead>
               <TableHead>Método</TableHead>
+              <TableHead>Línea</TableHead>
               <TableHead>Número de origen</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Fecha</TableHead>
@@ -106,13 +123,13 @@ function AdminDepositsPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="text-sm text-muted-foreground">
                   Cargando solicitudes…
                 </TableCell>
               </TableRow>
             ) : deposits.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="text-sm text-muted-foreground">
                   Todavía no hay solicitudes de fondos.
                 </TableCell>
               </TableRow>
@@ -125,6 +142,26 @@ function AdminDepositsPage() {
                     {formatCUP(deposit.credited_amount)}
                   </TableCell>
                   <TableCell className="text-xs">{labelFor(deposit.payment_method)}</TableCell>
+                  <TableCell className="text-xs">
+                    {deposit.line_number ? (
+                      <>
+                        <span className="font-medium">Línea {deposit.line_number}</span>
+                        <span className="block text-muted-foreground">{deposit.line_phone}</span>
+                        <span className="block text-muted-foreground">
+                          {deposit.line_assigned_at
+                            ? formatDateTime(deposit.line_assigned_at)
+                            : "—"}
+                        </span>
+                        <span className="block text-muted-foreground">
+                          {deposit.line_released_at
+                            ? `Liberada ${formatDateTime(deposit.line_released_at)}`
+                            : "Ocupada"}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {deposit.payment_reference}
                   </TableCell>
@@ -157,6 +194,16 @@ function AdminDepositsPage() {
                         >
                           Rechazar
                         </Button>
+                        {deposit.line_id && !deposit.line_released_at ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={release.isPending}
+                            onClick={() => release.mutate(deposit.id)}
+                          >
+                            Liberar línea
+                          </Button>
+                        ) : null}
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">
