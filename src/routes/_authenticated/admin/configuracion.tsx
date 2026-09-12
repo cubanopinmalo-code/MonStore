@@ -12,8 +12,13 @@ import { Switch } from "@/components/ui/switch";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import {
+  getLinePolicy,
+  listPaymentLines,
   listPaymentMethods,
+  savePaymentLine,
   savePaymentMethod,
+  setLineReusePolicy,
+  type PaymentLine,
   type PaymentMethodInfo,
   type TransferField,
 } from "@/lib/payments.functions";
@@ -30,12 +35,14 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
     ],
   }),
   loader: async () => {
-    const [pricing, saldo, methods] = await Promise.all([
+    const [pricing, saldo, methods, lines, linePolicy] = await Promise.all([
       getUsdRate(),
       getSaldoRate(),
       listPaymentMethods(),
+      listPaymentLines(),
+      getLinePolicy(),
     ]);
-    return { pricing, saldo, methods };
+    return { pricing, saldo, methods, lines, linePolicy };
   },
   errorComponent: () => (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
@@ -337,6 +344,132 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
   );
 }
 
+/** Líneas de recepción: números que el sistema asigna a cada solicitud de fondos. */
+function PaymentLinesCard() {
+  const { lines, linePolicy } = Route.useLoaderData();
+  const router = useRouter();
+  const saveLine = useServerFn(savePaymentLine);
+  const savePolicy = useServerFn(setLineReusePolicy);
+  const [drafts, setDrafts] = useState(
+    lines.map((line: PaymentLine) => ({
+      id: line.id,
+      label: line.label,
+      phone_number: line.phone_number,
+      active: line.active,
+    })),
+  );
+  const [reuse, setReuse] = useState(linePolicy.allow_line_reuse);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  function update(id: string, patch: Partial<(typeof drafts)[number]>) {
+    setDrafts((current) =>
+      current.map((draft) => (draft.id === id ? { ...draft, ...patch } : draft)),
+    );
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5 lg:col-span-2">
+      <div>
+        <h2 className="text-base font-semibold">Líneas de recepción de saldo móvil</h2>
+        <p className="text-xs text-muted-foreground">
+          Cada solicitud de fondos recibe una línea libre. Mientras la solicitud esté pendiente,
+          esa línea no se le asigna a nadie más, así sabes de quién es cada pago.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {lines.map((line: PaymentLine) => {
+          const draft = drafts.find((item) => item.id === line.id);
+          if (!draft) return null;
+          return (
+            <div
+              key={line.id}
+              className="space-y-3 rounded-lg border border-border/60 p-3 sm:flex sm:items-end sm:gap-3 sm:space-y-0"
+            >
+              <div className="space-y-1.5 sm:w-40">
+                <Label htmlFor={`line-label-${line.id}`}>Nombre</Label>
+                <Input
+                  id={`line-label-${line.id}`}
+                  value={draft.label}
+                  onChange={(event) => update(line.id, { label: event.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5 sm:flex-1">
+                <Label htmlFor={`line-phone-${line.id}`}>
+                  Número de la línea {line.line_number}
+                </Label>
+                <Input
+                  id={`line-phone-${line.id}`}
+                  inputMode="tel"
+                  value={draft.phone_number}
+                  onChange={(event) =>
+                    update(line.id, { phone_number: event.target.value.replace(/\D/g, "") })
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={draft.active}
+                  onCheckedChange={(value) => update(line.id, { active: value })}
+                  aria-label={`Activar línea ${line.line_number}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {line.busy ? "Ocupada ahora" : "Libre"}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving === line.id}
+                  onClick={async () => {
+                    setSaving(line.id);
+                    try {
+                      await saveLine({ data: draft });
+                      toast.success(`Línea ${line.line_number} guardada.`);
+                      await router.invalidate();
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error ? error.message : "No se pudo guardar.",
+                      );
+                    } finally {
+                      setSaving(null);
+                    }
+                  }}
+                >
+                  {saving === line.id ? "Guardando…" : "Guardar"}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <label className="flex items-center justify-between gap-4 text-sm">
+        <span>
+          Permitir reutilizar una línea ocupada
+          <span className="block text-xs text-muted-foreground">
+            Desactivado: si las tres líneas tienen pagos en revisión, el cliente ve un aviso y
+            debe esperar.
+          </span>
+        </span>
+        <Switch
+          checked={reuse}
+          onCheckedChange={async (value) => {
+            setReuse(value);
+            try {
+              await savePolicy({ data: { allow: value } });
+              toast.success(value ? "Reutilización permitida." : "Reutilización desactivada.");
+              await router.invalidate();
+            } catch (error) {
+              setReuse(!value);
+              toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+            }
+          }}
+        />
+      </label>
+    </section>
+  );
+}
+
 function AdminSettingsPage() {
   const { methods } = Route.useLoaderData();
 
@@ -345,6 +478,7 @@ function AdminSettingsPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <UsdRateCard />
         <SaldoRateCard />
+        <PaymentLinesCard />
 
         {methods.map((method) => (
           <PaymentMethodCard key={method.payment_method} method={method} />
