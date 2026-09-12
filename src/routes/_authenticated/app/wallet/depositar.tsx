@@ -361,6 +361,12 @@ function DepositPage() {
       toast.error("Escribe un importe válido.");
       return false;
     }
+    if (destination && !destination.destination_value) {
+      toast.error("Este pago todavía no tiene destino publicado", {
+        description: "Elige otro método o escríbenos antes de transferir.",
+      });
+      return false;
+    }
     const sender = fromNumber.replace(/\D/g, "");
     if (needsSender && sender.length < 8) {
       setSenderError(true);

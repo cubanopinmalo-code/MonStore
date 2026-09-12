@@ -21,3 +21,11 @@
 ## Pendiente de decisiones
 
 - Tasa de cambio USD → CUP para el margen (hoy el costo del proveedor se guarda en USD y la venta en CUP)
+
+## Aspecto 2 — Métodos de pago y confirmación (hecho)
+- Flujo por pasos: método → Transfermóvil/EnZona/iPhone → banco (BANDEC, BPA, Metropolitano/Mi Transfer) → importe y datos → confirmación.
+- Destinos de pago configurables desde el panel (nada escrito en la aplicación).
+- EnZona pide ID de transacción; iPhone exige captura (guardada de forma privada).
+- La solicitud guarda canal, banco, destino, ID de transacción, número de origen, comprobante y estado del flujo.
+- WhatsApp de atención configurable y botón en las notificaciones rechazadas.
+- Pendiente: conciliación automática por SMS (estructura ya preparada).
