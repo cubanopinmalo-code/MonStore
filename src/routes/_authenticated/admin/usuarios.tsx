@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/states";
 import {
   Table,
   TableBody,
@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockUsers } from "@/data/mock/account";
-import { formatDate } from "@/lib/format";
+import { useAdminUsers } from "@/hooks/useAdmin";
+import { formatCUP, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   head: () => ({
@@ -24,54 +24,50 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios")({
 });
 
 function AdminUsersPage() {
+  const { data: users, isLoading } = useAdminUsers();
+
   return (
     <AdminShell title="Usuarios" description="Perfiles registrados y su estado.">
-      <div className="surface-card overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Contacto</TableHead>
-              <TableHead>Ubicación</TableHead>
-              <TableHead>Código</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Alta</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {user.email}
-                  <span className="block">{user.phone}</span>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {user.municipality}, {user.province}
-                </TableCell>
-                <TableCell className="text-xs">{user.referral_code}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
-                <TableCell>
-                  <StatusBadge status={user.status} />
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                  {formatDate(user.created_at)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm" disabled>
-                    Gestionar
-                  </Button>
-                </TableCell>
+      {!isLoading && (users ?? []).length === 0 ? (
+        <EmptyState title="Todavía no hay usuarios registrados" />
+      ) : (
+        <div className="surface-card overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Teléfono</TableHead>
+                <TableHead>Ubicación</TableHead>
+                <TableHead>Código</TableHead>
+                <TableHead>Saldo</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Alta</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Las acciones se activarán cuando exista autenticación real.
-      </p>
+            </TableHeader>
+            <TableBody>
+              {(users ?? []).map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{user.phone}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {[user.municipality, user.province].filter(Boolean).join(", ") || "—"}
+                  </TableCell>
+                  <TableCell className="text-xs">{user.referral_code}</TableCell>
+                  <TableCell>{formatCUP(user.balance)}</TableCell>
+                  <TableCell className="capitalize">{user.role}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={user.status} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    {formatDate(user.created_at)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </AdminShell>
   );
 }

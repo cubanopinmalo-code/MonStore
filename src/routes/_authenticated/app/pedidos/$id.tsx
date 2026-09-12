@@ -1,46 +1,71 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { CardListSkeleton, EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { mockApiTransactions, mockOrders } from "@/data/mock/orders";
-import { mockGames } from "@/data/mock/games";
-import { mockProducts } from "@/data/mock/products";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/app/pedidos/$id")({
-  loader: ({ params }) => {
-    const order = mockOrders.find((item) => item.id === params.id || item.code === params.id);
-    if (!order) throw notFound();
-    return {
-      order,
-      product: mockProducts.find((item) => item.id === order.product_id) ?? null,
-      game: mockGames.find((item) => item.id === order.game_id) ?? null,
-      apiTx: mockApiTransactions.filter((tx) => tx.order_id === order.id),
-    };
-  },
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
-      { title: loaderData ? `Pedido ${loaderData.order.code} — MONSTORE` : "Pedido — MONSTORE" },
+      { title: "Pedido — MONSTORE" },
       { name: "description", content: "Detalle completo de tu pedido." },
       { name: "robots", content: "noindex" },
     ],
   }),
-  errorComponent: () => (
-    <UserShell>
-      <p className="text-sm text-muted-foreground">No pudimos cargar este pedido.</p>
-    </UserShell>
-  ),
-  notFoundComponent: () => (
-    <UserShell>
-      <p className="text-sm text-muted-foreground">Pedido no encontrado.</p>
-    </UserShell>
-  ),
   component: OrderDetailPage,
 });
 
+function useOrder(id: string) {
+  return useQuery({
+    queryKey: ["order", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          "id, code, status, player_id, player_data, unit_price, total_amount, payment_method, g2bulk_transaction_id, error_message, created_at, products(name, delivery_method), games(name)",
+        )
+        .or(`id.eq.${id},code.eq.${id}`)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 function OrderDetailPage() {
-  const { order, product, game, apiTx } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const { data: order, isLoading } = useOrder(id);
+
+  if (isLoading) {
+    return (
+      <UserShell>
+        <CardListSkeleton items={2} />
+      </UserShell>
+    );
+  }
+
+  if (!order) {
+    return (
+      <UserShell>
+        <EmptyState
+          title="Pedido no encontrado"
+          description="Puede que el enlace no sea correcto."
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/app/pedidos">Ver mis pedidos</Link>
+            </Button>
+          }
+        />
+      </UserShell>
+    );
+  }
+
+  const playerData = (order.player_data ?? {}) as Record<string, unknown>;
 
   return (
     <UserShell>
@@ -62,40 +87,36 @@ function OrderDetailPage() {
 
         <section className="surface-card space-y-2 p-5 text-sm">
           <h2 className="text-base font-semibold">Detalle</h2>
-          <Row label="Juego" value={game?.name ?? "—"} />
-          <Row label="Producto" value={product?.name ?? "—"} />
+          <Row label="Juego" value={order.games?.name ?? "—"} />
+          <Row label="Producto" value={order.products?.name ?? "—"} />
           <Row
             label="Método de entrega"
-            value={product?.delivery_method === "via_cuenta" ? "Por cuenta" : "Por ID"}
+            value={order.products?.delivery_method === "via_cuenta" ? "Por cuenta" : "Por ID"}
           />
           <Row label="Precio unitario" value={formatCUP(order.unit_price)} />
           <Row label="Total" value={formatCUP(order.total_amount)} />
-          <Row label="Método de pago" value={order.payment_method === "wallet" ? "Wallet" : order.payment_method} />
+          <Row
+            label="Método de pago"
+            value={order.payment_method === "wallet" ? "Wallet" : String(order.payment_method)}
+          />
         </section>
 
         <section className="surface-card space-y-2 p-5 text-sm">
           <h2 className="text-base font-semibold">Datos utilizados</h2>
-          {Object.entries(order.player_data).map(([key, value]) => (
-            <Row key={key} label={key} value={value} />
+          <Row label="ID de jugador" value={order.player_id} />
+          {Object.entries(playerData).map(([key, value]) => (
+            <Row key={key} label={key} value={String(value)} />
           ))}
         </section>
 
         <section className="surface-card space-y-2 p-5 text-sm">
-          <h2 className="text-base font-semibold">Proveedor</h2>
-          <Row label="ID de transacción" value={order.g2bulk_transaction_id ?? "Pendiente"} />
-          <Row
-            label="Respuesta"
-            value={apiTx.length > 0 ? (apiTx[0]!.status === "ok" ? "Correcta" : "Con error") : "Sin registros"}
-          />
+          <h2 className="text-base font-semibold">Entrega</h2>
+          <Row label="Referencia del proveedor" value={order.g2bulk_transaction_id ?? "Pendiente"} />
           {order.error_message ? (
             <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
               {order.error_message}
             </p>
           ) : null}
-          <p className="text-[11px] text-muted-foreground">
-            La conexión real con el proveedor se añadirá en una fase posterior, siempre desde el
-            servidor.
-          </p>
         </section>
       </div>
     </UserShell>

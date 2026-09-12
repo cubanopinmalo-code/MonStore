@@ -10,8 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockUsers } from "@/data/mock/account";
-import { mockWallet, mockWalletTransactions } from "@/data/mock/wallet";
+import { useAdminStats, useAdminTransactions, useAdminUsers } from "@/hooks/useAdmin";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/wallets")({
@@ -24,17 +23,17 @@ export const Route = createFileRoute("/_authenticated/admin/wallets")({
   component: AdminWalletsPage,
 });
 
-const BALANCES = [7450, 15200, 0, 3100];
-
 function AdminWalletsPage() {
-  const total = BALANCES.reduce((sum, value) => sum + value, 0);
+  const { data: users } = useAdminUsers();
+  const { data: stats } = useAdminStats();
+  const { data: transactions } = useAdminTransactions();
 
   return (
     <AdminShell title="Wallets" description="Saldos y movimientos de la plataforma.">
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Saldo total en wallets" value={formatCUP(total)} />
-        <StatCard label="Wallets activas" value={String(BALANCES.length)} />
-        <StatCard label="Movimientos recientes" value={String(mockWalletTransactions.length)} />
+        <StatCard label="Saldo total en wallets" value={formatCUP(stats?.wallets_total ?? 0)} />
+        <StatCard label="Wallets activas" value={String(stats?.wallets_count ?? 0)} />
+        <StatCard label="Movimientos recientes" value={String((transactions ?? []).length)} />
       </div>
 
       <section className="surface-card overflow-x-auto">
@@ -48,13 +47,13 @@ function AdminWalletsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockUsers.map((user, index) => (
+            {(users ?? []).map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{formatCUP(BALANCES[index] ?? 0)}</TableCell>
-                <TableCell>{mockWallet.currency}</TableCell>
+                <TableCell className="font-medium">{user.name || user.phone}</TableCell>
+                <TableCell>{formatCUP(user.balance)}</TableCell>
+                <TableCell>{user.currency}</TableCell>
                 <TableCell>
-                  <StatusBadge status={user.status === "activo" ? "activa" : "suspendido"} />
+                  <StatusBadge status={user.wallet_status} />
                 </TableCell>
               </TableRow>
             ))}
@@ -68,6 +67,7 @@ function AdminWalletsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Usuario</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Importe</TableHead>
@@ -76,8 +76,9 @@ function AdminWalletsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockWalletTransactions.map((tx) => (
+              {(transactions ?? []).map((tx) => (
                 <TableRow key={tx.id}>
+                  <TableCell>{tx.user_name}</TableCell>
                   <TableCell>{tx.description}</TableCell>
                   <TableCell className="capitalize">{tx.type}</TableCell>
                   <TableCell className={tx.amount > 0 ? "text-success" : undefined}>

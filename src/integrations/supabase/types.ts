@@ -1000,6 +1000,14 @@ export type Database = {
     }
     Functions: {
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
+      enter_event_room: { Args: { p_event: string }; Returns: Json }
+      event_participant_counts: {
+        Args: never
+        Returns: {
+          event_id: string
+          participants: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1046,6 +1054,14 @@ export type Database = {
         }
         Returns: Json
       }
+      request_withdrawal: {
+        Args: {
+          p_amount: number
+          p_destination: string
+          p_method: Database["public"]["Enums"]["payment_method"]
+        }
+        Returns: Json
+      }
       review_deposit: {
         Args: {
           p_admin: string
@@ -1059,7 +1075,15 @@ export type Database = {
         Args: { p_approve: boolean; p_listing: string; p_reason: string }
         Returns: Json
       }
+      review_withdrawal: {
+        Args: { p_approve: boolean; p_reason: string; p_withdrawal: string }
+        Returns: Json
+      }
       set_display_currency: { Args: { p_currency: string }; Returns: Json }
+      subscribe_event: {
+        Args: { p_event: string; p_game_account_id: string }
+        Returns: Json
+      }
       top_recharged_games: {
         Args: { _limit?: number }
         Returns: {

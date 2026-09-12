@@ -3,11 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { EmptyState } from "@/components/common/states";
+import { CardListSkeleton, EmptyState, ErrorState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { mockOrders } from "@/data/mock/orders";
-import { mockGames } from "@/data/mock/games";
-import { mockProducts } from "@/data/mock/products";
+import { useOrders } from "@/hooks/useAccount";
 import { formatCUP, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -33,9 +31,11 @@ const FILTERS = [
 
 function OrdersPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("todos");
-  const orders = mockOrders
-    .filter((order) => order.user_id === "us_001")
-    .filter((order) => filter === "todos" || order.status === filter);
+  const { data, isLoading, isError, refetch } = useOrders(100);
+
+  const orders = (data ?? []).filter(
+    (order) => filter === "todos" || order.status === filter,
+  );
 
   return (
     <UserShell>
@@ -60,7 +60,11 @@ function OrdersPage() {
           ))}
         </div>
 
-        {orders.length === 0 ? (
+        {isLoading ? (
+          <CardListSkeleton items={3} />
+        ) : isError ? (
+          <ErrorState onRetry={() => void refetch()} />
+        ) : orders.length === 0 ? (
           <EmptyState
             title="No tienes pedidos todavía"
             description="Cuando compres una recarga aparecerá aquí."
@@ -72,32 +76,28 @@ function OrdersPage() {
           />
         ) : (
           <div className="grid gap-2">
-            {orders.map((order) => {
-              const product = mockProducts.find((item) => item.id === order.product_id);
-              const game = mockGames.find((item) => item.id === order.game_id);
-              return (
-                <Link
-                  key={order.id}
-                  to="/app/pedidos/$id"
-                  params={{ id: order.id }}
-                  className="surface-card flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40"
-                >
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-sm font-semibold">{product?.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {game?.name} · {order.code}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDateTime(order.created_at)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="text-sm font-semibold">{formatCUP(order.total_amount)}</span>
-                    <StatusBadge status={order.status} />
-                  </div>
-                </Link>
-              );
-            })}
+            {orders.map((order) => (
+              <Link
+                key={order.id}
+                to="/app/pedidos/$id"
+                params={{ id: order.id }}
+                className="surface-card flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40"
+              >
+                <div className="min-w-0 space-y-1">
+                  <p className="text-sm font-semibold">{order.products?.name ?? "Recarga"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {order.games?.name ?? "—"} · {order.code}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDateTime(order.created_at)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span className="text-sm font-semibold">{formatCUP(order.total_amount)}</span>
+                  <StatusBadge status={order.status} />
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </div>
