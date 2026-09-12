@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Bell, MessageCircle } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/states";
@@ -9,6 +9,7 @@ import { useNotifications } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getSupportWhatsapp } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/app/notificaciones")({
   head: () => ({
@@ -17,6 +18,15 @@ export const Route = createFileRoute("/_authenticated/app/notificaciones")({
       { name: "description", content: "Avisos de pedidos, depósitos, retiros y publicaciones." },
     ],
   }),
+  loader: async () => {
+    try {
+      return await getSupportWhatsapp();
+    } catch {
+      return { phone: "" };
+    }
+  },
+  errorComponent: () => null,
+  notFoundComponent: () => null,
   component: NotificationsPage,
 });
 
@@ -33,6 +43,7 @@ const TONE: Record<string, string> = {
 
 function NotificationsPage() {
   const queryClient = useQueryClient();
+  const { phone: supportPhone } = Route.useLoaderData();
   const { data, isLoading } = useNotifications();
   const items = data ?? [];
   const unread = items.filter((item) => !item.read).length;
@@ -69,14 +80,14 @@ function NotificationsPage() {
         ) : (
           <div className="grid gap-2">
             {items.map((item) => (
-              <button
+              <div
                 key={item.id}
+                className={cn("surface-card p-4", !item.read && "border-primary/40")}
+              >
+              <button
                 type="button"
                 onClick={() => void markRead([item.id])}
-                className={cn(
-                  "surface-card flex gap-3 p-4 text-left",
-                  !item.read && "border-primary/40",
-                )}
+                className="flex w-full gap-3 text-left"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <Bell className="size-4" aria-hidden="true" />
@@ -103,6 +114,21 @@ function NotificationsPage() {
                   </p>
                 </div>
               </button>
+              {item.type.includes("rechaz") && supportPhone ? (
+                <Button asChild size="sm" variant="outline" className="mt-3">
+                  <a
+                    href={`https://wa.me/${supportPhone}?text=${encodeURIComponent(
+                      "Hola MONSTORE, necesito ayuda con mi solicitud rechazada.",
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="mr-1 size-4" aria-hidden="true" />
+                    Contactar por WhatsApp
+                  </a>
+                </Button>
+              ) : null}
+              </div>
             ))}
           </div>
         )}

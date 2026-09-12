@@ -85,65 +85,102 @@ export type Database = {
       deposits: {
         Row: {
           amount: number
+          approval_method: string
+          bank: string | null
           bonus_pct: number
           created_at: string
           credited_amount: number
+          destination_id: string | null
+          destination_value: string | null
+          flow_status: string
           id: string
           line_assigned_at: string | null
           line_id: string | null
           line_number: number | null
           line_phone: string | null
           line_released_at: string | null
+          payment_channel: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_received_at: string | null
           payment_reference: string
+          payment_submethod: string | null
           proof_image_url: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          sender_phone: string | null
           status: Database["public"]["Enums"]["request_status"]
+          transaction_id: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          approval_method?: string
+          bank?: string | null
           bonus_pct?: number
           created_at?: string
           credited_amount?: number
+          destination_id?: string | null
+          destination_value?: string | null
+          flow_status?: string
           id?: string
           line_assigned_at?: string | null
           line_id?: string | null
           line_number?: number | null
           line_phone?: string | null
           line_released_at?: string | null
+          payment_channel?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_received_at?: string | null
           payment_reference?: string
+          payment_submethod?: string | null
           proof_image_url?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sender_phone?: string | null
           status?: Database["public"]["Enums"]["request_status"]
+          transaction_id?: string | null
           user_id: string
         }
         Update: {
           amount?: number
+          approval_method?: string
+          bank?: string | null
           bonus_pct?: number
           created_at?: string
           credited_amount?: number
+          destination_id?: string | null
+          destination_value?: string | null
+          flow_status?: string
           id?: string
           line_assigned_at?: string | null
           line_id?: string | null
           line_number?: number | null
           line_phone?: string | null
           line_released_at?: string | null
+          payment_channel?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_received_at?: string | null
           payment_reference?: string
+          payment_submethod?: string | null
           proof_image_url?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sender_phone?: string | null
           status?: Database["public"]["Enums"]["request_status"]
+          transaction_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deposits_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "payment_destinations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deposits_line_id_fkey"
             columns: ["line_id"]
@@ -539,6 +576,60 @@ export type Database = {
           },
         ]
       }
+      payment_destinations: {
+        Row: {
+          active: boolean
+          bank: string | null
+          channel: string
+          created_at: string
+          description: string
+          destination_value: string
+          id: string
+          instructions: string
+          kind: string
+          label: string
+          position: number
+          requires_proof: boolean
+          requires_sender_phone: boolean
+          requires_transaction_id: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bank?: string | null
+          channel: string
+          created_at?: string
+          description?: string
+          destination_value?: string
+          id?: string
+          instructions?: string
+          kind?: string
+          label?: string
+          position?: number
+          requires_proof?: boolean
+          requires_sender_phone?: boolean
+          requires_transaction_id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bank?: string | null
+          channel?: string
+          created_at?: string
+          description?: string
+          destination_value?: string
+          id?: string
+          instructions?: string
+          kind?: string
+          label?: string
+          position?: number
+          requires_proof?: boolean
+          requires_sender_phone?: boolean
+          requires_transaction_id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_line_events: {
         Row: {
           action: string
@@ -725,6 +816,7 @@ export type Database = {
           id: boolean
           listing_fee_per_day: number
           saldo_conversion_rate: number
+          support_whatsapp: string
           updated_at: string
           usd_margin_cup: number
           usd_to_cup: number
@@ -735,6 +827,7 @@ export type Database = {
           id?: boolean
           listing_fee_per_day?: number
           saldo_conversion_rate?: number
+          support_whatsapp?: string
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
@@ -745,6 +838,7 @@ export type Database = {
           id?: boolean
           listing_fee_per_day?: number
           saldo_conversion_rate?: number
+          support_whatsapp?: string
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
@@ -1161,6 +1255,20 @@ export type Database = {
           p_has_proof: boolean
           p_method: Database["public"]["Enums"]["payment_method"]
           p_reference: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      request_deposit_v2: {
+        Args: {
+          p_amount: number
+          p_destination?: string
+          p_has_proof: boolean
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_proof_url?: string
+          p_reference: string
+          p_sender_phone?: string
+          p_transaction_id?: string
           p_user: string
         }
         Returns: Json

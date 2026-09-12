@@ -16,10 +16,42 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
 import {
+  getDepositProofUrl,
   listPaymentMethods,
   releaseDepositLine,
   reviewDeposit,
 } from "@/lib/payments.functions";
+
+const CHANNEL_TITLES: Record<string, string> = {
+  transfermovil: "Transfermóvil",
+  enzona: "EnZona",
+  iphone: "iPhone (revisión manual)",
+};
+
+/** Enlace temporal para ver la captura del pago guardada de forma privada. */
+function ProofLink({ path }: { path: string | null }) {
+  const signUrl = useServerFn(getDepositProofUrl);
+  if (!path) {
+    return <span className="mt-1 block text-muted-foreground">Sin captura</span>;
+  }
+  return (
+    <button
+      type="button"
+      className="mt-1 block text-primary underline"
+      onClick={async () => {
+        try {
+          const { url } = await signUrl({ data: { path } });
+          if (url) window.open(url, "_blank", "noopener,noreferrer");
+          else toast.error("No pudimos abrir la captura.");
+        } catch {
+          toast.error("No pudimos abrir la captura.");
+        }
+      }}
+    >
+      Ver captura
+    </button>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
@@ -112,9 +144,9 @@ function AdminDepositsPage() {
               <TableHead>Usuario</TableHead>
               <TableHead>Envía</TableHead>
               <TableHead>Acredita</TableHead>
-              <TableHead>Método</TableHead>
+              <TableHead>Método / destino</TableHead>
               <TableHead>Línea</TableHead>
-              <TableHead>Número de origen</TableHead>
+              <TableHead>Datos del pago</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
@@ -141,7 +173,20 @@ function AdminDepositsPage() {
                   <TableCell className="text-primary">
                     {formatCUP(deposit.credited_amount)}
                   </TableCell>
-                  <TableCell className="text-xs">{labelFor(deposit.payment_method)}</TableCell>
+                  <TableCell className="text-xs">
+                    <span className="block font-medium">
+                      {CHANNEL_TITLES[deposit.payment_channel ?? ""] ??
+                        labelFor(deposit.payment_method)}
+                    </span>
+                    {deposit.bank ? (
+                      <span className="block uppercase text-muted-foreground">{deposit.bank}</span>
+                    ) : null}
+                    {deposit.destination_value ? (
+                      <span className="block break-all text-muted-foreground">
+                        {deposit.destination_value}
+                      </span>
+                    ) : null}
+                  </TableCell>
                   <TableCell className="text-xs">
                     {deposit.line_number ? (
                       <>
@@ -163,8 +208,18 @@ function AdminDepositsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {deposit.payment_reference}
+                    {deposit.transaction_id ? (
+                      <span className="block break-all">ID: {deposit.transaction_id}</span>
+                    ) : null}
+                    {deposit.sender_phone ? (
+                      <span className="block">Desde: {deposit.sender_phone}</span>
+                    ) : null}
+                    {!deposit.transaction_id && !deposit.sender_phone ? (
+                      <span className="block break-all">{deposit.payment_reference}</span>
+                    ) : null}
+                    <ProofLink path={deposit.proof_image_url} />
                   </TableCell>
+
                   <TableCell>
                     <StatusBadge status={deposit.status} />
                     {deposit.rejection_reason ? (
