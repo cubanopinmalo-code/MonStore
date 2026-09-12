@@ -196,10 +196,10 @@ export const requestDeposit = createServerFn({ method: "POST" })
       p_method: data.method as DbPaymentMethod,
       p_reference: data.reference,
       p_has_proof: data.hasProof || Boolean(data.proofPath),
-      p_destination: data.destinationId ?? undefined,
-      p_transaction_id: data.transactionId ?? undefined,
-      p_sender_phone: data.senderPhone ?? undefined,
-      p_proof_url: data.proofPath ?? undefined,
+      ...(data.destinationId ? { p_destination: data.destinationId } : {}),
+      ...(data.transactionId ? { p_transaction_id: data.transactionId } : {}),
+      ...(data.senderPhone ? { p_sender_phone: data.senderPhone } : {}),
+      ...(data.proofPath ? { p_proof_url: data.proofPath } : {}),
     });
     if (error) throw new Error(error.message);
     const payload = (result ?? {}) as { line_number?: number | null; line_phone?: string | null };
