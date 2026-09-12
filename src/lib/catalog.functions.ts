@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { coverFor, publishableClient, signCatalogImages, CATALOG_BUCKET } from "./supabase.server";
+import { translateOfferName } from "./offerName";
 import {
   ProviderError,
   gameCatalogue,
