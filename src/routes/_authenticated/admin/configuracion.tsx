@@ -13,11 +13,16 @@ import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalo
 import { formatCUP } from "@/lib/format";
 import {
   getLinePolicy,
+  getSupportWhatsapp,
+  listAllPaymentDestinations,
   listPaymentLines,
   listPaymentMethods,
+  savePaymentDestination,
   savePaymentLine,
   savePaymentMethod,
   setLineReusePolicy,
+  setSupportWhatsapp,
+  type PaymentDestination,
   type PaymentLine,
   type PaymentMethodInfo,
   type TransferField,
@@ -30,20 +35,23 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
       {
         name: "description",
         content:
-          "Métodos de pago (saldo móvil, tarjeta CUP, USDT, Zelle), comisiones y ajustes generales.",
+          "Métodos de pago (Transfermóvil, EnZona, iPhone, saldo móvil, USDT, Zelle), comisiones y ajustes generales.",
       },
     ],
   }),
   loader: async () => {
-    const [pricing, saldo, methods, lines, linePolicy] = await Promise.all([
+    const [pricing, saldo, methods, lines, linePolicy, destinations, support] = await Promise.all([
       getUsdRate(),
       getSaldoRate(),
       listPaymentMethods(),
       listPaymentLines(),
       getLinePolicy(),
+      listAllPaymentDestinations(),
+      getSupportWhatsapp(),
     ]);
-    return { pricing, saldo, methods, lines, linePolicy };
+    return { pricing, saldo, methods, lines, linePolicy, destinations, support };
   },
+
   errorComponent: () => (
     <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
       <p className="surface-card p-5 text-sm text-muted-foreground">
@@ -479,6 +487,9 @@ function AdminSettingsPage() {
         <UsdRateCard />
         <SaldoRateCard />
         <PaymentLinesCard />
+        <PaymentDestinationsCard />
+        <SupportWhatsappCard />
+
 
         {methods.map((method) => (
           <PaymentMethodCard key={method.payment_method} method={method} />
@@ -547,5 +558,191 @@ function AdminSettingsPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+const CHANNEL_TITLES: Record<string, string> = {
+  transfermovil: "Transfermóvil",
+  enzona: "EnZona",
+  iphone: "Utilizo iPhone",
+};
+
+/** Destinos de pago: tarjeta BANDEC/BPA, Monedero Mi Transfer, EnZona e iPhone. */
+function PaymentDestinationsCard() {
+  const { destinations } = Route.useLoaderData();
+  const router = useRouter();
+  const save = useServerFn(savePaymentDestination);
+  const [drafts, setDrafts] = useState(
+    destinations.map((item: PaymentDestination) => ({
+      id: item.id,
+      label: item.label,
+      description: item.description,
+      destination_value: item.destination_value,
+      instructions: item.instructions,
+      active: item.active,
+    })),
+  );
+  const [saving, setSaving] = useState<string | null>(null);
+
+  function update(id: string, patch: Partial<(typeof drafts)[number]>) {
+    setDrafts((current) =>
+      current.map((draft) => (draft.id === id ? { ...draft, ...patch } : draft)),
+    );
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5 lg:col-span-2">
+      <div>
+        <h2 className="text-base font-semibold">Métodos de pago del cliente</h2>
+        <p className="text-xs text-muted-foreground">
+          Números de tarjeta, datos del Monedero Mi Transfer e instrucciones que verá el cliente.
+          Nada de esto está escrito dentro de la aplicación: todo se edita aquí.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {destinations.map((item: PaymentDestination) => {
+          const draft = drafts.find((row) => row.id === item.id);
+          if (!draft) return null;
+          const title = `${CHANNEL_TITLES[item.channel] ?? item.channel}${
+            item.bank ? ` · ${item.bank.toUpperCase()}` : ""
+          }`;
+          return (
+            <div key={item.id} className="space-y-3 rounded-lg border border-border/60 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.kind === "monedero"
+                      ? "Monedero Mi Transfer"
+                      : item.kind === "tarjeta"
+                        ? "Tarjeta bancaria"
+                        : "Aplicación de pago"}
+                    {item.requires_transaction_id ? " · pide ID de transacción" : ""}
+                    {item.requires_proof ? " · captura obligatoria" : ""}
+                  </p>
+                </div>
+                <Switch
+                  checked={draft.active}
+                  onCheckedChange={(value) => update(item.id, { active: value })}
+                  aria-label={`Activar ${title}`}
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor={`dest-label-${item.id}`}>Nombre visible</Label>
+                  <Input
+                    id={`dest-label-${item.id}`}
+                    value={draft.label}
+                    onChange={(event) => update(item.id, { label: event.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`dest-value-${item.id}`}>
+                    {item.kind === "tarjeta"
+                      ? "Número de tarjeta para recibir el pago"
+                      : item.kind === "monedero"
+                        ? "Datos del Monedero Mi Transfer"
+                        : "Cuenta o dato de destino"}
+                  </Label>
+                  <Input
+                    id={`dest-value-${item.id}`}
+                    value={draft.destination_value}
+                    placeholder={item.kind === "tarjeta" ? "9200 0000 0000 0000" : "Datos del destino"}
+                    onChange={(event) =>
+                      update(item.id, { destination_value: event.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
+                <Textarea
+                  id={`dest-inst-${item.id}`}
+                  rows={2}
+                  value={draft.instructions}
+                  onChange={(event) => update(item.id, { instructions: event.target.value })}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving === item.id}
+                  onClick={async () => {
+                    setSaving(item.id);
+                    try {
+                      await save({ data: draft });
+                      toast.success(`${title} guardado.`);
+                      await router.invalidate();
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+                    } finally {
+                      setSaving(null);
+                    }
+                  }}
+                >
+                  {saving === item.id ? "Guardando…" : "Guardar"}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Última actualización:{" "}
+                  {item.updated_at ? new Date(item.updated_at).toLocaleString("es-CU") : "—"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Número de WhatsApp que se muestra al cliente para atención y reclamaciones. */
+function SupportWhatsappCard() {
+  const { support } = Route.useLoaderData();
+  const router = useRouter();
+  const save = useServerFn(setSupportWhatsapp);
+  const [phone, setPhone] = useState(support.phone);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div>
+        <h2 className="text-base font-semibold">Atención al cliente por WhatsApp</h2>
+        <p className="text-xs text-muted-foreground">
+          Este número aparece en el perfil y cuando se rechaza una solicitud de fondos.
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="support-whatsapp">Número de WhatsApp</Label>
+        <Input
+          id="support-whatsapp"
+          inputMode="tel"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))}
+        />
+      </div>
+      <Button
+        type="button"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            await save({ data: { phone } });
+            toast.success("Número de atención guardado.");
+            await router.invalidate();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        {saving ? "Guardando…" : "Guardar número"}
+      </Button>
+    </section>
   );
 }

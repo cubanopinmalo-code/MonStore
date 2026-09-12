@@ -144,11 +144,16 @@ export interface RequestDepositInput {
   method: string;
   reference?: string;
   hasProof: boolean;
+  destinationId?: string | null;
+  transactionId?: string | null;
+  senderPhone?: string | null;
+  proofPath?: string | null;
 }
 
 /**
  * El cliente envía una solicitud de fondos. Solo se aceptan métodos activados
  * por el administrador y el registro lo hace la parte privada de la aplicación.
+ * El servidor vuelve a validar importe, destino y datos obligatorios.
  */
 export const requestDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -164,6 +169,10 @@ export const requestDeposit = createServerFn({ method: "POST" })
       method,
       reference: String(data?.reference ?? "").trim().slice(0, 160),
       hasProof: Boolean(data?.hasProof),
+      destinationId: String(data?.destinationId ?? "").trim() || null,
+      transactionId: String(data?.transactionId ?? "").trim().slice(0, 80) || null,
+      senderPhone: String(data?.senderPhone ?? "").replace(/\D/g, "").slice(0, 15) || null,
+      proofPath: String(data?.proofPath ?? "").trim().slice(0, 300) || null,
     };
   })
   .handler(async ({ data, context }) => {
@@ -176,14 +185,21 @@ export const requestDeposit = createServerFn({ method: "POST" })
     if (!settings || !settings.active) {
       throw new Error("Ese método de pago está desactivado por ahora.");
     }
+    if (data.proofPath && !data.proofPath.startsWith(`${context.userId}/`)) {
+      throw new Error("El comprobante no corresponde a tu cuenta.");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await supabaseAdmin.rpc("request_deposit", {
+    const { data: result, error } = await supabaseAdmin.rpc("request_deposit_v2", {
       p_user: context.userId,
       p_amount: data.amount,
       p_method: data.method as DbPaymentMethod,
       p_reference: data.reference,
-      p_has_proof: data.hasProof,
+      p_has_proof: data.hasProof || Boolean(data.proofPath),
+      p_destination: data.destinationId,
+      p_transaction_id: data.transactionId,
+      p_sender_phone: data.senderPhone,
+      p_proof_url: data.proofPath,
     });
     if (error) throw new Error(error.message);
     const payload = (result ?? {}) as { line_number?: number | null; line_phone?: string | null };
@@ -193,6 +209,7 @@ export const requestDeposit = createServerFn({ method: "POST" })
       line_phone: payload.line_phone ?? null,
     };
   });
+
 
 export interface ReviewDepositInput {
   depositId: string;
@@ -429,4 +446,158 @@ export const releaseDepositLine = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { released: true };
+  });
+
+// ── Destinos de pago (Transfermóvil/BANDEC, BPA, Metropolitano, EnZona, iPhone) ──
+
+export interface PaymentDestination {
+  id: string;
+  channel: string;
+  bank: string | null;
+  kind: string;
+  label: string;
+  description: string;
+  destination_value: string;
+  instructions: string;
+  requires_transaction_id: boolean;
+  requires_proof: boolean;
+  requires_sender_phone: boolean;
+  active: boolean;
+  position: number;
+  updated_at: string;
+}
+
+const DESTINATION_COLUMNS =
+  "id, channel, bank, kind, label, description, destination_value, instructions, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
+
+function mapDestination(row: Record<string, unknown>): PaymentDestination {
+  return {
+    id: String(row["id"]),
+    channel: String(row["channel"] ?? ""),
+    bank: row["bank"] == null ? null : String(row["bank"]),
+    kind: String(row["kind"] ?? "tarjeta"),
+    label: String(row["label"] ?? ""),
+    description: String(row["description"] ?? ""),
+    destination_value: String(row["destination_value"] ?? ""),
+    instructions: String(row["instructions"] ?? ""),
+    requires_transaction_id: Boolean(row["requires_transaction_id"]),
+    requires_proof: Boolean(row["requires_proof"]),
+    requires_sender_phone: Boolean(row["requires_sender_phone"]),
+    active: Boolean(row["active"]),
+    position: Number(row["position"] ?? 50),
+    updated_at: String(row["updated_at"] ?? ""),
+  };
+}
+
+/** Destinos activos que el cliente puede elegir. */
+export const listPaymentDestinations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PaymentDestination[]> => {
+    const { data, error } = await context.supabase
+      .from("payment_destinations")
+      .select(DESTINATION_COLUMNS)
+      .eq("active", true)
+      .order("position", { ascending: true });
+    if (error) throw new Error("No se pudieron cargar los destinos de pago.");
+    return (data ?? []).map((row) => mapDestination(row as Record<string, unknown>));
+  });
+
+/** Todos los destinos, incluidos los desactivados (panel administrativo). */
+export const listAllPaymentDestinations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PaymentDestination[]> => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    const { data, error } = await context.supabase
+      .from("payment_destinations")
+      .select(DESTINATION_COLUMNS)
+      .order("position", { ascending: true });
+    if (error) throw new Error("No se pudieron cargar los destinos de pago.");
+    return (data ?? []).map((row) => mapDestination(row as Record<string, unknown>));
+  });
+
+export interface PaymentDestinationDraft {
+  id: string;
+  label: string;
+  description: string;
+  destination_value: string;
+  instructions: string;
+  active: boolean;
+}
+
+/** El administrador cambia el número/datos de un destino de pago. */
+export const savePaymentDestination = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: PaymentDestinationDraft) => {
+    const id = String(data?.id ?? "");
+    if (id.length === 0) throw new Error("No se indicó el destino de pago.");
+    return {
+      id,
+      label: String(data?.label ?? "").trim().slice(0, 60),
+      description: String(data?.description ?? "").trim().slice(0, 200),
+      destination_value: String(data?.destination_value ?? "").trim().slice(0, 120),
+      instructions: String(data?.instructions ?? "").trim().slice(0, 600),
+      active: Boolean(data?.active),
+    };
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    if (data.active && data.destination_value.length === 0) {
+      throw new Error("Escribe el número o los datos del destino antes de activarlo.");
+    }
+    const { error } = await context.supabase
+      .from("payment_destinations")
+      .update({
+        label: data.label,
+        description: data.description,
+        destination_value: data.destination_value,
+        instructions: data.instructions,
+        active: data.active,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error("No se pudo guardar el destino de pago.");
+    return { saved: true };
+  });
+
+/** Número de WhatsApp de atención al cliente configurado por el administrador. */
+export const getSupportWhatsapp = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ phone: string }> => {
+    const { data } = await context.supabase
+      .from("platform_settings")
+      .select("support_whatsapp")
+      .maybeSingle();
+    return { phone: String(data?.support_whatsapp ?? "").replace(/\D/g, "") };
+  });
+
+export const setSupportWhatsapp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { phone: string }) => ({
+    phone: String(data?.phone ?? "").replace(/\D/g, "").slice(0, 15),
+  }))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    if (data.phone.length < 8) throw new Error("Escribe un número de WhatsApp válido.");
+    const { error } = await context.supabase
+      .from("platform_settings")
+      .update({ support_whatsapp: data.phone })
+      .eq("id", true);
+    if (error) throw new Error("No se pudo guardar el número de atención al cliente.");
+    return { phone: data.phone };
+  });
+
+/** Enlace temporal para que el administrador vea la captura de un depósito. */
+export const getDepositProofUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { path: string }) => ({ path: String(data?.path ?? "") }))
+  .handler(async ({ data, context }): Promise<{ url: string | null }> => {
+    if (data.path.length === 0) return { url: null };
+    const isOwner = data.path.startsWith(`${context.userId}/`);
+    if (!isOwner) {
+      await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed } = await supabaseAdmin.storage
+      .from("deposit-proofs")
+      .createSignedUrl(data.path, 60 * 10);
+    return { url: signed?.signedUrl ?? null };
   });
