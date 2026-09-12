@@ -211,11 +211,19 @@ function DepositPage() {
       return;
     }
     if (!requireSender()) return;
+    if (linesBusy) {
+      toast.error("Todas las líneas están ocupadas ahora mismo", {
+        description:
+          "Espera unos minutos a que se liberen y vuelve a intentarlo. Nadie más puede usar una línea con un pago en revisión.",
+      });
+      return;
+    }
     const sender = fromNumber.replace(/\D/g, "");
     if (sending) return;
     setSending(true);
+    let assigned: { line_number: number | null; line_phone: string | null } | null = null;
     try {
-      await send({
+      assigned = await send({
         data: {
           amount: parsed,
           method: current.payment_method,
@@ -225,6 +233,7 @@ function DepositPage() {
       });
     } catch (error) {
       setSending(false);
+      await lineQuery.refetch();
       toast.error("No pudimos enviar tu solicitud", {
         description: error instanceof Error ? error.message : "Inténtalo de nuevo.",
       });
@@ -232,8 +241,12 @@ function DepositPage() {
     }
     setSending(false);
     await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    const lineNote =
+      assigned?.line_number != null
+        ? ` Tu pago quedó registrado en la Línea ${assigned.line_number} (${assigned.line_phone ?? ""}).`
+        : "";
     toast.success("Solicitud de fondos enviada", {
-      description: `${note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla."} ${verificationNotice(getVerificationClock())}`,
+      description: `${note ?? "Tu solicitud está siendo procesada y te avisaremos al acreditarla."}${lineNote} ${verificationNotice(getVerificationClock())}`,
       duration: 10000,
     });
     void navigate({ to: "/app/recargas" });
