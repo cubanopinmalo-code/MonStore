@@ -234,14 +234,8 @@ const WORDS: Record<string, string> = {
   anniversary: "Aniversario",
   superstar: "Superestrella",
   starting: "Inicial",
-  and: "y",
-  of: "de",
-  the: "el",
-  for: "para",
-  in: "en",
-  is: "es",
-  web: "Web",
-  one: "Uno",
+  diamond: "Diamante",
+  diamonds: "Diamantes",
 };
 
 const KEEP = new Set([
