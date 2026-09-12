@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
-import { claimReferralReward } from "@/lib/payments.functions";
+import { claimReferralReward, getSupportWhatsapp } from "@/lib/payments.functions";
 
 const REFERRAL_GOAL = 10;
 const SUPPORT_PHONE = "5351115040";
@@ -25,15 +25,21 @@ const SUPPORT_WHATSAPP_URL =
   "?text=" +
   encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.");
 
+function supportUrl(phone: string) {
+  return (
+    "https://wa.me/" +
+    (phone || SUPPORT_PHONE) +
+    "?text=" +
+    encodeURIComponent("Hola MONSTORE, necesito ayuda con mi cuenta.")
+  );
+}
+
 function openSupportChat(event: MouseEvent<HTMLAnchorElement>) {
   // In some embedded previews target="_blank" is blocked, so fall back to direct navigation.
   event.preventDefault();
-  const opened = window.open(
-    SUPPORT_WHATSAPP_URL,
-    "_blank",
-    "noopener,noreferrer",
-  );
-  if (!opened) window.location.assign(SUPPORT_WHATSAPP_URL);
+  const url = event.currentTarget.href || SUPPORT_WHATSAPP_URL;
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  if (!opened) window.location.assign(url);
 }
 
 export const Route = createFileRoute("/_authenticated/app/perfil")({
@@ -44,17 +50,17 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
     ],
   }),
   loader: async () => {
-    try {
-      return await getUsdRate();
-    } catch {
-      return { rate: DEFAULT_USD_RATE, margin: DEFAULT_USD_MARGIN };
-    }
+    const [pricing, support] = await Promise.all([
+      getUsdRate().catch(() => ({ rate: DEFAULT_USD_RATE, margin: DEFAULT_USD_MARGIN })),
+      getSupportWhatsapp().catch(() => ({ phone: SUPPORT_PHONE })),
+    ]);
+    return { ...pricing, support: support.phone || SUPPORT_PHONE };
   },
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { rate: usdRate } = Route.useLoaderData();
+  const { rate: usdRate, support: supportPhone } = Route.useLoaderData();
   const rewardCup = Math.round(usdRate);
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useProfile();
@@ -300,7 +306,7 @@ function ProfilePage() {
           <Button asChild className="w-full">
             <a
               onClick={openSupportChat}
-              href={SUPPORT_WHATSAPP_URL}
+              href={supportUrl(supportPhone)}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Abrir chat de ayuda al cliente en WhatsApp"
