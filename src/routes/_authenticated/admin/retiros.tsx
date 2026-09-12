@@ -34,8 +34,8 @@ function AdminWithdrawalsPage() {
   const review = useMutation({
     mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
       const reason = approve
-        ? null
-        : window.prompt("Motivo del rechazo (se devuelve el dinero al cliente):") ?? "";
+        ? ""
+        : (window.prompt("Motivo del rechazo (se devuelve el dinero al cliente):") ?? "");
       const { error } = await supabase.rpc("review_withdrawal", {
         p_withdrawal: id,
         p_approve: approve,

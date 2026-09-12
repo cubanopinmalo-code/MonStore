@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/common/states";
 import { listCatalogGames } from "@/lib/catalog.functions";
 import { giftCardImage, isGiftCard } from "@/lib/giftcards";
 
-import { mockEvents } from "@/data/mock/events";
+import { useEvents } from "@/hooks/useEvents";
 import { EventCard } from "@/components/events/EventCard";
 import { formatCUP, formatDate } from "@/lib/format";
 
@@ -37,9 +37,8 @@ function UserHome() {
   const giftCards = catalog.filter((game) => isGiftCard(game)).slice(0, 6);
   const { data: ordersData } = useOrders(5);
   const orders = ordersData ?? [];
-  const currentEvents = mockEvents
-    .filter((event) => event.status !== "finalizado" && event.status !== "cancelado")
-    .slice(0, 3);
+  const { data: eventsData } = useEvents();
+  const currentEvents = (eventsData ?? []).slice(0, 3);
 
   return (
     <UserShell>
@@ -93,7 +92,7 @@ function UserHome() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {currentEvents.map((event) => (
-              <EventCard key={event.id} eventId={event.id} />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         </section>
