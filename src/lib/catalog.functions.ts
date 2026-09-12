@@ -237,7 +237,11 @@ export const getCatalogGame = createServerFn({ method: "GET" })
 
     return {
       game: { ...game, cover, offers: rows.length },
-      products: rows.map((row) => ({ ...row, image: coverFor(row.image_url, signed, cover) })),
+      products: rows.map((row) => ({
+        ...row,
+        name: translateOfferName(row.name),
+        image: coverFor(row.image_url, signed, cover),
+      })),
     };
   });
 
@@ -274,6 +278,7 @@ export const listCatalogOffers = createServerFn({ method: "GET" })
       const cover = coverFor(game?.image_url ?? "", signed);
       return {
         ...(row as unknown as ProductRow),
+        name: translateOfferName(row.name),
         image: coverFor(row.image_url, signed, cover),
         game_name: game?.name ?? "",
         game_slug: game?.slug ?? "",
