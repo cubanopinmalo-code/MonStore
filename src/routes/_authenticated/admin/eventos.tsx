@@ -209,7 +209,9 @@ function AdminEventsPage() {
               <Label htmlFor="estado">Estado</Label>
               <Select
                 value={selected.status}
-                onValueChange={(value) => updateEvent.mutate({ status: value })}
+                onValueChange={(value) =>
+                  updateEvent.mutate({ status: value as EventStatus })
+                }
               >
                 <SelectTrigger id="estado">
                   <SelectValue />
