@@ -16,10 +16,42 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
 import {
+  getDepositProofUrl,
   listPaymentMethods,
   releaseDepositLine,
   reviewDeposit,
 } from "@/lib/payments.functions";
+
+const CHANNEL_TITLES: Record<string, string> = {
+  transfermovil: "Transfermóvil",
+  enzona: "EnZona",
+  iphone: "iPhone (revisión manual)",
+};
+
+/** Enlace temporal para ver la captura del pago guardada de forma privada. */
+function ProofLink({ path }: { path: string | null }) {
+  const signUrl = useServerFn(getDepositProofUrl);
+  if (!path) {
+    return <span className="mt-1 block text-muted-foreground">Sin captura</span>;
+  }
+  return (
+    <button
+      type="button"
+      className="mt-1 block text-primary underline"
+      onClick={async () => {
+        try {
+          const { url } = await signUrl({ data: { path } });
+          if (url) window.open(url, "_blank", "noopener,noreferrer");
+          else toast.error("No pudimos abrir la captura.");
+        } catch {
+          toast.error("No pudimos abrir la captura.");
+        }
+      }}
+    >
+      Ver captura
+    </button>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/admin/depositos")({
   head: () => ({
@@ -112,9 +144,9 @@ function AdminDepositsPage() {
               <TableHead>Usuario</TableHead>
               <TableHead>Envía</TableHead>
               <TableHead>Acredita</TableHead>
-              <TableHead>Método</TableHead>
+              <TableHead>Método / destino</TableHead>
               <TableHead>Línea</TableHead>
-              <TableHead>Número de origen</TableHead>
+              <TableHead>Datos del pago</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
