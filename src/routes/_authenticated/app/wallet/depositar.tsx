@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ChevronLeft,
@@ -26,6 +26,7 @@ import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import {
   listPaymentMethods,
+  previewPaymentLine,
   requestDeposit,
   type PaymentMethodInfo,
 } from "@/lib/payments.functions";
@@ -135,6 +136,7 @@ function DepositPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const send = useServerFn(requestDeposit);
+  const previewLine = useServerFn(previewPaymentLine);
   const { necesario, metodo } = Route.useSearch();
   const { saldo: saldoRate, methods } = Route.useLoaderData();
 
@@ -444,6 +446,48 @@ function DepositPage() {
 
         <section className="surface-card space-y-4 p-5">
           <h2 className="text-base font-semibold">Datos para transferir</h2>
+
+          {linesBusy ? (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm">
+              <p className="font-semibold text-destructive">
+                Todas las líneas de recepción están ocupadas
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Hay pagos en revisión en las tres líneas. Espera unos minutos y vuelve a entrar:
+                en cuanto se libere una, te la asignamos automáticamente.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => void lineQuery.refetch()}
+              >
+                Volver a comprobar
+              </Button>
+            </div>
+          ) : hasLine ? (
+            <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+              <p className="text-xs text-muted-foreground">
+                Línea asignada a tu solicitud — envía el dinero solo a este número
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <p className="min-w-0 flex-1 break-all font-display text-lg font-bold text-primary">
+                  Línea {line?.line_number}: {line?.phone_number}
+                </p>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copy(line?.phone_number ?? "")}
+                  aria-label="Copiar número de la línea asignada"
+                >
+                  <Copy className="size-4" aria-hidden="true" />
+                </Button>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Esta línea queda reservada para tu pago mientras esté en revisión.
+              </p>
+            </div>
+          ) : null}
           {transferFields.length > 0 ? (
             <div className="space-y-3">
               {transferFields.map((field) => (
@@ -561,8 +605,8 @@ function DepositPage() {
             ) : null}
           </div>
 
-          <Button className="w-full" disabled={sending} onClick={submitPaid}>
-            {sending ? "Enviando…" : "He pagado"}
+          <Button className="w-full" disabled={sending || linesBusy} onClick={submitPaid}>
+            {sending ? "Enviando…" : linesBusy ? "Líneas ocupadas, espera un momento" : "He pagado"}
           </Button>
         </section>
 
