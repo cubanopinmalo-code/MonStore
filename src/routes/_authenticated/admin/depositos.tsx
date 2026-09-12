@@ -141,7 +141,20 @@ function AdminDepositsPage() {
                   <TableCell className="text-primary">
                     {formatCUP(deposit.credited_amount)}
                   </TableCell>
-                  <TableCell className="text-xs">{labelFor(deposit.payment_method)}</TableCell>
+                  <TableCell className="text-xs">
+                    <span className="block font-medium">
+                      {CHANNEL_TITLES[deposit.payment_channel ?? ""] ??
+                        labelFor(deposit.payment_method)}
+                    </span>
+                    {deposit.bank ? (
+                      <span className="block uppercase text-muted-foreground">{deposit.bank}</span>
+                    ) : null}
+                    {deposit.destination_value ? (
+                      <span className="block break-all text-muted-foreground">
+                        {deposit.destination_value}
+                      </span>
+                    ) : null}
+                  </TableCell>
                   <TableCell className="text-xs">
                     {deposit.line_number ? (
                       <>
@@ -163,8 +176,18 @@ function AdminDepositsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {deposit.payment_reference}
+                    {deposit.transaction_id ? (
+                      <span className="block break-all">ID: {deposit.transaction_id}</span>
+                    ) : null}
+                    {deposit.sender_phone ? (
+                      <span className="block">Desde: {deposit.sender_phone}</span>
+                    ) : null}
+                    {!deposit.transaction_id && !deposit.sender_phone ? (
+                      <span className="block break-all">{deposit.payment_reference}</span>
+                    ) : null}
+                    <ProofLink path={deposit.proof_image_url} />
                   </TableCell>
+
                   <TableCell>
                     <StatusBadge status={deposit.status} />
                     {deposit.rejection_reason ? (
