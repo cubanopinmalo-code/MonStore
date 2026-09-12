@@ -52,7 +52,7 @@ function nestedName(value: unknown): string {
 function toList(items: Array<OrderRow & { products?: unknown; games?: unknown }>): OrderListItem[] {
   return items.map((row) => ({
     ...row,
-    product_name: nestedName(row.products),
+    product_name: translateOfferName(nestedName(row.products)),
     game_name: nestedName(row.games),
   }));
 }
