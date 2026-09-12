@@ -37,6 +37,7 @@ import { useEvents, useEventSubscriptions } from "@/hooks/useEvents";
 import { EVENT_STATUS_LABEL, formatEventDate } from "@/lib/events";
 import { formatCUP } from "@/lib/format";
 import type { EventStatus } from "@/types";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/eventos")({
   head: () => ({
@@ -93,7 +94,7 @@ function AdminEventsPage() {
   };
 
   const updateEvent = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: Partial<Database["public"]["Tables"]["events"]["Update"]>) => {
       const { error } = await supabase.from("events").update(patch).eq("id", selectedId);
       if (error) throw new Error(error.message);
     },
@@ -208,7 +209,9 @@ function AdminEventsPage() {
               <Label htmlFor="estado">Estado</Label>
               <Select
                 value={selected.status}
-                onValueChange={(value) => updateEvent.mutate({ status: value })}
+                onValueChange={(value) =>
+                  updateEvent.mutate({ status: value as EventStatus })
+                }
               >
                 <SelectTrigger id="estado">
                   <SelectValue />
