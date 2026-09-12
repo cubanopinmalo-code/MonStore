@@ -178,7 +178,7 @@ export const requestDeposit = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.rpc("request_deposit", {
+    const { data: result, error } = await supabaseAdmin.rpc("request_deposit", {
       p_user: context.userId,
       p_amount: data.amount,
       p_method: data.method as DbPaymentMethod,
@@ -186,7 +186,12 @@ export const requestDeposit = createServerFn({ method: "POST" })
       p_has_proof: data.hasProof,
     });
     if (error) throw new Error(error.message);
-    return { sent: true };
+    const payload = (result ?? {}) as { line_number?: number | null; line_phone?: string | null };
+    return {
+      sent: true,
+      line_number: payload.line_number ?? null,
+      line_phone: payload.line_phone ?? null,
+    };
   });
 
 export interface ReviewDepositInput {
