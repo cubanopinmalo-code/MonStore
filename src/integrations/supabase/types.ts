@@ -89,6 +89,11 @@ export type Database = {
           created_at: string
           credited_amount: number
           id: string
+          line_assigned_at: string | null
+          line_id: string | null
+          line_number: number | null
+          line_phone: string | null
+          line_released_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_reference: string
           proof_image_url: string | null
@@ -104,6 +109,11 @@ export type Database = {
           created_at?: string
           credited_amount?: number
           id?: string
+          line_assigned_at?: string | null
+          line_id?: string | null
+          line_number?: number | null
+          line_phone?: string | null
+          line_released_at?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_reference?: string
           proof_image_url?: string | null
@@ -119,6 +129,11 @@ export type Database = {
           created_at?: string
           credited_amount?: number
           id?: string
+          line_assigned_at?: string | null
+          line_id?: string | null
+          line_number?: number | null
+          line_phone?: string | null
+          line_released_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_reference?: string
           proof_image_url?: string | null
@@ -128,7 +143,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["request_status"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deposits_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "payment_lines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_subscriptions: {
         Row: {
@@ -516,6 +539,87 @@ export type Database = {
           },
         ]
       }
+      payment_line_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          deposit_id: string | null
+          id: string
+          line_id: string | null
+          note: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          deposit_id?: string | null
+          id?: string
+          line_id?: string | null
+          note?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          deposit_id?: string | null
+          id?: string
+          line_id?: string | null
+          note?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_line_events_deposit_id_fkey"
+            columns: ["deposit_id"]
+            isOneToOne: false
+            referencedRelation: "deposits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_events_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "payment_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_lines: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          line_number: number
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          phone_number: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          line_number: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          phone_number?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          line_number?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          phone_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           active: boolean
@@ -616,6 +720,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          allow_line_reuse: boolean
           created_at: string
           id: boolean
           listing_fee_per_day: number
@@ -625,6 +730,7 @@ export type Database = {
           usd_to_cup: number
         }
         Insert: {
+          allow_line_reuse?: boolean
           created_at?: string
           id?: boolean
           listing_fee_per_day?: number
@@ -634,6 +740,7 @@ export type Database = {
           usd_to_cup?: number
         }
         Update: {
+          allow_line_reuse?: boolean
           created_at?: string
           id?: boolean
           listing_fee_per_day?: number
@@ -1042,6 +1149,10 @@ export type Database = {
       }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }
+        Returns: Json
+      }
+      release_payment_line: {
+        Args: { p_deposit: string; p_reason: string }
         Returns: Json
       }
       request_deposit: {
