@@ -29,6 +29,10 @@ export type ProviderStatus = {
   error: string | null;
 };
 
+/** Columnas de ofertas visibles para el cliente: nunca incluyen el costo del proveedor. */
+const PRODUCT_PUBLIC_COLUMNS =
+  "id, game_id, g2bulk_product_id, name, description, image_url, sale_price, currency, delivery_method, active, available, metadata, last_synced_at, created_at, updated_at";
+
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_IMAGE_BYTES = 4_000_000;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
