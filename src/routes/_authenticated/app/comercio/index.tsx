@@ -190,6 +190,53 @@ function UserMarketplacePage() {
           </div>
         </div>
 
+        <section
+          aria-label="Filtros del comercio"
+          className="surface-card flex flex-col gap-3 p-3 sm:flex-row sm:items-end"
+        >
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <SlidersHorizontal className="size-4 text-primary" aria-hidden="true" />
+            Filtros
+          </div>
+          <div className="grid flex-1 gap-3 sm:grid-cols-2">
+            <label className="space-y-1">
+              <span className="text-xs text-muted-foreground">Ordenar por</span>
+              <div className="relative">
+                <ArrowDownWideNarrow
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="w-full appearance-none rounded-md border border-border bg-surface/60 py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-muted-foreground">Región</span>
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full appearance-none rounded-md border border-border bg-surface/60 px-3 py-2 text-sm outline-none focus:border-primary"
+              >
+                <option value="todas">Todas las regiones</option>
+                {regions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+
         {!isLoading && total === 0 ? (
           <EmptyState
             title="Todavía no hay cuentas publicadas"
