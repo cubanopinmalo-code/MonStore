@@ -29,3 +29,14 @@
 - La solicitud guarda canal, banco, destino, ID de transacción, número de origen, comprobante y estado del flujo.
 - WhatsApp de atención configurable y botón en las notificaciones rechazadas.
 - Pendiente: conciliación automática por SMS (estructura ya preparada).
+
+## Convergencia al Supabase canónico (nklgztbukgaoycuaryzk)
+
+- [x] Auditoría de la base actual y plan de convergencia (.lovable/plan.md)
+- [x] Diagnóstico de solo lectura del catálogo (juegos, ofertas, duplicados, precios, G2Bulk)
+- [ ] Configuración comercial de precios editable desde el panel (costo base + ganancia por USD)
+- [ ] Proteger la sincronización de G2Bulk: solo columnas técnicas
+- [ ] Snapshot de precio congelado en cada pedido
+- [ ] Dry run de solo lectura contra el canónico — BLOQUEADO: falta acceso al proyecto nklgztbukgaoycuaryzk
+- [ ] Datos reales de pago (líneas y destinos) — pendiente del usuario, no se migran los de ejemplo
+- [ ] Migración real y cambio de conexión — solo tras aprobación explícita del dry run

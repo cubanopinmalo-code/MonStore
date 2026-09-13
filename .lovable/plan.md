@@ -234,4 +234,49 @@ Cómo evitar cada fallo:
 
 ---
 
-Me detengo aquí. Nada de lo anterior se ha ejecutado. Dime qué apruebas y por dónde empezamos.
+# Anexo A — Enmiendas aprobadas (revisión del 13/09)
+
+Incorporo tus 8 puntos. Sustituyen a lo dicho arriba donde haya diferencia.
+
+**A1. Precios comerciales administrables.** La base de precios deja de estar en el código y vive en la configuración comercial de la base de datos, editable solo por administradores: `costo_base_cup_por_usd` (1.000) y `ganancia_cup_por_usd` (150) → 1.150 CUP por USD. Fórmula única: `precio_venta_CUP = costo_G2Bulk_USD × (costo_base + ganancia)`. Cambiar a 1.200 + 200 hace que todo cálculo posterior use 1.400 automáticamente, sin tocar código. El panel tendrá esos dos campos, con registro en auditoría de quién los cambia y cuándo.
+
+**A2. G2Bulk no controla el precio.** La sincronización solo escribe: costo USD, disponibilidad técnica, identificadores, datos técnicos, campos requeridos, `last_synced_at`. Queda prohibida — por permisos de columna y por trigger, no solo por convención — de tocar precio de venta, margen, promoción, fechas de promoción, activo comercial, destacado y orden.
+
+**A3. Precios durante la migración.** Se copia `sale_price` tal cual, sin recálculo. Verificación obligatoria antes/después: número de filas, suma total y precio mínimo idénticos. Ninguna recalculación masiva sin tu autorización explícita; la configuración nueva rige solo para cálculos y altas futuras.
+
+**A4. Pedido con precio congelado.** Cada pedido guardará un snapshot inmutable: costo G2Bulk en USD, su equivalente en CUP, ganancia aplicada, precio de venta CUP, cantidad, producto, nombre del juego y la configuración comercial usada (los dos valores y su fecha). Cambiar la configuración después no altera ningún pedido histórico.
+
+**A5. Diagnóstico del catálogo — resultados reales (solo lectura, ya ejecutado):**
+
+| Comprobación | Resultado |
+|---|---|
+| Juegos | 386 |
+| Ofertas | 6.193 |
+| Ofertas sin método de entrega | 0 |
+| Ofertas sin `g2bulk_product_id` | 0 |
+| `g2bulk_product_id` duplicados | 0 |
+| Ofertas con precio 0 o negativo | 0 |
+| Ofertas con precio por debajo del costo | 0 |
+| Ofertas con costo 0 | 0 |
+| Slugs de juego duplicados | 0 |
+| Juegos sin `g2bulk_id` | **4** |
+| Juegos sin ninguna oferta | **8** |
+| Juegos duplicados por nombre | **7 pares** |
+
+Detalle de lo que hay que decidir antes de migrar:
+
+- **4 juegos sin identificador del proveedor y sin ofertas:** Free Fire, Call of Duty, DLS26, Neo Monster. Son los 5 juegos del comercio de cuentas (creados a mano), no del proveedor. Propuesta: migrarlos marcados como juegos internos, no sincronizables.
+- **4 juegos del proveedor sin ofertas:** League of Legends Instant, One Punch Man World, RF Online NEXT, Valorant. Propuesta: migrar y resincronizar; si siguen vacíos, desactivar.
+- **7 juegos duplicados por nombre** (dos filas con el mismo nombre y distinto identificador del proveedor): EAFC 24 (PC / Console), Honor of Kings, Magic Chess Gogo, Valorant Indonesia, Valorant Malaysia, Valorant Philippines, Yalla Ludo. No son un error de datos: son entradas distintas del proveedor (categoría vs juego, o plataforma). Efecto visible: el cliente ve el mismo juego dos veces. Propuesta: **no fusionar durante la migración** (riesgo de perder ofertas); migrar tal cual y resolver después renombrando o desactivando el duplicado desde el panel. Decisión tuya.
+- No hay ofertas duplicadas reales: las repeticiones de nombre que aparecían salen de esos juegos duplicados, no de ofertas repetidas dentro de un mismo juego.
+
+**A6. Clasificación (propuesta, no ejecutada).** 5.070 → `via_id`; 1.123 → `codigo`; 0 → `via_cuenta`. El diagnóstico la respalda: las 1.123 tienen todas `g2bulk_product_id`, es decir son automáticas del proveedor, no atención manual. Queda pendiente de tu validación.
+
+**A7. Datos de pago.** Las 3 líneas y los destinos de ejemplo **quedan fuera de la migración**. La estructura sí se prepara; las filas reales las cargas tú desde el panel. Esto no bloquea el resto.
+
+**A8. Próximo paso autorizado: dry run de solo lectura.** Alcance exacto: comparar esquema origen vs canónico (tablas, columnas, tipos, dependencias), simular transformaciones, conteos origen/destino esperados, duplicados, inconsistencias de precios, referencias G2Bulk, Storage, usuario y dependencias, configuración de precios, columnas sin destino y datos en riesgo de pérdida. Sin `INSERT`, `UPDATE`, `DELETE`, `ALTER`, `DROP`, sin cambio de conexión y sin tocar RLS.
+
+**Bloqueo actual del dry run:** este entorno **no tiene acceso al proyecto `nklgztbukgaoycuaryzk`**. La mitad de "origen" ya está hecha (arriba); la mitad de "canónico" es imposible hasta que me des acceso de lectura a ese proyecto o me pases el volcado de su esquema (`pg_dump --schema-only`). Dime cuál de las dos vías prefieres y entrego el dry run completo.
+
+Nada se ha ejecutado más allá de consultas de lectura. Espero tu aprobación.
+
