@@ -41,6 +41,9 @@ export const Route = createFileRoute("/_authenticated/app/comercio/publicar")({
 
 const DAY_OPTIONS = [1, 2, 3, 4, 5];
 
+/** Únicos juegos que se pueden publicar en el comercio de cuentas. */
+const LISTABLE_GAMES = ["Free Fire", "Blood Strike", "Call of Duty", "DLS26", "Neo Monster"];
+
 function PublishListingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
