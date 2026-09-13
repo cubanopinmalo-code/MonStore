@@ -100,9 +100,43 @@ function ListingCard({ listing }: { listing: Listing }) {
   );
 }
 
+type SortKey = "recientes" | "precio_asc" | "precio_desc" | "tiempo_asc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "recientes", label: "Más recientes" },
+  { value: "precio_asc", label: "Precio: menor a mayor" },
+  { value: "precio_desc", label: "Precio: mayor a menor" },
+  { value: "tiempo_asc", label: "Menos tiempo de publicación" },
+];
+
 function UserMarketplacePage() {
   const { data, isLoading } = usePublicListings();
-  const listings = data ?? [];
+  const [sort, setSort] = useState<SortKey>("recientes");
+  const [region, setRegion] = useState<string>("todas");
+
+  const regions = useMemo(
+    () =>
+      Array.from(new Set((data ?? []).map((l) => l.region).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
+    [data],
+  );
+
+  const listings = useMemo(() => {
+    const filtered = (data ?? []).filter((l) => region === "todas" || l.region === region);
+    const byNewest = (a: (typeof filtered)[number], b: (typeof filtered)[number]) =>
+      new Date(b.published_at ?? b.created_at).getTime() -
+      new Date(a.published_at ?? a.created_at).getTime();
+    const byRemaining = (l: (typeof filtered)[number]) =>
+      l.expires_at ? new Date(l.expires_at).getTime() - Date.now() : Number.POSITIVE_INFINITY;
+    const sorted = [...filtered];
+    if (sort === "precio_asc") sorted.sort((a, b) => a.price - b.price);
+    else if (sort === "precio_desc") sorted.sort((a, b) => b.price - a.price);
+    else if (sort === "tiempo_asc") sorted.sort((a, b) => byRemaining(a) - byRemaining(b));
+    else sorted.sort(byNewest);
+    return sorted;
+  }, [data, region, sort]);
+
   const total = listings.length;
 
   return (
