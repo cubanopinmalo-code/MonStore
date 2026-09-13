@@ -245,7 +245,7 @@ export const getCatalogGame = createServerFn({ method: "GET" })
     return {
       game: { ...game, cover, offers: rows.length },
       products: rows.map((row) => ({
-        ...row,
+        ...(row as unknown as ProductRow),
         name: translateOfferName(row.name),
         image: coverFor(row.image_url, signed, cover),
       })),

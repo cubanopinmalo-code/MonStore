@@ -47,10 +47,15 @@ export function useEvents(includeFinished = false, admin = false) {
     queryKey: ["events", includeFinished, admin],
     staleTime: 30 * 1000,
     queryFn: async (): Promise<EventRow[]> => {
-      const query = supabase
-        .from(admin ? "events" : "events_public")
-        .select(admin ? EVENT_ADMIN_FIELDS : EVENT_FIELDS)
-        .order("event_date", { ascending: true, nullsFirst: false });
+      const query = admin
+        ? supabase
+            .from("events")
+            .select(EVENT_ADMIN_FIELDS)
+            .order("event_date", { ascending: true, nullsFirst: false })
+        : supabase
+            .from("events_public")
+            .select(EVENT_FIELDS)
+            .order("event_date", { ascending: true, nullsFirst: false });
       const { data, error } = includeFinished
         ? await query
         : await query.not("status", "in", "(finalizado,cancelado)");
