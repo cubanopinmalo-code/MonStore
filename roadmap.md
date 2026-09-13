@@ -40,3 +40,5 @@
 - [ ] Dry run de solo lectura contra el canónico — BLOQUEADO: falta acceso al proyecto nklgztbukgaoycuaryzk
 - [ ] Datos reales de pago (líneas y destinos) — pendiente del usuario, no se migran los de ejemplo
 - [ ] Migración real y cambio de conexión — solo tras aprobación explícita del dry run
+- [x] Fase 2A: preparación técnica de solo lectura (modelo de fondos, precios, snapshot, auth, storage, catálogo, seguridad, rollback)
+- [ ] Fase 2: ejecución — pendiente de aprobación explícita del usuario
