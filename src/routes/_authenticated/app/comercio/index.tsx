@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileStack, Plus, Store } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowDownWideNarrow, FileStack, Plus, SlidersHorizontal, Store } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
