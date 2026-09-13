@@ -42,3 +42,4 @@
 - [ ] Migración real y cambio de conexión — solo tras aprobación explícita del dry run
 - [x] Fase 2A: preparación técnica de solo lectura (modelo de fondos, precios, snapshot, auth, storage, catálogo, seguridad, rollback)
 - [ ] Fase 2: ejecución — pendiente de aprobación explícita del usuario
+- [x] Validación final read-only previa a Fase 2 (destino, pagos, seguridad, orden, rollback)
