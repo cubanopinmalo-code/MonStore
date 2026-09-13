@@ -26,9 +26,33 @@ function AdminListingCard({ listing }: { listing: Listing }) {
   const queryClient = useQueryClient();
   const images = useSignedImages(listing.images as string[]);
   const [working, setWorking] = useState(false);
-  const secrets = Array.isArray(listing.game_account_secrets)
-    ? listing.game_account_secrets[0]
-    : listing.game_account_secrets;
+  const [secrets, setSecrets] = useState<{
+    account_email: string;
+    account_password: string;
+    admin_access_notes: string;
+  } | null>(null);
+  const [loadingSecrets, setLoadingSecrets] = useState(false);
+
+  async function revealSecrets() {
+    setLoadingSecrets(true);
+    const { data, error } = await supabase.rpc("read_account_credentials", {
+      p_account: listing.id,
+    });
+    setLoadingSecrets(false);
+    if (error) {
+      toast.error("No pudimos mostrar los datos", { description: error.message });
+      return;
+    }
+    if (!data) {
+      toast.error("Esta publicación no tiene datos guardados.");
+      return;
+    }
+    setSecrets(data as unknown as {
+      account_email: string;
+      account_password: string;
+      admin_access_notes: string;
+    });
+  }
 
   async function review(approve: boolean) {
     const reason = approve
@@ -92,11 +116,17 @@ function AdminListingCard({ listing }: { listing: Listing }) {
       </div>
       <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
         <p className="mb-2 font-semibold text-warning">Datos privados — solo administración</p>
-        <dl className="space-y-1">
-          <div><dt className="inline text-muted-foreground">Correo: </dt><dd className="inline">{secrets?.account_email}</dd></div>
-          <div><dt className="inline text-muted-foreground">Contraseña: </dt><dd className="inline">{secrets?.account_password}</dd></div>
-          <div><dt className="inline text-muted-foreground">Acceso: </dt><dd className="inline">{secrets?.admin_access_notes}</dd></div>
-        </dl>
+        {secrets ? (
+          <dl className="space-y-1">
+            <div><dt className="inline text-muted-foreground">Correo: </dt><dd className="inline">{secrets.account_email}</dd></div>
+            <div><dt className="inline text-muted-foreground">Contraseña: </dt><dd className="inline">{secrets.account_password}</dd></div>
+            <div><dt className="inline text-muted-foreground">Acceso: </dt><dd className="inline">{secrets.admin_access_notes}</dd></div>
+          </dl>
+        ) : (
+          <Button size="sm" variant="outline" disabled={loadingSecrets} onClick={() => void revealSecrets()}>
+            {loadingSecrets ? "Mostrando…" : "Mostrar datos de la cuenta"}
+          </Button>
+        )}
       </div>
       {listing.status === "pendiente" ? (
         <div className="flex gap-2">

@@ -95,7 +95,7 @@ export function useAdminListings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("game_accounts")
-        .select(`${LISTING_FIELDS}, game_account_secrets(account_email, account_password, admin_access_notes)`)
+        .select(LISTING_FIELDS)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;

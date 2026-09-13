@@ -2,8 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/useAccount";
 
+/** Campos visibles para cualquier participante: nunca incluyen las credenciales de sala. */
 const EVENT_FIELDS =
-  "id, name, game_id, event_type, prize, region, min_participants, max_participants, event_date, event_time, entry_price, currency, status, room_id, room_password, room_activated_at, entry_window_minutes, description, banner_url, created_at, finished_at, games(name, image_url)";
+  "id, name, game_id, event_type, prize, region, min_participants, max_participants, event_date, event_time, entry_price, currency, status, room_activated_at, entry_window_minutes, description, banner_url, created_at, finished_at, games(name, image_url)";
+
+/** Solo administración: añade las credenciales de sala. */
+const EVENT_ADMIN_FIELDS = `${EVENT_FIELDS}, room_id, room_password`;
 
 export interface EventRow {
   id: string;
@@ -17,8 +21,8 @@ export interface EventRow {
   event_time: string;
   entry_price: number;
   status: string;
-  room_id: string | null;
-  room_password: string | null;
+  room_id?: string | null;
+  room_password?: string | null;
   room_activated_at: string | null;
   entry_window_minutes: number;
   description: string;
@@ -38,15 +42,20 @@ async function fetchCounts(): Promise<Record<string, number>> {
 }
 
 /** Eventos reales de la base, con el número de inscritos de cada uno. */
-export function useEvents(includeFinished = false) {
+export function useEvents(includeFinished = false, admin = false) {
   return useQuery({
-    queryKey: ["events", includeFinished],
+    queryKey: ["events", includeFinished, admin],
     staleTime: 30 * 1000,
     queryFn: async (): Promise<EventRow[]> => {
-      const query = supabase.from("events").select(EVENT_FIELDS).order("event_date", {
-        ascending: true,
-        nullsFirst: false,
-      });
+      const query = admin
+        ? supabase
+            .from("events")
+            .select(EVENT_ADMIN_FIELDS)
+            .order("event_date", { ascending: true, nullsFirst: false })
+        : supabase
+            .from("events_public")
+            .select(EVENT_FIELDS)
+            .order("event_date", { ascending: true, nullsFirst: false });
       const { data, error } = includeFinished
         ? await query
         : await query.not("status", "in", "(finalizado,cancelado)");
@@ -54,7 +63,7 @@ export function useEvents(includeFinished = false) {
       const counts = await fetchCounts();
       return (data ?? []).map((row) => ({
         ...(row as unknown as Omit<EventRow, "participants">),
-        participants: counts[row.id] ?? 0,
+        participants: counts[(row as { id: string }).id] ?? 0,
       }));
     },
   });
@@ -67,7 +76,7 @@ export function useEvent(id: string) {
     staleTime: 15 * 1000,
     queryFn: async (): Promise<EventRow | null> => {
       const { data, error } = await supabase
-        .from("events")
+        .from("events_public")
         .select(EVENT_FIELDS)
         .eq("id", id)
         .maybeSingle();
@@ -76,7 +85,7 @@ export function useEvent(id: string) {
       const counts = await fetchCounts();
       return {
         ...(data as unknown as Omit<EventRow, "participants">),
-        participants: counts[data.id] ?? 0,
+        participants: counts[(data as { id: string }).id] ?? 0,
       };
     },
   });

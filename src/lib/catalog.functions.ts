@@ -29,6 +29,10 @@ export type ProviderStatus = {
   error: string | null;
 };
 
+/** Columnas de ofertas visibles para el cliente: nunca incluyen el costo del proveedor. */
+const PRODUCT_PUBLIC_COLUMNS =
+  "id, game_id, g2bulk_product_id, name, description, image_url, sale_price, currency, delivery_method, active, available, metadata, last_synced_at, created_at, updated_at";
+
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_IMAGE_BYTES = 4_000_000;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -142,7 +146,9 @@ export const setUsdRate = createServerFn({ method: "POST" })
       .upsert({ id: true, usd_to_cup: data.rate, usd_margin_cup: data.margin });
     if (error) throw new Error("No se pudo guardar el valor del dólar.");
 
-    const { data: rows, error: readError } = await context.supabase
+    // El costo del proveedor solo se lee en servidor, tras validar el rol de administrador.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error: readError } = await supabaseAdmin
       .from("products")
       .select("id,g2bulk_cost")
       .gt("g2bulk_cost", 0);
@@ -150,7 +156,7 @@ export const setUsdRate = createServerFn({ method: "POST" })
 
     let updated = 0;
     for (const row of rows ?? []) {
-      const { error: updateError } = await context.supabase
+      const { error: updateError } = await supabaseAdmin
         .from("products")
         .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data) })
         .eq("id", row.id);
@@ -229,7 +235,7 @@ export const getCatalogGame = createServerFn({ method: "GET" })
 
     const { data: products } = await supabase
       .from("products")
-      .select("*")
+      .select(PRODUCT_PUBLIC_COLUMNS)
       .eq("game_id", game.id)
       .order("sale_price");
     const rows = products ?? [];
@@ -239,7 +245,7 @@ export const getCatalogGame = createServerFn({ method: "GET" })
     return {
       game: { ...game, cover, offers: rows.length },
       products: rows.map((row) => ({
-        ...row,
+        ...(row as unknown as ProductRow),
         name: translateOfferName(row.name),
         image: coverFor(row.image_url, signed, cover),
       })),
@@ -260,7 +266,7 @@ export const listCatalogOffers = createServerFn({ method: "GET" })
     const supabase = publishableClient();
     let query = supabase
       .from("products")
-      .select("*, games(name, slug, image_url)")
+      .select(`${PRODUCT_PUBLIC_COLUMNS}, games(name, slug, image_url)`)
       .order("sale_price");
     if (data.search) query = query.ilike("name", `%${data.search}%`);
     const { data: rows, error } = await query.limit(300);
@@ -305,7 +311,8 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Array<CatalogProduct & { game_name: string }>> => {
     await requireAdmin(context);
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("products")
       .select("*, games(name)")
       .order("created_at", { ascending: false });
@@ -609,7 +616,8 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
       }
     }
 
-    const existingOffers = await context.supabase
+    const { supabaseAdmin: adminClient } = await import("@/integrations/supabase/client.server");
+    const existingOffers = await adminClient
       .from("products")
       .select("id,g2bulk_product_id,g2bulk_cost,available,name");
     const offersByRef = new Map<string, ProductRow & { id: string }>();

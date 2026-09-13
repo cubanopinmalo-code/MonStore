@@ -102,7 +102,8 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const placed = await supabaseAdmin.rpc("place_wallet_order", {
+    // El pedido se registra con la sesión del propio cliente: la función valida auth.uid().
+    const placed = await supabase.rpc("place_wallet_order", {
       p_user: userId,
       p_product: data.product_id,
       p_player_id: data.player_id,

@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/admin/eventos")({
 
 function AdminEventsPage() {
   const queryClient = useQueryClient();
-  const { data: events } = useEvents(true);
+  const { data: events } = useEvents(true, true);
   const [selectedId, setSelectedId] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
 
