@@ -57,6 +57,13 @@
       "when": 1789308258004,
       "tag": "0007_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789308448206,
+      "tag": "0008_account_credentials_encryption",
+      "breakpoints": true
     }
   ]
 }

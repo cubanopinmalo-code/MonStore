@@ -363,23 +363,32 @@ export type Database = {
       game_account_secrets: {
         Row: {
           account_email: string
+          account_email_enc: string | null
           account_id: string
           account_password: string
+          account_password_enc: string | null
           admin_access_notes: string
+          admin_access_notes_enc: string | null
           created_at: string
         }
         Insert: {
           account_email?: string
+          account_email_enc?: string | null
           account_id: string
           account_password?: string
+          account_password_enc?: string | null
           admin_access_notes?: string
+          admin_access_notes_enc?: string | null
           created_at?: string
         }
         Update: {
           account_email?: string
+          account_email_enc?: string | null
           account_id?: string
           account_password?: string
+          account_password_enc?: string | null
           admin_access_notes?: string
+          admin_access_notes_enc?: string | null
           created_at?: string
         }
         Relationships: [
@@ -1360,6 +1369,7 @@ export type Database = {
         }
         Returns: Json
       }
+      read_account_credentials: { Args: { p_account: string }; Returns: Json }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }
         Returns: Json
