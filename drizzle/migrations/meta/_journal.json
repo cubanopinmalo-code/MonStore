@@ -43,6 +43,13 @@
       "when": 1789308224178,
       "tag": "0005_events_private_room",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789308239929,
+      "tag": "0006_internal_cost_protection",
+      "breakpoints": true
     }
   ]
 }
