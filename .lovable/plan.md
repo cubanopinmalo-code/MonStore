@@ -1,190 +1,185 @@
-# DRY RUN — Convergencia Customer App → MonStore canónico
+# FASE 2A — Preparación técnica (solo lectura)
 
-Fase 1 completada. **No se ejecutó ninguna escritura**: solo lecturas (`SELECT`) en la base actual y lectura del código y las migraciones del Panel Admin. Cero `INSERT`, `UPDATE`, `DELETE`, `ALTER`, `DROP`, cambios de RLS, Storage, usuarios o conexión.
+Todo lo de abajo es diseño y medición. **No se ejecutó ninguna escritura**: ni `INSERT`, `UPDATE`, `DELETE`, `ALTER`, `DROP`, ni RLS, buckets, Storage, usuarios o cambio de conexión.
 
-## 0. Acceso al canónico: resuelto
+## Hallazgo que simplifica el trabajo: el almacén de catálogo está vacío
 
-Pude leer el proyecto **Admin Panel MonStore** desde el espacio de trabajo, con su `config.toml` apuntando a `nklgztbukgaoycuaryzk` y sus 10 migraciones + el esquema base. La comparación de abajo es contra ese esquema real, no contra una suposición. Aviso honesto: comparo contra **el esquema declarado en sus migraciones**; si alguien aplicó algo a mano en ese proyecto, no lo veo.
-
-## 1. Comparación de esquema: origen vs canónico
-
-Son **dos modelos de datos distintos**, no dos versiones del mismo. El canónico es más estricto (histórico inmutable, saldo solo por `wallet_apply`, pedidos con máquina de estados) y usa otros nombres, otros enums y otras unidades. La convergencia es una **traducción**, no una copia.
-
-| Origen (actual) | Destino canónico | Estado |
-|---|---|---|
-| profiles | profiles | parcial — faltan columnas |
-| user_roles | user_roles | compatible |
-| wallets | wallets | renombrado (`balance`→`balance_cup`, `held_balance`→`held_cup`) |
-| wallet_transactions | wallet_transactions | tipo de movimiento con enum distinto |
-| deposits | fund_requests | **muchas columnas sin destino** |
-| withdrawals | withdrawal_requests | renombrado + enum distinto |
-| payment_settings / payment_destinations / payment_line_events | — | **no existe equivalente** |
-| payment_lines | balance_lines | parcial |
-| platform_settings | settings (clave/valor) | parcial — `settings.value` es numérico |
-| orders | orders + order_status_history | modelo nuevo (0 filas, sin copia) |
-| api_transactions | columnas `provider_*` de orders | sin tabla propia |
-| games | games | renombrado + restricciones nuevas |
-| products | products | renombrado + **unidad de costo distinta** |
-| events / event_subscriptions | events / event_rooms / event_participants / event_results | modelo distinto (0 filas) |
-| game_accounts | account_listings | parcial |
-| game_account_secrets | account_credentials | **cifrado distinto** (AES-GCM en backend vs PGP en base) |
-| notifications | notifications | renombrado (`message`→`body`, `type`→`category`) |
-| referrals | referrals | renombrado, compatible |
-| user_favorite_games | — | **no existe** |
-| user_currency_prefs | — | **no existe** |
-| audit_log | audit_log | forma distinta (0 filas) |
-
-## 2. Incompatibilidades concretas (tipos, enums, unidades)
-
-1. **Costo del proveedor: USD vs CUP.** Hoy `products.g2bulk_cost` está **en USD**. En el canónico `cost_cup` y `provider_cost_cup` son **CUP**. Convertir sin más perdería el dato original. Propuesta: guardar el USD íntegro en `provider_metadata.cost_usd` y calcular `cost_cup` con la configuración comercial. `price_cup` se copia sin tocar (requisito A3).
-2. **`payment_method`**: origen `wallet, saldo_movil, tarjeta_cup, usdt, zelle`; canónico `saldo, tarjeta, monedero, usdt, zelle`. Mapa: `saldo_movil→saldo`, `tarjeta_cup→tarjeta`, transfermóvil/EnZona→`monedero`, `usdt→usdt`, `zelle→zelle`. `wallet` no tiene destino (y no se usa en solicitudes).
-3. **`request_status`**: `pendiente/aprobado/rechazado` → `pending/approved/rejected` (el canónico añade `in_review`, `cancelled`).
-4. **Movimientos de wallet**: hoy `type` es texto libre (`compra, deposito, reembolso, retiro, premio, publicacion, evento`); el canónico usa el enum `wallet_tx_type` (`purchase, deposit, refund, withdrawal_*, prize, adjustment, event_fee`). `publicacion` no tiene equivalente → `adjustment` con nota. Además el canónico **no guarda `balance_before`** (solo `balance_after`).
-5. **`settings.value` es `numeric`**: `support_whatsapp` (texto) **no cabe**. Necesita una columna de texto o una tabla aparte. `allow_line_reuse` (booleano) cabe como 0/1.
-6. **`games.slug`** exige el patrón `^[a-z0-9][a-z0-9-]*$`. Verificado en origen: **los 386 slugs cumplen**, sin duplicados.
-7. **`products.sku` es único** y `products.fields` debe pasar el validador de esquema. Propuesta: `sku = 'g2bulk:' || g2bulk_product_id` (verificado: 0 duplicados, 0 vacíos).
-8. **`products.region`** es obligatorio en el canónico y no existe en origen → `global` por defecto.
-9. **`games.platforms[]`** (comercio de cuentas) no tiene columna destino → `internal_notes` o `fields`.
-10. **`profiles`**: provincia y municipio **no existen** en el canónico. `name` → `full_name`, `avatar` → `avatar_url`, `referred_by` → tabla `referrals`.
-11. **Credenciales del comercio**: el canónico cifra en el backend (AES-256-GCM, `ciphertext` texto) y **no** con el trigger PGP actual. Nuestro cifrado no se migra: se adopta el suyo.
-
-## 3. Mapeo exacto y conteos esperados (antes → después)
-
-| Tabla origen | Filas | Destino | Filas esperadas | Nota |
-|---|---|---|---|---|
-| games | 386 | games | 386 | `g2bulk_id`→`provider_game_id`, `provider='g2bulk'`, `active`→`is_active`, `id` antiguo en `legacy_id` |
-| products | 6.193 | products | 6.193 | `sale_price`→`price_cup` **sin recálculo**; `delivery_method`→`topup_kind`; USD a `provider_metadata` |
-| profiles | 1 | profiles | 1 | provincia/municipio pendientes de destino |
-| user_roles | 2 | user_roles | 2 | admin + user |
-| wallets | 1 | wallets | 1 | saldo 0 = 0 |
-| user_favorite_games | 2 | — | 2 en riesgo | sin tabla destino |
-| platform_settings | 1 fila / 6 valores | settings | 6 claves | ver §7 |
-| payment_settings | 4 | — | 0 | sin destino; el flujo de fondos depende de esto |
-| payment_lines | 3 | balance_lines | **0 (excluidas)** | datos de ejemplo, no se migran (A7) |
-| payment_destinations | 5 | — | **0 (excluidas)** | ídem |
-| wallet_transactions, deposits, withdrawals, orders, api_transactions, notifications, referrals, events, event_subscriptions, game_accounts, game_account_secrets, payment_line_events, user_currency_prefs, audit_log | 0 | correspondiente | 0 | nada que copiar |
-
-Total a escribir en la migración real: **6.582 filas** (386 + 6.193 + 3) más 6 claves de configuración.
-
-## 4. Diagnóstico completo del catálogo (ejecutado, solo lectura)
+Medido ahora en la base actual:
 
 | Comprobación | Resultado |
 |---|---|
-| Juegos / ofertas | 386 / 6.193 |
-| Ofertas sin método de entrega | 0 |
-| Ofertas sin `g2bulk_product_id` | 0 |
-| `g2bulk_product_id` duplicados | 0 |
-| Precio 0 o negativo | 0 |
-| Precio por debajo del costo | 0 |
-| Costo 0 | 0 |
-| Slugs de juego duplicados | 0 |
-| Slugs que no cumplen el patrón canónico | 0 |
-| Juegos sin `g2bulk_id` | 4 |
-| Juegos sin ninguna oferta | 8 |
-| Juegos duplicados por nombre | 7 pares |
+| Objetos en el bucket `catalog` | **0** |
+| Objetos en todos los buckets | 1 (un avatar) |
+| Juegos con imagen como ruta de objeto | 0 |
+| Juegos con imagen como URL externa | 249 |
+| Juegos sin imagen | 137 |
+| Ofertas con imagen | 0 (las 6.193 heredan la del juego) |
 
-**Clasificación propuesta (sin aplicar):** 5.070 → `via_id`; 1.123 → `codigo`; 0 → `via_cuenta`. Respaldo: las 1.123 tienen todas identificador de producto del proveedor, es decir son automáticas. El enum canónico ya admite `codigo` (migración 004) y los pedidos aceptan `via_id` y `codigo`.
+Es decir: **no hay archivos de catálogo que copiar**. Las portadas son enlaces externos del proveedor, que viajan como texto dentro de la fila. El riesgo de "rutas que dejan de resolver" que señalé en el dry run **no existe**. Los 137 juegos sin foto son los que ya muestran portada con iniciales en la app.
 
-**7 pares duplicados por nombre** — dos filas distintas del proveedor, no un error de datos:
+## Requisito 1 — Modelo de fondos (migraciones aditivas propuestas, no ejecutadas)
 
-| Nombre | Identificadores del proveedor | Recomendación |
+El canónico solo tiene `balance_lines` + `fund_requests` con `reference` y `proof_url`. Para no perder nada del flujo actual propongo esto, todo **aditivo**:
+
+**1.1 Columnas nuevas en `public.fund_requests`** (todas anulables o con valor por defecto):
+
+`payment_channel text`, `payment_submethod text`, `bank text`, `destination_id uuid` → `payment_destinations(id)`, `destination_value text`, `transaction_id text`, `sender_phone text`, `bonus_pct numeric(6,2) not null default 0`, `credited_amount_cup numeric(14,2)`, `flow_status text not null default 'pendiente'`, `approval_method text not null default 'manual'`, `payment_received_at timestamptz`, `line_number smallint`, `line_phone text`, `line_assigned_at timestamptz`, `line_released_at timestamptz`, `legacy_payload jsonb not null default '{}'`.
+
+**1.2 Tabla nueva `public.payment_destinations`** — destinos editables desde el panel: `id`, `channel` (transfermóvil, EnZona, USDT, Zelle…), `bank`, `kind`, `label`, `description`, `destination_value`, `instructions`, `requires_transaction_id`, `requires_proof`, `requires_sender_phone`, `is_active`, `sort_order`, `created_at`, `updated_at`.
+
+**1.3 Tabla nueva `public.payment_methods_config`** — por método: etiqueta, instrucciones, bonificación de depósito, comisión de retiro, conversión de retiro, campos de transferencia (`jsonb`), activo, orden.
+
+**1.4 Tabla nueva `public.payment_line_events`** — auditoría de líneas: `id`, `balance_line_id`, `fund_request_id`, `user_id`, `actor_id`, `action` (asignada, liberada_manual, liberada_aprobacion, liberada_rechazo), `note`, `created_at`. Inmutable con el `deny_change()` que ya existe en el canónico.
+
+**1.5 Columnas nuevas en `public.balance_lines`**: `line_number smallint`, `allow_reuse boolean not null default false`.
+
+**Índices:** `fund_requests(destination_id)`, `fund_requests(balance_line_id, status)` parcial para pendientes sin liberar, `payment_destinations(is_active, sort_order)`, `payment_line_events(balance_line_id, created_at desc)`.
+
+**RLS:**
+- `payment_destinations` y `payment_methods_config`: `select` para `anon` y `authenticated` **solo de filas activas**; escritura solo `is_admin()`.
+- `payment_line_events`: lectura solo `is_admin()`; escritura solo `service_role` (más el trigger de inmutabilidad).
+- `fund_requests`: se mantiene tal cual (lectura propia o admin, inserción propia, sin `UPDATE` para clientes).
+
+**Funciones necesarias** (todas `security definer`, `set search_path = public`):
+- `request_fund(...)` — asigna línea con `for update skip locked`, respeta la reutilización configurada, calcula bonificación e importe acreditado, congela `settings_snapshot()`, registra el evento de línea y la notificación. Equivale a `request_deposit_v2`.
+- `release_payment_line(fund_request_id, reason)` — liberación manual, solo admin.
+- Las aprobaciones siguen usando las canónicas `admin_approve_fund_request` / `admin_reject_fund_request`, ampliadas para liberar la línea y registrar el evento.
+
+## Requisito 2 — Configuración comercial
+
+El canónico ya tiene `settings` (clave/valor numérico, RLS de solo-admin, `settings_snapshot()`). Propongo:
+
+| Clave | Valor inicial | Unidad | Significado |
+|---|---|---|---|
+| `usd_base_cost_cup` | 1000 | CUP | costo base por USD |
+| `profit_per_usd` | 150 | CUP | ganancia por USD (ya existe, hoy en 0) |
+| `listing_fee_per_day` | 150 | CUP | publicación de cuenta por día |
+| `mobile_balance_value` | 2.8 | CUP | conversión de saldo móvil (ya existe) |
+| `allow_line_reuse` | 0 | 0/1 | reutilización de líneas |
+
+`settings.value` es numérico, así que el **WhatsApp de soporte no cabe**: propongo añadir `settings.text_value text` (aditivo, anulable) para valores de texto.
+
+Precio comercial: `price_cup = cost_usd × (usd_base_cost_cup + profit_per_usd)` = 1.150 CUP por USD hoy. Al cambiar a 1.200 + 200, todo cálculo posterior usa 1.400 sin tocar código.
+
+**Separación de capas en `products`** (el canónico ya trae casi todo tras la migración 004):
+
+| Capa | Columna | Quién escribe |
 |---|---|---|
-| EAFC 24 | `fifa_futcoins_pc` / `fifa_futcoins_console` | migrar ambos y **renombrar** a "EAFC 24 PC" y "EAFC 24 Console" |
-| Honor of Kings | `category:171` / `hok` | migrar ambos; comparar ofertas y desactivar el más pobre |
-| Magic Chess Gogo | `magic_chess_gogo` / `magic_chest_gogo` | el segundo es una errata del proveedor; migrar ambos y desactivar el duplicado tras comparar ofertas |
-| Valorant Indonesia | `category:155` / `valorant_id` | migrar ambos; desactivar el de categoría |
-| Valorant Malaysia | `category:152` / `valorant_my` | ídem |
-| Valorant Philippines | `category:157` / `valorant_ph` | ídem |
-| Yalla Ludo | `yalla_ludo` / `category:7` | ídem |
+| Costo técnico del proveedor (USD) | `provider_metadata.cost_usd` | solo sincronización |
+| Costo convertido a CUP | `provider_cost_cup` / `cost_cup` | solo sincronización |
+| Precio comercial | `price_cup`, descuentos, fechas | solo administrador |
+| Presentación | `is_active`, `is_featured`, `sort_order` | solo administrador |
 
-En todos los casos: **migrar los dos, no fusionar durante la copia** (fusionar podría perder ofertas). La limpieza se hace después desde el panel, con datos a la vista.
+La protección **ya está implementada** en el canónico: el trigger `products_guard_commercial` rechaza cualquier cambio de precio, descuento, fechas, activo, destacado u orden cuando la sesión está marcada como sincronización, y `sync_product_provider_data` (solo admin) escribe únicamente las columnas técnicas. Nuestro sincronizador actual, que sí pisa el precio, se reescribe para llamar a esa función.
 
-**4 juegos internos sin proveedor** (creados a mano para el comercio de cuentas, 0 ofertas): Free Fire, Call of Duty, DLS26, Neo Monster → migrar con `provider = null`, excluidos de la sincronización.
+## Requisito 3 — Snapshot financiero del pedido
 
-**4 juegos del proveedor sin ofertas**: League of Legends Instant, One Punch Man World, RF Online NEXT, Valorant → migrar y resincronizar; si siguen vacíos, `is_active = false`.
+Verificado en la tabla `orders` canónica: ya conserva de forma inmutable `game_name`, `product_name`, `unit_price_cup`, `total_cup`, `unit_cost_cup`, `total_cost_cup`, `quantity` y `settings_snapshot`, con `order_status_history` a prueba de cambios y una restricción que exige coherencia entre unitario, cantidad y total. Cambiar el producto después **no altera el pedido**.
 
-## 5. Storage
+Falta una sola cosa: el **costo del proveedor en USD**. Propuesta aditiva: `orders.provider_cost_usd numeric(14,4)` y `orders.provider_total_cost_usd numeric(14,4)`, rellenadas por `create_order` desde `provider_metadata.cost_usd`.
 
-El canónico **no define ningún bucket** en sus migraciones: hay que crear los cuatro (`avatars`, `catalog`, `deposit-proofs`, `listings`) como privados con las mismas políticas antes de copiar catálogo. Las portadas se guardan como **ruta de objeto**, no URL, y se firman a 1 hora desde el servidor; si se copian los objetos **conservando la ruta exacta**, ninguna fila necesita reescritura. Hoy no hay avatares, comprobantes ni fotos de publicaciones (0 filas), así que solo migra el contenido de `catalog`.
+## Requisito 4 — Autenticación (documentado, sin tocar nada)
 
-## 6. Usuario y autenticación
+- **Usuario a migrar:** uno solo, teléfono 5351115040, correo interno `5351115040@telefono.monstore.cu`, con perfil, wallet (0 CUP) y roles admin + user.
+- **Teléfono:** el canónico lo guarda en `profiles.phone` con índice único y con un trigger que impide que el propio usuario lo cambie. Se copia idéntico; el correo interno se deriva igual que hoy, así que el método de acceso no cambia.
+- **Código de referido:** el canónico lo genera solo con un trigger al insertar el perfil. Para conservar el actual hay que **escribirlo explícitamente después del alta** (es un `UPDATE` de admin, permitido por su guarda). Si no se hace, los enlaces ya compartidos dejan de funcionar.
+- **Roles:** su enum incluye `admin`, `moderator`, `user`; se insertan las dos filas mediante `admin_grant_role`.
+- **Sin duplicados:** `profiles.phone` es único, `profiles.legacy_id` es único y `legacy_user_map` lleva índice único sobre el identificador antiguo. Una segunda pasada de la migración no crea un segundo usuario.
+- **Login tras el cambio:** idéntico para el cliente (teléfono + contraseña). La contraseña es nueva, la defines tú al crear el usuario.
+- **Sesión actual:** se pierde — el token pertenece al proyecto viejo. Con un solo usuario, basta volver a entrar. Conviene mostrar un aviso en pantalla el día del cambio.
+- **Primer inicio de sesión en el canónico:** creas el usuario con contraseña temporal, entras, verificas que ves el panel (rol admin) y cambias la contraseña.
+- **Recuperación de cuenta (posterior):** hoy no existe en ninguno de los dos. Propuesta para después de la convergencia: código de un solo uso por WhatsApp al teléfono registrado, validado en el servidor, con límite de intentos. No entra en esta migración.
 
-Un solo usuario: `5351115040@telefono.monstore.cu`, con perfil, wallet y roles admin+user. No se copian contraseñas. Estrategia: crear el usuario en el canónico (su `handle_new_user` ya crea perfil, wallet y rol `user` automáticamente), anotar la equivalencia en `legacy_user_map` y volcar las columnas propias. Diferencias a tener en cuenta: el canónico usa `profiles.phone` único, genera su propio `referral_code` con trigger (hay que **forzar el actual** para no romper enlaces compartidos) y bloquea que el usuario cambie teléfono, estado o código. Duplicados imposibles: `phone` es único y `legacy_id` también.
+## Requisito 5 — Storage
 
-## 7. Configuración de precios
+- Objetos actuales en `catalog`: **0**. Rutas a copiar: **ninguna**.
+- Filas que dependen de rutas de objeto: **0** en `games` y **0** en `products`.
+- 249 juegos apuntan a URLs externas del proveedor (se copian como texto, siguen funcionando); 137 no tienen imagen y usan la portada con iniciales de la app.
+- Único objeto en todo el almacén: 1 avatar de perfil, en el bucket `avatars`.
 
-El canónico ya trae `settings` clave/valor administrable con RLS de solo-admin y `settings_snapshot()` que congela los valores en cada operación — exactamente lo que pediste en A1 y A4. Claves existentes: `usdt_value`, `mobile_balance_value`, `profit_per_usd` (=ganancia por USD), `withdrawal_commission_pct`, `account_trade_commission_pct`.
+Conclusión: **no hay migración de Storage que hacer**. Sí hay que crear los cuatro buckets privados en el canónico (`avatars`, `catalog`, `deposit-proofs`, `listings`) antes de que la app vuelva a subir archivos, y copiar ese único avatar. Nada de esto se ejecuta ahora.
 
-**Falta la clave del costo base por USD.** Propuesta: añadir `usd_base_cost_cup = 1000` y fijar `profit_per_usd = 150` → 1.150 CUP por USD, todo editable desde el panel. Faltan también `listing_fee_per_day` y un lugar de texto para el WhatsApp de soporte.
+## Requisito 6 — Reporte de catálogo (cifras a cuadrar tras la migración)
 
-Protección comercial (A2): **ya resuelta en el canónico**. El trigger `products_guard_commercial` impide que la sincronización toque precio, descuento, fechas, activo, destacado y orden, y `sync_product_provider_data` (solo admin) escribe únicamente costo, disponibilidad, identificadores y metadatos técnicos. Nuestro sincronizador actual, que sí pisa precio, debe reescribirse para llamar a esa función.
+| Medida | Valor actual |
+|---|---|
+| Juegos | 386 |
+| Ofertas | 6.193 |
+| Ofertas `via_id` | 5.070 |
+| Ofertas `codigo` (hoy marcadas `via_cuenta`) | 1.123 |
+| Ofertas `via_cuenta` reales | 0 |
+| Suma de `price_cup` | 293.721.871,45 CUP |
+| Precio mínimo | 5,75 CUP |
+| Precio máximo | 17.595.000,00 CUP |
+| Suma de costo del proveedor | 255.413,65 USD |
+| Costo mínimo / máximo | 0,0100 / 15.300,0000 USD |
+| Juegos con al menos una oferta | 378 |
+| Media de ofertas por juego | 16,4 |
+| Máximo de ofertas en un juego | 547 (Legend of the Neverland NAEU) |
 
-## 8. Pedidos y riesgo de doble cobro
+Los cinco juegos con más ofertas: Legend of the Neverland NAEU (547), Legend of the Phoenix (355), lds login (157), Solo Leveling Arise (146), Mobile Legends Exclusive (127). Tras la migración, **cada una de estas cifras debe coincidir exactamente**; cualquier diferencia detiene el proceso y dispara el rollback.
 
-El canónico ya implementa lo que pediste: `create_order` (sin cobrar, idempotente por clave) → `pay_order` (cobra por `wallet_apply`, no vuelve a cobrar si ya está pagado) → `admin_set_order_status` → `admin_refund_order`, con `order_status_history` inmutable, guarda de transiciones y bloqueo duro para que `via_cuenta` nunca genere pedido. **Snapshot congelado ya presente**: `game_name`, `product_name`, `unit_price_cup`, `total_cup`, `unit_cost_cup`, `total_cost_cup`, `quantity`, `settings_snapshot`. Único añadido recomendado: guardar también el costo en USD del proveedor dentro del snapshot.
+Comprobación aritmética de coherencia: 255.413,65 USD × 1.150 = 293.725.697,50 CUP frente a los 293.721.871,45 actuales — una diferencia del 0,0013 %, atribuible al redondeo a dos decimales por oferta. Confirma que los precios actuales sí salen de la base 1.150, y que **no hace falta recalcular nada**.
 
-Riesgos de doble cobro detectados:
-1. **Convivencia de modelos**: si `place_wallet_order` siguiera accesible tras el cambio, un mismo pedido podría cobrarse dos veces. Mitigación: no migrar esa función; el canónico ni la tiene.
-2. **Reintento de pago**: cubierto — `pay_order` es idempotente por estado y `wallet_apply` por clave (`order-pay:<id>`).
-3. **Doble entrega del proveedor**: la clave de idempotencia hacia G2Bulk debe derivarse del `order_code` canónico, no de un UUID nuevo por intento.
+## Requisito 7 — Duplicados: propuesta de nombre y estado (sin aplicar)
 
-## 9. Funciones y RPC: compatibilidad
+| Nombre actual | Identificadores | Propuesta de nombre | Propuesta de estado |
+|---|---|---|---|
+| EAFC 24 (×2) | `fifa_futcoins_pc` / `fifa_futcoins_console` | "EAFC 24 PC" y "EAFC 24 Consola" | ambos activos |
+| Honor of Kings (×2) | `hok` / `category:171` | conservar el de `hok`; el otro "Honor of Kings (catálogo)" | revisar y desactivar el de menor catálogo |
+| Magic Chess Gogo (×2) | `magic_chess_gogo` / `magic_chest_gogo` | conservar el correcto; el segundo sin renombrar | desactivar el de la errata tras comparar ofertas |
+| Valorant Indonesia (×2) | `valorant_id` / `category:155` | conservar el de juego | desactivar el de categoría |
+| Valorant Malaysia (×2) | `valorant_my` / `category:152` | ídem | ídem |
+| Valorant Philippines (×2) | `valorant_ph` / `category:157` | ídem | ídem |
+| Yalla Ludo (×2) | `yalla_ludo` / `category:7` | ídem | ídem |
 
-| Actual | Canónica | Acción |
-|---|---|---|
-| place_wallet_order | create_order + pay_order | reemplazar |
-| refund_wallet_order | admin_refund_order | reemplazar |
-| request_deposit_v2 | insert en fund_requests | **adaptar con pérdida** (ver §10) |
-| review_deposit | admin_approve/reject_fund_request | reemplazar |
-| request_withdrawal | create_withdrawal_request | reemplazar |
-| review_withdrawal | admin_complete/reject_withdrawal | reemplazar |
-| release_payment_line | — | sin equivalente: **hay que crearlo o perder la gestión de líneas** |
-| claim_referral_reward | — | sin equivalente: crear sobre `wallet_apply` + `referrals` |
-| publish_game_account / review_game_account | account_listings + funciones de admin | adaptar |
-| subscribe_event / enter_event_room | event_participants / get_event_room | reemplazar |
-| read_account_credentials | backend con AES-GCM | reemplazar |
-| top_recharged_games / event_participant_counts / set_display_currency | — | sin equivalente: recrear |
-| has_role / handle_new_user / update_updated_at_column | iguales | conservar las canónicas |
+Se migran los 14 tal cual, sin fusionar, sin renombrar y sin desactivar. La decisión se toma después, desde el panel.
 
-## 10. Datos que podrían perderse (lista completa)
+## Requisito 8 — Seguridad de lo nuevo
 
-Ninguno se pierde hoy por volumen (0 filas), pero **la estructura sí se perdería** y con ella funciones visibles de la app:
+| Tabla nueva | Lectura | Escritura | RLS |
+|---|---|---|---|
+| payment_destinations | anon + authenticated (solo activas) | solo `is_admin()` | activada |
+| payment_methods_config | anon + authenticated (solo activas) | solo `is_admin()` | activada |
+| payment_line_events | solo `is_admin()` | solo `service_role` + inmutable | activada |
+| legacy_user_map | nadie salvo `service_role` | `service_role` | activada, sin políticas |
+| Columnas nuevas de fund_requests | heredan la política existente (propia o admin) | sin `UPDATE` para clientes | — |
 
-1. **Flujo de agregar fondos completo**: `payment_settings`, `payment_destinations`, `payment_line_events` y las columnas de `deposits` (canal, submétodo, banco, destino, ID de transacción, número de origen, bonificación, importe acreditado, estado de flujo, método de aprobación, asignación y liberación de línea). El canónico solo tiene `balance_lines` + `reference` + `proof_url`. **Es la mayor brecha del proyecto**: sin ampliar el canónico, la pantalla de fondos actual no se puede reproducir.
-2. Provincia y municipio del perfil.
-3. Favoritos (`user_favorite_games`) y preferencia de moneda (`user_currency_prefs`).
-4. `balance_before` de los movimientos.
-5. Estado y moneda de la wallet (`status='activa'`, `currency`).
-6. Plataformas de acceso por juego (comercio de cuentas).
-7. WhatsApp de soporte y tarifa de publicación (no caben en `settings` numérico).
-8. `api_transactions` como tabla propia (el canónico guarda la respuesta del proveedor dentro del pedido).
+Reglas transversales: toda función nueva será `security definer` con `set search_path = public`, comprobará `auth.uid() is not null`, y usará `is_admin()` / `has_role()` para lo administrativo — nunca `current_user` ni una comprobación en el navegador. Los cuatro buckets nacen privados, con URLs firmadas generadas en el servidor. Las credenciales de cuentas quedan sin acceso para `anon` y `authenticated`, alcanzables solo con clave de servicio y registradas en el log de accesos. El costo del proveedor no aparece en `products_public`. El precio comercial queda protegido por `products_guard_commercial`. Contra el doble cobro: `create_order` es idempotente por clave, `pay_order` por estado y `wallet_apply` por clave (`order-pay:<id>`), y `place_wallet_order` no se migra. Contra la doble entrega a G2Bulk: la clave de idempotencia hacia el proveedor se deriva del `order_code`, con `provider_attempts` y `provider_last_attempt_at` como tope de reintentos.
 
-Todo esto requiere **migraciones aditivas en el canónico** (columnas y 3–4 tablas nuevas). No se tocan ahora; van en el paso 1 de la migración real, con tu aprobación.
+## Requisito 9 — Rollback real
 
-## 11. Seguridad observada en el canónico
+- **Respaldo:** antes de la primera escritura, exportación completa del canónico (es pequeño) y export de las tablas del origen. El proyecto actual **no se toca en ningún momento**: la migración solo lee de él.
+- **Identificar cada fila migrada:** el canónico tiene `legacy_id` en `games`, `products`, `profiles`, `wallets`, `wallet_transactions`, `fund_requests`, `withdrawal_requests`, `orders`, `referrals` y `account_listings`. Se escribe el identificador antiguo en todas. Deshacer = borrar las filas con `legacy_id` no nulo.
+- **Evitar duplicados:** inserciones con `on conflict (legacy_id) do nothing`; `sku`, `slug` y `phone` son únicos. Repetir la migración es inofensivo.
+- **Revertir la conexión:** devolver las dos variables de entorno y `config.toml` al proyecto actual. Es el paso más rápido y el que se usa ante cualquier problema grave.
+- **30 días:** el proyecto actual queda congelado, sin escrituras, y no se borra hasta que tú lo digas.
+- **Detectar migración parcial:** tras cada bloque, comparación de conteos y sumas contra la tabla del §6; si algo no cuadra, el proceso se detiene y no continúa al bloque siguiente.
+- **Si falla Storage:** no bloquea nada (0 objetos de catálogo). Se reintenta el avatar aparte.
+- **Si falla Auth:** se borra el usuario creado y su fila en `legacy_user_map`, y se reintenta; el catálogo ya migrado no se toca.
+- **Si falla el catálogo:** borrar productos y juegos con `legacy_id` no nulo y repetir. Como la app sigue apuntando al proyecto viejo, el cliente no ve nada.
+- **Si falla la integración de pedidos:** se detecta en pruebas, antes del cambio de conexión; no hay pedidos históricos en riesgo.
 
-Mejor que la actual en casi todo: histórico inmutable (`deny_change`), saldo solo por `wallet_apply` con guarda de compuerta, `fund_requests` sin `UPDATE` para clientes, credenciales sin acceso para `anon`/`authenticated`, costo del producto fuera de las vistas públicas, pedidos de solo lectura para el cliente. Dos puntos a verificar al migrar: que los buckets nuevos nazcan privados, y que el rol de sincronización actúe siempre con `monstore.sync = 'on'` para que la guarda comercial se active.
+## Requisito 10 — Orden exacto de ejecución (Fase 2, pendiente de tu autorización)
 
-## 12. Plan de migración real (para aprobar, no ejecutado)
+1. Respaldo de ambos proyectos.
+2. Migraciones aditivas en el canónico: fondos (§1), configuración (§2), snapshot USD del pedido (§3), `legacy_user_map`, favoritos, preferencia de moneda, provincia/municipio, plataformas por juego.
+3. Validación del esquema: cada tabla, columna, índice, política y función esperada existe.
+4. Storage: crear los cuatro buckets privados con sus políticas (sin objetos que copiar salvo 1 avatar).
+5. Catálogo: 386 juegos, luego 6.193 ofertas, con `legacy_id`, `sku`, `topup_kind` y `price_cup` idéntico.
+6. Usuario y autenticación: crear el usuario, forzar su código de referido, roles, perfil y wallet.
+7. Configuración: claves de precios y métodos; **destinos y líneas de pago quedan vacíos** para que los cargues tú.
+8. Adaptación del Customer App contra el canónico (sin cambiar todavía la conexión de producción).
+9. Pruebas funcionales completas.
+10. Validación cruzada de las cifras del §6.
+11. Cambio de conexión.
+12. Pruebas en producción: entrar, ver catálogo, crear y pagar un pedido de prueba, reembolsarlo.
+13. Rollback disponible 30 días.
 
-1. **Ampliar el canónico** (aditivo): claves de precios (`usd_base_cost_cup`, `profit_per_usd`, tarifa de publicación, texto de soporte), columnas de `fund_requests` para el flujo cubano, tablas de destinos de pago y eventos de línea, favoritos, preferencia de moneda, provincia/municipio, plataformas por juego, `legacy_user_map`.
-2. **Crear los 4 buckets** privados con sus políticas.
-3. **Copiar Storage** (`catalog`) conservando rutas exactas.
-4. **Copiar catálogo**: 386 juegos → 6.193 ofertas, con `legacy_id`, `sku`, `topup_kind` acordado y `price_cup` **idéntico**.
-5. **Validar catálogo**: conteos, suma y mínimo de precios, 10 muestras, referencias del proveedor.
-6. **Crear el usuario** y volcar perfil, roles, wallet (0) y favoritos vía `legacy_user_map`.
-7. **Cargar configuración de precios** y dejar los datos de pago vacíos para que los cargues tú.
-8. **Adaptar el Customer App**: vistas `games_public`/`products_public`, `create_order`+`pay_order`, funciones de fondos y retiros canónicas, sincronizador por `sync_product_provider_data`, pantalla `via_cuenta` por WhatsApp, y conectar la compra real (hoy sigue simulada).
-9. **Pruebas integrales** contra el canónico sin cambiar la conexión de producción.
-10. **Cambio de conexión** (`.env` + `config.toml`), con aviso de que hay que volver a iniciar sesión.
-11. **Pruebas en producción**: entrar, ver catálogo, crear y pagar un pedido de prueba, reembolsarlo.
-12. **Rollback**: revertir las dos variables de conexión al proyecto actual, que queda intacto y congelado 30 días. El canónico conserva `legacy_id` en cada fila, así que una segunda pasada nunca duplica.
+## Lo que necesito de ti para empezar la Fase 2
 
-## 13. Lo que necesito de ti para la Fase 2
-
-1. Aprobación de la clasificación 5.070 `via_id` / 1.123 `codigo` / 0 `via_cuenta`.
-2. Decisión sobre los 7 pares duplicados (mi recomendación: migrar todos, renombrar EAFC 24, revisar el resto después).
-3. Autorización para las **migraciones aditivas** del §10 en el canónico — sin ellas se pierde el flujo de agregar fondos.
-4. Confirmación de los valores iniciales: costo base 1.000 CUP y ganancia 150 CUP por USD.
+1. Autorización para las migraciones aditivas del canónico (paso 2) — son solo altas de tablas y columnas, sin borrar nada.
+2. La contraseña inicial del usuario administrador en el canónico (o confirmación de que uses una temporal y la cambies al entrar).
+3. Confirmación de los valores: 1.000 + 150 CUP por USD.
 
 Me detengo aquí. Nada fue modificado.
