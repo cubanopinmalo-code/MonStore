@@ -52,7 +52,7 @@ function PublishListingPage() {
   const { data: games } = useActiveGames();
   const { data: feePerDay } = useListingFee();
 
-  const availableGames = games ?? [];
+  const availableGames = (games ?? []).filter((game) => LISTABLE_GAMES.includes(game.name));
   const [gameId, setGameId] = useState("");
   const [price, setPrice] = useState("");
   const [showPassword, setShowPassword] = useState(false);
