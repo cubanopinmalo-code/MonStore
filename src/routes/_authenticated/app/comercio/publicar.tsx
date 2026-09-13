@@ -51,7 +51,6 @@ function PublishListingPage() {
 
   const availableGames = games ?? [];
   const [gameId, setGameId] = useState("");
-  const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [region, setRegion] = useState("Latinoamérica");
@@ -110,7 +109,7 @@ function PublishListingPage() {
 
     const { data, error } = await supabase.rpc("publish_game_account", {
       p_game: gameId,
-      p_title: title.trim() || `Cuenta de ${selectedGame?.name ?? "videojuego"}`,
+      p_title: `Cuenta en venta de ${selectedGame?.name ?? "videojuego"}`,
       p_price: Number(price),
       p_region: region,
       p_platform: platform,
@@ -170,16 +169,6 @@ function PublishListingPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="titulo">Título del anuncio</Label>
-            <Input
-              id="titulo"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Cuenta nivel 60 con skins raras"
-            />
           </div>
 
           <div className="space-y-1.5">
