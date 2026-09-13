@@ -232,6 +232,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_subscriptions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       events: {
@@ -1200,7 +1207,80 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      events_public: {
+        Row: {
+          banner_url: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          entry_price: number | null
+          entry_window_minutes: number | null
+          event_date: string | null
+          event_time: string | null
+          event_type: string | null
+          finished_at: string | null
+          game_id: string | null
+          id: string | null
+          max_participants: number | null
+          min_participants: number | null
+          name: string | null
+          prize: string | null
+          region: string | null
+          room_activated_at: string | null
+          status: Database["public"]["Enums"]["event_status"] | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          entry_price?: number | null
+          entry_window_minutes?: number | null
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          finished_at?: string | null
+          game_id?: string | null
+          id?: string | null
+          max_participants?: number | null
+          min_participants?: number | null
+          name?: string | null
+          prize?: string | null
+          region?: string | null
+          room_activated_at?: string | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          entry_price?: number | null
+          entry_window_minutes?: number | null
+          event_date?: string | null
+          event_time?: string | null
+          event_type?: string | null
+          finished_at?: string | null
+          game_id?: string | null
+          id?: string | null
+          max_participants?: number | null
+          min_participants?: number | null
+          name?: string | null
+          prize?: string | null
+          region?: string | null
+          room_activated_at?: string | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
