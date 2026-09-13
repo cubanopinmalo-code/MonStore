@@ -182,6 +182,10 @@ function PublishListingPage() {
             />
           </div>
 
+          <p className="text-xs text-muted-foreground">
+            Título automático: Cuenta en venta de {selectedGame?.name ?? "videojuego"}
+          </p>
+
           <div className="space-y-1.5">
             <Label htmlFor="precio">Precio (CUP)</Label>
             <Input
