@@ -173,20 +173,6 @@ function PublishListingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="titulo">Título del anuncio</Label>
-            <Input
-              id="titulo"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Cuenta nivel 60 con skins raras"
-            />
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Título automático: Cuenta en venta de {selectedGame?.name ?? "videojuego"}
-          </p>
-
-          <div className="space-y-1.5">
             <Label htmlFor="precio">Precio (CUP)</Label>
             <Input
               id="precio"
