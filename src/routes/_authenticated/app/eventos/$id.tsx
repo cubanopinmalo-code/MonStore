@@ -194,8 +194,9 @@ function EventDetail({ event }: { event: EventRow }) {
     subscribe.mutate(value);
   }
 
-  const roomId = room?.id ?? (paid ? event.room_id : null);
-  const roomPassword = room?.password ?? (paid ? event.room_password : null);
+  // Las credenciales de sala solo llegan desde enter_event_room().
+  const roomId = room?.id ?? null;
+  const roomPassword = room?.password ?? null;
 
   return (
     <UserShell>
