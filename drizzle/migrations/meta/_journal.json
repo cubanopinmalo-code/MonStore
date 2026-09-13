@@ -50,6 +50,13 @@
       "when": 1789308239929,
       "tag": "0006_internal_cost_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789308258004,
+      "tag": "0007_audit_log",
+      "breakpoints": true
     }
   ]
 }
