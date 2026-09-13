@@ -146,7 +146,9 @@ export const setUsdRate = createServerFn({ method: "POST" })
       .upsert({ id: true, usd_to_cup: data.rate, usd_margin_cup: data.margin });
     if (error) throw new Error("No se pudo guardar el valor del dólar.");
 
-    const { data: rows, error: readError } = await context.supabase
+    // El costo del proveedor solo se lee en servidor, tras validar el rol de administrador.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error: readError } = await supabaseAdmin
       .from("products")
       .select("id,g2bulk_cost")
       .gt("g2bulk_cost", 0);
@@ -154,7 +156,7 @@ export const setUsdRate = createServerFn({ method: "POST" })
 
     let updated = 0;
     for (const row of rows ?? []) {
-      const { error: updateError } = await context.supabase
+      const { error: updateError } = await supabaseAdmin
         .from("products")
         .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data) })
         .eq("id", row.id);
@@ -233,7 +235,7 @@ export const getCatalogGame = createServerFn({ method: "GET" })
 
     const { data: products } = await supabase
       .from("products")
-      .select("*")
+      .select(PRODUCT_PUBLIC_COLUMNS)
       .eq("game_id", game.id)
       .order("sale_price");
     const rows = products ?? [];
@@ -264,7 +266,7 @@ export const listCatalogOffers = createServerFn({ method: "GET" })
     const supabase = publishableClient();
     let query = supabase
       .from("products")
-      .select("*, games(name, slug, image_url)")
+      .select(`${PRODUCT_PUBLIC_COLUMNS}, games(name, slug, image_url)`)
       .order("sale_price");
     if (data.search) query = query.ilike("name", `%${data.search}%`);
     const { data: rows, error } = await query.limit(300);
@@ -309,7 +311,8 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Array<CatalogProduct & { game_name: string }>> => {
     await requireAdmin(context);
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("products")
       .select("*, games(name)")
       .order("created_at", { ascending: false });
@@ -613,7 +616,8 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
       }
     }
 
-    const existingOffers = await context.supabase
+    const { supabaseAdmin: adminClient } = await import("@/integrations/supabase/client.server");
+    const existingOffers = await adminClient
       .from("products")
       .select("id,g2bulk_product_id,g2bulk_cost,available,name");
     const offersByRef = new Map<string, ProductRow & { id: string }>();
