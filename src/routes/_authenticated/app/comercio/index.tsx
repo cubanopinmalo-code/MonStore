@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileStack, Plus, Store } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowDownWideNarrow, FileStack, Plus, SlidersHorizontal, Store } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -99,9 +100,43 @@ function ListingCard({ listing }: { listing: Listing }) {
   );
 }
 
+type SortKey = "recientes" | "precio_asc" | "precio_desc" | "tiempo_asc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "recientes", label: "Más recientes" },
+  { value: "precio_asc", label: "Precio: menor a mayor" },
+  { value: "precio_desc", label: "Precio: mayor a menor" },
+  { value: "tiempo_asc", label: "Menos tiempo de publicación" },
+];
+
 function UserMarketplacePage() {
   const { data, isLoading } = usePublicListings();
-  const listings = data ?? [];
+  const [sort, setSort] = useState<SortKey>("recientes");
+  const [region, setRegion] = useState<string>("todas");
+
+  const regions = useMemo(
+    () =>
+      Array.from(new Set((data ?? []).map((l) => l.region).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
+    [data],
+  );
+
+  const listings = useMemo(() => {
+    const filtered = (data ?? []).filter((l) => region === "todas" || l.region === region);
+    const byNewest = (a: (typeof filtered)[number], b: (typeof filtered)[number]) =>
+      new Date(b.published_at ?? b.created_at).getTime() -
+      new Date(a.published_at ?? a.created_at).getTime();
+    const byRemaining = (l: (typeof filtered)[number]) =>
+      l.expires_at ? new Date(l.expires_at).getTime() - Date.now() : Number.POSITIVE_INFINITY;
+    const sorted = [...filtered];
+    if (sort === "precio_asc") sorted.sort((a, b) => a.price - b.price);
+    else if (sort === "precio_desc") sorted.sort((a, b) => b.price - a.price);
+    else if (sort === "tiempo_asc") sorted.sort((a, b) => byRemaining(a) - byRemaining(b));
+    else sorted.sort(byNewest);
+    return sorted;
+  }, [data, region, sort]);
+
   const total = listings.length;
 
   return (
@@ -154,6 +189,53 @@ function UserMarketplacePage() {
             </div>
           </div>
         </div>
+
+        <section
+          aria-label="Filtros del comercio"
+          className="surface-card flex flex-col gap-3 p-3 sm:flex-row sm:items-end"
+        >
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <SlidersHorizontal className="size-4 text-primary" aria-hidden="true" />
+            Filtros
+          </div>
+          <div className="grid flex-1 gap-3 sm:grid-cols-2">
+            <label className="space-y-1">
+              <span className="text-xs text-muted-foreground">Ordenar por</span>
+              <div className="relative">
+                <ArrowDownWideNarrow
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="w-full appearance-none rounded-md border border-border bg-surface/60 py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-muted-foreground">Región</span>
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full appearance-none rounded-md border border-border bg-surface/60 px-3 py-2 text-sm outline-none focus:border-primary"
+              >
+                <option value="todas">Todas las regiones</option>
+                {regions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
 
         {!isLoading && total === 0 ? (
           <EmptyState
