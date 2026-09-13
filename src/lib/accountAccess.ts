@@ -32,6 +32,16 @@ const RULES: Rule[] = [
     access: ["Cuenta EA", "Google", "Facebook", "Apple ID"],
   },
   {
+    // Dream League Soccer
+    match: /dls|dream\s*league/i,
+    access: ["Google", "Facebook", "Apple ID", "Correo y contraseña"],
+  },
+  {
+    // Neo Monsters
+    match: /neo\s*monsters?/i,
+    access: ["Google", "Facebook", "Apple ID", "Correo y contraseña"],
+  },
+  {
     match: /blood\s*strike/i,
     access: ["Cuenta NetEase", "Google", "Facebook", "Apple ID", "X (Twitter)"],
   },
