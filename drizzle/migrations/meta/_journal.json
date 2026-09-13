@@ -29,6 +29,13 @@
       "when": 1789308174489,
       "tag": "0003_orders_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789308194014,
+      "tag": "0004_wallet_guards",
+      "breakpoints": true
     }
   ]
 }
