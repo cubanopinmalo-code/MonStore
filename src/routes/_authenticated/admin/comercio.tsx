@@ -26,9 +26,33 @@ function AdminListingCard({ listing }: { listing: Listing }) {
   const queryClient = useQueryClient();
   const images = useSignedImages(listing.images as string[]);
   const [working, setWorking] = useState(false);
-  const secrets = Array.isArray(listing.game_account_secrets)
-    ? listing.game_account_secrets[0]
-    : listing.game_account_secrets;
+  const [secrets, setSecrets] = useState<{
+    account_email: string;
+    account_password: string;
+    admin_access_notes: string;
+  } | null>(null);
+  const [loadingSecrets, setLoadingSecrets] = useState(false);
+
+  async function revealSecrets() {
+    setLoadingSecrets(true);
+    const { data, error } = await supabase.rpc("read_account_credentials", {
+      p_account: listing.id,
+    });
+    setLoadingSecrets(false);
+    if (error) {
+      toast.error("No pudimos mostrar los datos", { description: error.message });
+      return;
+    }
+    if (!data) {
+      toast.error("Esta publicación no tiene datos guardados.");
+      return;
+    }
+    setSecrets(data as unknown as {
+      account_email: string;
+      account_password: string;
+      admin_access_notes: string;
+    });
+  }
 
   async function review(approve: boolean) {
     const reason = approve
