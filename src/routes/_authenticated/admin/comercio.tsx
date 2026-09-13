@@ -116,11 +116,17 @@ function AdminListingCard({ listing }: { listing: Listing }) {
       </div>
       <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
         <p className="mb-2 font-semibold text-warning">Datos privados — solo administración</p>
-        <dl className="space-y-1">
-          <div><dt className="inline text-muted-foreground">Correo: </dt><dd className="inline">{secrets?.account_email}</dd></div>
-          <div><dt className="inline text-muted-foreground">Contraseña: </dt><dd className="inline">{secrets?.account_password}</dd></div>
-          <div><dt className="inline text-muted-foreground">Acceso: </dt><dd className="inline">{secrets?.admin_access_notes}</dd></div>
-        </dl>
+        {secrets ? (
+          <dl className="space-y-1">
+            <div><dt className="inline text-muted-foreground">Correo: </dt><dd className="inline">{secrets.account_email}</dd></div>
+            <div><dt className="inline text-muted-foreground">Contraseña: </dt><dd className="inline">{secrets.account_password}</dd></div>
+            <div><dt className="inline text-muted-foreground">Acceso: </dt><dd className="inline">{secrets.admin_access_notes}</dd></div>
+          </dl>
+        ) : (
+          <Button size="sm" variant="outline" disabled={loadingSecrets} onClick={() => void revealSecrets()}>
+            {loadingSecrets ? "Mostrando…" : "Mostrar datos de la cuenta"}
+          </Button>
+        )}
       </div>
       {listing.status === "pendiente" ? (
         <div className="flex gap-2">
