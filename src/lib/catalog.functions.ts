@@ -660,7 +660,7 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         last_synced_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      } as Omit<ProductRow, "id"> & { game_id: string });
+      } as unknown as Omit<ProductRow, "id"> & { game_id: string });
     }
 
     let offersCreated = 0;
