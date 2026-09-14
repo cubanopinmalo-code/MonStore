@@ -21,11 +21,9 @@ import {
   phoneToEmailCanonical,
 } from "./phone";
 
-const OTP_TTL_SECONDS = 300; // 5 minutos
-const OTP_MAX_ATTEMPTS = 5;
-const RESEND_COOLDOWN_SECONDS = 60;
-const MAX_PER_PHONE_PER_HOUR = 5;
-const MAX_PER_IP_PER_HOUR = 10;
+// Los límites ya NO están escritos aquí: viven en `public.otp_limits`
+// (solo servidor, ajustables sin tocar código). Ver src/lib/otp-config.server.ts.
+
 
 interface Challenge {
   id: string;
@@ -52,7 +50,7 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 function pepper(): string {
-  return process.env["OTP_TEST_PEPPER"] ?? "monstore-fase-2-6-prueba";
+  return process.env["OTP_PEPPER"] ?? process.env["OTP_TEST_PEPPER"] ?? "monstore-fase-2-6-prueba";
 }
 
 function clientIp(): string {
@@ -70,29 +68,34 @@ export const requestOtpTest = createServerFn({ method: "POST" })
 
     const phone = e164Phone(data.phone);
     const ip = clientIp();
+    const { getOtpLimits } = await import("./otp-config.server");
+    const { logSmsUsage, smsSentLast24h } = await import("./otp-usage.server");
+    const limits = await getOtpLimits();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as TestTableClient;
     const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
 
     const { data: recent } = await db
       .from("otp_test_challenges")
       .select("id, created_at")
       .eq("phone_e164", phone)
-      .gte("created_at", hourAgo)
+      .gte("created_at", dayAgo)
       .order("created_at", { ascending: false });
 
     const list = (recent ?? []) as Array<{ created_at: string }>;
-    if (list.length >= MAX_PER_PHONE_PER_HOUR) {
+    if (list.length >= limits.maxPerPhonePerDay) {
+      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_telefono" });
       return { ok: false as const, reason: "limite_telefono" };
     }
     const last = list[0];
     if (last) {
       const elapsed = (Date.now() - new Date(last.created_at).getTime()) / 1000;
-      if (elapsed < RESEND_COOLDOWN_SECONDS) {
+      if (elapsed < limits.resendCooldownSeconds) {
         return {
           ok: false as const,
           reason: "espera",
-          retryInSeconds: Math.ceil(RESEND_COOLDOWN_SECONDS - elapsed),
+          retryInSeconds: Math.ceil(limits.resendCooldownSeconds - elapsed),
         };
       }
     }
@@ -102,12 +105,22 @@ export const requestOtpTest = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("request_ip", ip)
       .gte("created_at", hourAgo);
-    if ((ipCount ?? 0) >= MAX_PER_IP_PER_HOUR) {
+    if ((ipCount ?? 0) >= limits.maxPerIpPerHour) {
+      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_origen" });
       return { ok: false as const, reason: "limite_origen" };
     }
 
-    // Código de 6 dígitos con generador criptográfico.
-    const code = String(crypto.getRandomValues(new Uint32Array(1))[0]! % 1_000_000).padStart(6, "0");
+    if (limits.dailySmsCap != null && (await smsSentLast24h()) >= limits.dailySmsCap) {
+      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "tope_diario" });
+      return { ok: false as const, reason: "tope_diario" };
+    }
+
+    // Código con generador criptográfico, de la longitud configurada.
+    const span = 10 ** limits.codeLength;
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0]! % span).padStart(
+      limits.codeLength,
+      "0",
+    );
     const codeHash = await sha256Hex(`${phone}:${code}:${pepper()}`);
 
     // Invalidamos los desafíos anteriores: solo el último código es válido.
@@ -117,25 +130,45 @@ export const requestOtpTest = createServerFn({ method: "POST" })
       .eq("phone_e164", phone)
       .is("consumed_at", null);
 
+    const minutes = Math.round(limits.ttlSeconds / 60);
     const { sendSms } = await import("./zdsms.server");
-    const sms = await sendSms(phone, `MONSTORE: tu codigo es ${code}. Caduca en 5 minutos.`);
+    const sms = await sendSms(phone, `MONSTORE: tu codigo es ${code}. Caduca en ${minutes} minutos.`);
 
     await db.from("otp_test_challenges").insert({
       phone_e164: phone,
       code_hash: codeHash,
-      max_attempts: OTP_MAX_ATTEMPTS,
-      expires_at: new Date(Date.now() + OTP_TTL_SECONDS * 1000).toISOString(),
+      max_attempts: limits.maxAttempts,
+      expires_at: new Date(Date.now() + limits.ttlSeconds * 1000).toISOString(),
       request_ip: ip,
       provider_message_id: sms.messageId,
     });
 
+    await logSmsUsage({
+      phoneE164: phone,
+      ip,
+      outcome: sms.ok ? (sms.mode === "mock" ? "simulado" : "enviado") : "fallido",
+      providerMode: sms.mode,
+      providerMessageId: sms.messageId,
+      errorCode: sms.error ?? null,
+    });
+
     if (!sms.ok) {
-      return { ok: false as const, reason: "sms_no_enviado", providerError: sms.error };
+      // Nunca se expone el detalle técnico del proveedor al navegador.
+      const reason =
+        sms.error === "sin_saldo"
+          ? "proveedor_sin_saldo"
+          : sms.error === "numero_rechazado"
+            ? "numero_rechazado"
+            : sms.error === "rate_limit_proveedor"
+              ? "limite_origen"
+              : "sms_no_enviado";
+      return { ok: false as const, reason };
     }
 
     // Respuesta idéntica exista o no la cuenta: no permite enumerar usuarios.
-    return { ok: true as const, mode: sms.mode, expiresInSeconds: OTP_TTL_SECONDS };
+    return { ok: true as const, mode: sms.mode, expiresInSeconds: limits.ttlSeconds };
   });
+
 
 export const verifyOtpTest = createServerFn({ method: "POST" })
   .inputValidator((input: { phone: string; code: string }) => ({
@@ -143,7 +176,7 @@ export const verifyOtpTest = createServerFn({ method: "POST" })
     code: String(input.code ?? ""),
   }))
   .handler(async ({ data }) => {
-    if (!isValidCubanMobile(data.phone) || !/^\d{6}$/.test(data.code)) {
+    if (!isValidCubanMobile(data.phone) || !/^\d{4,8}$/.test(data.code)) {
       return { ok: false as const, reason: "datos_invalidos" };
     }
 
