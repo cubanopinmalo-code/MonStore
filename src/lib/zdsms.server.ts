@@ -1,44 +1,116 @@
 /**
- * FASE 2.6 — Cliente de zdSMS. SOLO SERVIDOR.
+ * FASE 2.6.1 — Cliente de zdSMS. SOLO SERVIDOR.
  *
- * El token vive exclusivamente en la variable de entorno ZDSMS_TOKEN del servidor.
- * Este archivo termina en `.server.ts`, por lo que el empaquetador impide que
- * llegue nunca al navegador.
+ * Credenciales: ZDSMS_EMAIL y ZDSMS_PASSWORD, leídas SIEMPRE dentro del
+ * manejador. Nunca viajan al navegador, nunca se registran, nunca aparecen en
+ * respuestas. Este archivo termina en `.server.ts`, por lo que el empaquetador
+ * impide que llegue al navegador.
  *
- * API oficial (confirmada): base https://zdsms.cu/api/v1
- *   POST /message/send   { recipient, mstext }  -> { id, ... }
- *   GET  /message/{id}/status
+ * API oficial (confirmada, no se inventa ningún endpoint): base https://zdsms.cu/api
+ *   POST /v1/token                { email, password } -> token
+ *   POST /v1/message/send         { recipient, mstext } -> { id, ... }
+ *   GET  /v1/message/{id}/status
  * No existe endpoint de generación ni de verificación de OTP: la validación
- * del código es responsabilidad del backend de MonStore.
+ * del código es responsabilidad exclusiva del backend de MonStore.
  */
 
-const ZDSMS_BASE = "https://zdsms.cu/api/v1";
+const ZDSMS_BASE = "https://zdsms.cu/api";
+const REQUEST_TIMEOUT_MS = 15_000;
+
+export type SmsErrorCode =
+  | "sin_credenciales"
+  | "auth_fallida"
+  | "sin_saldo"
+  | "numero_rechazado"
+  | "rate_limit_proveedor"
+  | "timeout"
+  | "proveedor_no_disponible"
+  | "envio_fallido";
 
 export interface SmsSendResult {
   /** true si el mensaje fue aceptado por el proveedor (o simulado). */
   ok: boolean;
   /** Identificador del mensaje del proveedor, si lo devuelve. */
   messageId: string | null;
-  /** "real" cuando se usó la API; "mock" cuando no hay credencial configurada. */
+  /** "real" cuando se usó la API; "mock" cuando no hay credenciales configuradas. */
   mode: "real" | "mock";
-  /** Motivo del fallo, apto para registrar. Nunca contiene el código. */
-  error?: string;
+  /** Motivo del fallo, apto para registrar. Nunca contiene el código ni las credenciales. */
+  error?: SmsErrorCode;
+  /** Código HTTP devuelto por el proveedor, para diagnóstico interno. */
+  status?: number;
 }
 
-/** Envía un SMS. Si no hay credencial configurada, simula el envío (Fase 2.6). */
-export async function sendSms(recipientE164: string, text: string): Promise<SmsSendResult> {
-  const token = process.env["ZDSMS_TOKEN"];
+function credentials(): { email: string; password: string } | null {
+  const email = process.env["ZDSMS_EMAIL"];
+  const password = process.env["ZDSMS_PASSWORD"];
+  if (!email || !password) return null;
+  return { email, password };
+}
 
-  if (!token) {
-    // Modo prueba: no se realiza ninguna llamada externa.
-    return { ok: true, messageId: `mock-${crypto.randomUUID()}`, mode: "mock" };
+async function withTimeout(input: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Token en memoria del proceso; nunca se persiste ni se devuelve al navegador. */
+let cachedToken: { value: string; expiresAt: number } | null = null;
+
+async function getToken(): Promise<{ token: string } | { error: SmsErrorCode; status?: number }> {
+  const creds = credentials();
+  if (!creds) return { error: "sin_credenciales" };
+  if (cachedToken && cachedToken.expiresAt > Date.now()) return { token: cachedToken.value };
+
+  try {
+    const response = await withTimeout(`${ZDSMS_BASE}/v1/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ email: creds.email, password: creds.password }),
+    });
+    if (!response.ok) {
+      return { error: response.status === 401 ? "auth_fallida" : "proveedor_no_disponible", status: response.status };
+    }
+    const payload = (await response.json()) as { token?: string; access_token?: string };
+    const token = payload.token ?? payload.access_token;
+    if (!token) return { error: "auth_fallida" };
+    cachedToken = { value: token, expiresAt: Date.now() + 30 * 60_000 };
+    return { token };
+  } catch (error) {
+    return { error: (error as Error)?.name === "AbortError" ? "timeout" : "proveedor_no_disponible" };
+  }
+}
+
+function mapSendError(status: number, body: string): SmsErrorCode {
+  if (status === 401 || status === 403) return "auth_fallida";
+  if (status === 429) return "rate_limit_proveedor";
+  if (status === 422 || status === 400) {
+    return /saldo|balance|credit/i.test(body) ? "sin_saldo" : "numero_rechazado";
+  }
+  if (status === 402) return "sin_saldo";
+  if (status >= 500) return "proveedor_no_disponible";
+  return "envio_fallido";
+}
+
+/** Envía un SMS. Sin credenciales configuradas, simula el envío (no hay llamada externa). */
+export async function sendSms(recipientE164: string, text: string): Promise<SmsSendResult> {
+  const auth = await getToken();
+
+  if ("error" in auth) {
+    if (auth.error === "sin_credenciales") {
+      return { ok: true, messageId: `mock-${crypto.randomUUID()}`, mode: "mock" };
+    }
+    return { ok: false, messageId: null, mode: "real", error: auth.error, ...(auth.status ? { status: auth.status } : {}) };
   }
 
   try {
-    const response = await fetch(`${ZDSMS_BASE}/message/send`, {
+    const response = await withTimeout(`${ZDSMS_BASE}/v1/message/send`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth.token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -46,31 +118,47 @@ export async function sendSms(recipientE164: string, text: string): Promise<SmsS
     });
 
     if (!response.ok) {
+      if (response.status === 401) cachedToken = null;
+      const body = await response.text().catch(() => "");
       return {
         ok: false,
         messageId: null,
         mode: "real",
-        error: `zdsms_http_${response.status}`,
+        error: mapSendError(response.status, body),
+        status: response.status,
       };
     }
 
     const payload = (await response.json()) as { id?: string | number };
+    return { ok: true, messageId: payload.id != null ? String(payload.id) : null, mode: "real" };
+  } catch (error) {
     return {
-      ok: true,
-      messageId: payload.id != null ? String(payload.id) : null,
+      ok: false,
+      messageId: null,
       mode: "real",
+      error: (error as Error)?.name === "AbortError" ? "timeout" : "proveedor_no_disponible",
     };
-  } catch {
-    return { ok: false, messageId: null, mode: "real", error: "zdsms_unreachable" };
   }
 }
 
 /** Consulta el estado de un envío. Solo servidor. */
 export async function getSmsStatus(messageId: string): Promise<unknown> {
-  const token = process.env["ZDSMS_TOKEN"];
-  if (!token) return { mode: "mock", id: messageId, status: "simulated" };
-  const response = await fetch(`${ZDSMS_BASE}/message/${messageId}/status`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  const auth = await getToken();
+  if ("error" in auth) return { mode: "mock", id: messageId, status: "simulated" };
+  const response = await withTimeout(`${ZDSMS_BASE}/v1/message/${messageId}/status`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${auth.token}`, Accept: "application/json" },
   });
   return response.json();
+}
+
+/** Comprobación de alcance de red al proveedor. No envía ningún mensaje. */
+export async function probeZdsms(): Promise<{ reachable: boolean; detail: string }> {
+  try {
+    const response = await withTimeout(`${ZDSMS_BASE}/v1/token`, { method: "OPTIONS" });
+    return { reachable: true, detail: `http_${response.status}` };
+  } catch (error) {
+    const name = (error as Error)?.name;
+    return { reachable: false, detail: name === "AbortError" ? "timeout" : "inalcanzable" };
+  }
 }
