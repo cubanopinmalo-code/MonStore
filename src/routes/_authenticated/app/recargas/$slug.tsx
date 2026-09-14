@@ -26,6 +26,7 @@ import {
   type CatalogProduct,
 } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import { deliveryLongLabel } from "@/lib/delivery";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
 

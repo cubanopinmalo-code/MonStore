@@ -56,6 +56,7 @@ import {
   type ProductDraft,
 } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import { deliveryLabel } from "@/lib/delivery";
 
 type OfferRow = CatalogProduct & { game_name: string };
 
