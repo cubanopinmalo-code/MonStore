@@ -77,3 +77,11 @@
 - [x] Comprobación de conectividad: zdsms.cu resuelve pero no responde desde este entorno (FASE_2_6_1_ZDSMS_PREPARACION.md)
 - [ ] Tope diario de SMS — pendiente de tu decisión
 - [ ] Credenciales reales de zdSMS — pendientes, no solicitadas todavía
+
+## Fase 2.6.4 — Preparación controlada del canónico
+
+- [x] Comprobar que el proyecto canónico responde (sí; falta credencial, no conectividad)
+- [x] Mapa de compatibilidad completo (tablas, funciones, reglas, archivos) — FASE_2_6_4_PREPARACION_CANONICO.md
+- [x] Plan de catálogo, usuarios, dinero, pedidos, proveedor, archivos y variables
+- [x] Procedimiento del día del cambio, vuelta atrás y pruebas obligatorias
+- [ ] BLOQUEADO: sin claves del proyecto canónico (pública y de servidor)
