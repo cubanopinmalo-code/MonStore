@@ -49,3 +49,12 @@
 - [x] Decisión aprobada: identidad canónica <telefono>@telefono.monstore.cu, sin prefijo 53
 - [ ] Ajuste de WhatsApp de soporte en el backend definitivo — pendiente de acceso
 - [ ] Cuatro depósitos privados (avatars, catalog, deposit-proofs, listings) en el backend definitivo — pendiente de acceso
+
+## Fase 2.5 — Acceso sin contraseña por código SMS (zdSMS)
+
+- [ ] Análisis y diseño del acceso por teléfono + código SMS (FASE_2_5_AUTH_OTP_MONSTORE.md)
+- [ ] Confirmar endpoints reales de zdSMS (envío y, si existe, verificación)
+- [ ] Diseñar validación del código en el servidor (sin guardar el código en claro)
+- [ ] Definir cómo convertir un código válido en sesión de la app
+- [ ] Clasificar los componentes actuales de contraseña (mantener/adaptar/reemplazar/retirar)
+- [ ] Recuperación de acceso ante pérdida del teléfono
