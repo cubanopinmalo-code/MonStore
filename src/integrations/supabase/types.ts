@@ -1553,7 +1553,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      delivery_method: "via_id" | "via_cuenta"
+      delivery_method: "via_id" | "via_cuenta" | "codigo"
       event_status:
         | "proximamente"
         | "inscripciones_abiertas"
@@ -1710,7 +1710,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      delivery_method: ["via_id", "via_cuenta"],
+      delivery_method: ["via_id", "via_cuenta", "codigo"],
       event_status: [
         "proximamente",
         "inscripciones_abiertas",

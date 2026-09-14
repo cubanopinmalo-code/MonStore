@@ -74,7 +74,14 @@ export const DEFAULT_USD_MARGIN = 150;
 
 export type Pricing = { rate: number; margin: number };
 
-/** Precio de venta en CUP: costo USD × (base del dólar + ganancia por dólar). */
+/**
+ * Precio inicial sugerido en CUP: costo USD × (base del dólar + ganancia por dólar).
+ *
+ * Solo se usa al dar de alta una oferta nueva o cuando el administrador pide
+ * expresamente recalcular. La sincronización con el proveedor NUNCA lo aplica
+ * sobre ofertas que ya existen: el precio de venta es un dato comercial de
+ * MONSTORE y el costo del proveedor es un dato técnico.
+ */
 export function priceFromCost(costUsd: number, pricing: Pricing): number {
   const cost = Number(costUsd ?? 0);
   return Math.round(cost * (pricing.rate + pricing.margin) * 100) / 100;
@@ -416,7 +423,7 @@ export type ProductDraft = {
   g2bulk_cost: number;
   sale_price: number;
   currency: string;
-  delivery_method: "via_id" | "via_cuenta";
+  delivery_method: "via_id" | "codigo" | "via_cuenta";
   active: boolean;
   available: boolean;
   image_url: string;
@@ -442,7 +449,8 @@ export const saveProduct = createServerFn({ method: "POST" })
       g2bulk_cost: cost,
       sale_price: price,
       currency: String(data?.currency ?? "CUP"),
-      delivery_method: data.delivery_method === "via_id" ? ("via_id" as const) : ("via_cuenta" as const),
+      // El catálogo del proveedor solo admite "via_id" o "codigo".
+      delivery_method: data.delivery_method === "via_id" ? ("via_id" as const) : ("codigo" as const),
       active: Boolean(data?.active),
       available: Boolean(data?.available),
       image_url: String(data?.image_url ?? "").trim(),
@@ -642,7 +650,9 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         g2bulk_cost: Number(product.unit_price ?? 0),
         sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
-        delivery_method: "via_cuenta",
+        // Los productos automáticos del proveedor entregan un código/tarjeta.
+        // "via_cuenta" queda reservado al comercio de cuentas entre usuarios.
+        delivery_method: "codigo",
         active: true,
         available: Number(product.stock ?? 0) > 0,
         metadata: { fields: [] },
@@ -676,9 +686,10 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
       if (!current) continue;
       const { error } = await context.supabase
         .from("products")
+        // Solo datos técnicos del proveedor. El precio de venta y el resto de la
+        // configuración comercial de MONSTORE no se tocan en la sincronización.
         .update({
           g2bulk_cost: Number(product.unit_price ?? 0),
-          sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
           available: Number(product.stock ?? 0) > 0,
           last_synced_at: new Date().toISOString(),
         })

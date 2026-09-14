@@ -7,6 +7,7 @@ import { CardListSkeleton, EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDateTime } from "@/lib/format";
+import { deliveryLabel } from "@/lib/delivery";
 
 export const Route = createFileRoute("/_authenticated/app/pedidos/$id")({
   head: () => ({
@@ -91,7 +92,7 @@ function OrderDetailPage() {
           <Row label="Producto" value={order.products?.name ?? "—"} />
           <Row
             label="Método de entrega"
-            value={order.products?.delivery_method === "via_cuenta" ? "Por cuenta" : "Por ID"}
+            value={deliveryLabel(order.products?.delivery_method)}
           />
           <Row label="Precio unitario" value={formatCUP(order.unit_price)} />
           <Row label="Total" value={formatCUP(order.total_amount)} />

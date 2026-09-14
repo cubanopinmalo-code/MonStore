@@ -56,6 +56,7 @@ import {
   type ProductDraft,
 } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import { deliveryLabel } from "@/lib/delivery";
 
 type OfferRow = CatalogProduct & { game_name: string };
 
@@ -286,7 +287,7 @@ function AdminProductsPage() {
                   </TableCell>
                   <TableCell className="text-xs">{product.game_name || "—"}</TableCell>
                   <TableCell className="text-xs">
-                    {product.delivery_method === "via_id" ? "Vía ID" : "Vía cuenta"}
+                    {deliveryLabel(product.delivery_method)}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     USD {product.g2bulk_cost.toFixed(2)}
@@ -410,7 +411,7 @@ function AdminProductsPage() {
                     onValueChange={(value) =>
                       setDraft({
                         ...draft,
-                        delivery_method: value === "via_id" ? "via_id" : "via_cuenta",
+                        delivery_method: value === "via_id" ? "via_id" : "codigo",
                       })
                     }
                   >
@@ -419,7 +420,7 @@ function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="via_id">Vía ID (directa)</SelectItem>
-                      <SelectItem value="via_cuenta">Vía cuenta (código)</SelectItem>
+                      <SelectItem value="codigo">Código o tarjeta</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

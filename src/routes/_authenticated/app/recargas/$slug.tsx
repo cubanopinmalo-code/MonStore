@@ -26,6 +26,7 @@ import {
   type CatalogProduct,
 } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
+import { deliveryLongLabel } from "@/lib/delivery";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -193,7 +194,7 @@ function PurchaseFlowPage() {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.delivery_method === "via_id" ? "Entrega por ID" : "Entrega por cuenta"}
+                    {deliveryLongLabel(item.delivery_method)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">

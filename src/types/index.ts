@@ -6,7 +6,12 @@
 
 export type Currency = "CUP";
 
-export type DeliveryMethod = "via_id" | "via_cuenta";
+/**
+ * via_id: recarga automática que necesita el ID del jugador.
+ * codigo: producto automático que entrega un código o tarjeta digital.
+ * via_cuenta: reservado al comercio de cuentas entre usuarios.
+ */
+export type DeliveryMethod = "via_id" | "codigo" | "via_cuenta";
 
 export type OrderStatus =
   | "pendiente"

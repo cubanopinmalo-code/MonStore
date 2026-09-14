@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCUP } from "@/lib/format";
+import { deliveryLabel } from "@/lib/delivery";
 import { listCatalogOffers } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/recargas")({
@@ -127,6 +128,7 @@ function RechargesPage() {
                 <SelectContent>
                   <SelectItem value="todos">Todas</SelectItem>
                   <SelectItem value="via_id">Por ID</SelectItem>
+                  <SelectItem value="codigo">Por código</SelectItem>
                   <SelectItem value="via_cuenta">Por cuenta</SelectItem>
                 </SelectContent>
               </Select>
@@ -171,7 +173,7 @@ function RechargesPage() {
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusBadge status={offer.available ? "disponible" : "no disponible"} />
                     <span className="text-[11px] text-muted-foreground">
-                      {offer.delivery_method === "via_id" ? "Por ID" : "Por cuenta"}
+                      {deliveryLabel(offer.delivery_method)}
                     </span>
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-1">
