@@ -52,9 +52,14 @@
 
 ## Fase 2.5 — Acceso sin contraseña por código SMS (zdSMS)
 
-- [ ] Análisis y diseño del acceso por teléfono + código SMS (FASE_2_5_AUTH_OTP_MONSTORE.md)
-- [ ] Confirmar endpoints reales de zdSMS (envío y, si existe, verificación)
-- [ ] Diseñar validación del código en el servidor (sin guardar el código en claro)
-- [ ] Definir cómo convertir un código válido en sesión de la app
-- [ ] Clasificar los componentes actuales de contraseña (mantener/adaptar/reemplazar/retirar)
-- [ ] Recuperación de acceso ante pérdida del teléfono
+- [x] Análisis y diseño del acceso por teléfono + código SMS (FASE_2_5_AUTH_OTP_MONSTORE.md)
+- [x] Confirmar endpoints reales de zdSMS (solo envío; no existe verificación nativa)
+- [x] Diseñar validación del código en el servidor (sin guardar el código en claro)
+- [x] Definir cómo convertir un código válido en sesión de la app (enlace de un solo uso) — pendiente de verificar en el destino
+- [x] Clasificar los componentes actuales de contraseña (mantener/adaptar/reemplazar/retirar)
+- [x] Recuperación de acceso ante pérdida del teléfono (cambio de número por soporte)
+- [x] Cutover, rollback y checklist de preproducción (FASE_2_5_CUTOVER_AUTH.md)
+- [ ] Verificar el mecanismo de sesión con una cuenta de prueba en el backend definitivo — BLOQUEADO: sin acceso
+- [ ] Aprobación de los límites de uso y del tope global diario de SMS — pendiente del usuario
+- [ ] Número de WhatsApp de soporte — pendiente del usuario
+
