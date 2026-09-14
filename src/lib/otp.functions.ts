@@ -59,7 +59,7 @@ function clientIp(): string {
   return forwarded.split(",")[0]?.trim() || "desconocida";
 }
 
-export const requestOtpTest = createServerFn({ method: "POST" })
+export const requestOtp = createServerFn({ method: "POST" })
   .inputValidator((input: { phone: string }) => ({ phone: String(input.phone ?? "") }))
   .handler(async ({ data }) => {
     if (!isValidCubanMobile(data.phone)) {
