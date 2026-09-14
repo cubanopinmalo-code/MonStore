@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ComercioRouteImport } from './routes/comercio'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as PruebaOtpRouteImport } from './routes/prueba-otp'
 import { Route as RecargasRouteImport } from './routes/recargas'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
@@ -72,11 +71,6 @@ const ComercioRoute = ComercioRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PruebaOtpRoute = PruebaOtpRouteImport.update({
-  id: '/prueba-otp',
-  path: '/prueba-otp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecargasRoute = RecargasRouteImport.update({
@@ -314,7 +308,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/comercio': typeof ComercioRoute
   '/login': typeof LoginRoute
-  '/prueba-otp': typeof PruebaOtpRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -360,7 +353,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/comercio': typeof ComercioRoute
   '/login': typeof LoginRoute
-  '/prueba-otp': typeof PruebaOtpRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/juegos/$slug': typeof JuegosSlugRoute
@@ -407,7 +399,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/comercio': typeof ComercioRoute
   '/login': typeof LoginRoute
-  '/prueba-otp': typeof PruebaOtpRoute
   '/recargas': typeof RecargasRoute
   '/registro': typeof RegistroRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -455,7 +446,6 @@ export interface FileRouteTypes {
     | '/'
     | '/comercio'
     | '/login'
-    | '/prueba-otp'
     | '/recargas'
     | '/registro'
     | '/admin'
@@ -501,7 +491,6 @@ export interface FileRouteTypes {
     | '/'
     | '/comercio'
     | '/login'
-    | '/prueba-otp'
     | '/recargas'
     | '/registro'
     | '/juegos/$slug'
@@ -547,7 +536,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/comercio'
     | '/login'
-    | '/prueba-otp'
     | '/recargas'
     | '/registro'
     | '/_authenticated/admin'
@@ -595,7 +583,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ComercioRoute: typeof ComercioRoute
   LoginRoute: typeof LoginRoute
-  PruebaOtpRoute: typeof PruebaOtpRoute
   RecargasRoute: typeof RecargasRoute
   RegistroRoute: typeof RegistroRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
@@ -631,13 +618,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/prueba-otp': {
-      id: '/prueba-otp'
-      path: '/prueba-otp'
-      fullPath: '/prueba-otp'
-      preLoaderRoute: typeof PruebaOtpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recargas': {
@@ -1020,7 +1000,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ComercioRoute: ComercioRoute,
   LoginRoute: LoginRoute,
-  PruebaOtpRoute: PruebaOtpRoute,
   RecargasRoute: RecargasRoute,
   RegistroRoute: RegistroRoute,
   JuegosSlugRoute: JuegosSlugRoute,

@@ -1,39 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
-/** El acceso es solo con teléfono: se deriva un correo interno estable. */
-export function normalizePhone(phone: string): string {
-  return phone.replace(/\D/g, "");
-}
+/**
+ * FASE 2.9.0.1 — El acceso de MonStore es EXCLUSIVAMENTE teléfono + código SMS.
+ * Ya no existe acceso por contraseña, alta con contraseña ni recuperación por
+ * correo. La identidad sigue siendo la de Supabase Auth (auth.users UUID) y el
+ * correo interno derivado del teléfono; ver src/lib/phone.ts y otp.functions.ts.
+ */
 
-export function phoneToEmail(phone: string): string {
-  return `${normalizePhone(phone)}@telefono.monstore.cu`;
-}
-
-export async function signInWithPhone(phone: string, password: string) {
-  return supabase.auth.signInWithPassword({
-    email: phoneToEmail(phone),
-    password,
-  });
-}
-
-export async function signUpWithPhone(params: {
-  phone: string;
-  password: string;
-  name: string;
-  referralCode?: string | undefined;
-}) {
-  const data: Record<string, string> = {
-    name: params.name,
-    phone: normalizePhone(params.phone),
-  };
-  if (params.referralCode) data['referral_code'] = params.referralCode.toUpperCase();
-
-  return supabase.auth.signUp({
-    email: phoneToEmail(params.phone),
-    password: params.password,
-    options: { data },
-  });
-}
+export { nationalPhone as normalizePhone, phoneToEmailCanonical as phoneToEmail } from "@/lib/phone";
 
 export async function signOut() {
   await supabase.auth.signOut();
