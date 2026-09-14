@@ -109,8 +109,8 @@ function GameDetailPage() {
                       </>
                     ) : (
                       <>
-                        <KeyRound className="size-3.5" aria-hidden="true" /> Entrega accediendo a la
-                        cuenta
+                        <KeyRound className="size-3.5" aria-hidden="true" />{" "}
+                        {deliveryLongLabel(product.delivery_method)}
                       </>
                     )}
                   </div>
