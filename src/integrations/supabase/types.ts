@@ -765,6 +765,45 @@ export type Database = {
           },
         ]
       }
+      otp_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          max_attempts: number
+          phone_e164: string
+          provider_message_id: string | null
+          request_ip: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          max_attempts?: number
+          phone_e164: string
+          provider_message_id?: string | null
+          request_ip?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          max_attempts?: number
+          phone_e164?: string
+          provider_message_id?: string | null
+          request_ip?: string | null
+        }
+        Relationships: []
+      }
       otp_limits: {
         Row: {
           code_length: number
@@ -834,45 +873,6 @@ export type Database = {
           phone_masked?: string
           provider_message_id?: string | null
           provider_mode?: string | null
-        }
-        Relationships: []
-      }
-      otp_test_challenges: {
-        Row: {
-          attempts: number
-          code_hash: string
-          consumed_at: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          max_attempts: number
-          phone_e164: string
-          provider_message_id: string | null
-          request_ip: string | null
-        }
-        Insert: {
-          attempts?: number
-          code_hash: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at: string
-          id?: string
-          max_attempts?: number
-          phone_e164: string
-          provider_message_id?: string | null
-          request_ip?: string | null
-        }
-        Update: {
-          attempts?: number
-          code_hash?: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          max_attempts?: number
-          phone_e164?: string
-          provider_message_id?: string | null
-          request_ip?: string | null
         }
         Relationships: []
       }
@@ -1827,6 +1827,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       place_wallet_order: {
         Args: {
           p_idempotency_key: string
@@ -1835,6 +1836,10 @@ export type Database = {
           p_product: string
           p_user: string
         }
+        Returns: Json
+      }
+      provision_user_account: {
+        Args: { _phone: string; _referral_code?: string; _user_id: string }
         Returns: Json
       }
       publish_game_account: {

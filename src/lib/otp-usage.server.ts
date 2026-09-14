@@ -14,7 +14,7 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 function pepper(): string {
-  return process.env["OTP_PEPPER"] ?? process.env["OTP_TEST_PEPPER"] ?? "monstore-fase-2-6-prueba";
+  return process.env["MONSTORE_OTP_PEPPER"] ?? process.env["OTP_PEPPER"] ?? "monstore-otp-sin-pimienta";
 }
 
 export function maskPhone(phoneE164: string): string {
@@ -44,6 +44,42 @@ export async function logSmsUsage(entry: SmsUsageEntry): Promise<void> {
     });
   } catch {
     // El registro de consumo nunca debe impedir el acceso del usuario.
+  }
+}
+
+export interface AuthEventEntry {
+  action:
+    | "otp_solicitado"
+    | "otp_rechazado"
+    | "otp_bloqueado"
+    | "login"
+    | "login_fallido"
+    | "logout";
+  phoneE164?: string;
+  userId?: string | null;
+  reason?: string | null;
+}
+
+/**
+ * Traza de seguridad del acceso. NUNCA guarda el código: solo el evento, el
+ * motivo y el teléfono enmascarado (últimas 4 cifras).
+ */
+export async function logAuthEvent(entry: AuthEventEntry): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (supabaseAdmin as any).from("audit_log").insert({
+      actor_id: entry.userId ?? null,
+      target_user_id: entry.userId ?? null,
+      action: entry.action,
+      entity_type: "auth",
+      note: entry.reason ?? "",
+      metadata: {
+        phone_masked: entry.phoneE164 ? maskPhone(entry.phoneE164) : null,
+        reason: entry.reason ?? null,
+      },
+    });
+  } catch {
+    // La traza nunca debe impedir el acceso del usuario.
   }
 }
 
