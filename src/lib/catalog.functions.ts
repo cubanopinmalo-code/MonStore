@@ -449,7 +449,8 @@ export const saveProduct = createServerFn({ method: "POST" })
       g2bulk_cost: cost,
       sale_price: price,
       currency: String(data?.currency ?? "CUP"),
-      delivery_method: data.delivery_method === "via_id" ? ("via_id" as const) : ("via_cuenta" as const),
+      // El catálogo del proveedor solo admite "via_id" o "codigo".
+      delivery_method: data.delivery_method === "via_id" ? ("via_id" as const) : ("codigo" as const),
       active: Boolean(data?.active),
       available: Boolean(data?.available),
       image_url: String(data?.image_url ?? "").trim(),
