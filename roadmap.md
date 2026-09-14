@@ -85,3 +85,7 @@
 - [x] Plan de catálogo, usuarios, dinero, pedidos, proveedor, archivos y variables
 - [x] Procedimiento del día del cambio, vuelta atrás y pruebas obligatorias
 - [ ] BLOQUEADO: sin claves del proyecto canónico (pública y de servidor)
+- [x] Fase 2.6.5 — Documentación de credenciales necesarias para el canónico (FASE_2_6_5_CREDENCIALES_CANONICO.md)
+- [x] Límites OTP aprobados definitivamente: 5/teléfono/24h, 60s, 6 dígitos, 5 min, 5 intentos, único, 10/IP/hora
+- [ ] Pendiente: usuario configura credenciales del canónico + zdSMS + OTP_PEPPER
+- [ ] Pendiente: tope diario de SMS del proyecto (daily_sms_cap)
