@@ -685,9 +685,10 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
       if (!current) continue;
       const { error } = await context.supabase
         .from("products")
+        // Solo datos técnicos del proveedor. El precio de venta y el resto de la
+        // configuración comercial de MONSTORE no se tocan en la sincronización.
         .update({
           g2bulk_cost: Number(product.unit_price ?? 0),
-          sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
           available: Number(product.stock ?? 0) > 0,
           last_synced_at: new Date().toISOString(),
         })
