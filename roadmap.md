@@ -43,3 +43,6 @@
 - [x] Fase 2A: preparación técnica de solo lectura (modelo de fondos, precios, snapshot, auth, storage, catálogo, seguridad, rollback)
 - [ ] Fase 2: ejecución — pendiente de aprobación explícita del usuario
 - [x] Validación final read-only previa a Fase 2 (destino, pagos, seguridad, orden, rollback)
+- [x] Auditoría de viabilidad de fusión en una sola web app (Customer App como app definitiva)
+- [ ] Fase 1 — Preparación del backend definitivo (validar esquema, estructuras aditivas, buckets, seguridad) — BLOQUEADO: sin acceso de escritura ni lectura al proyecto nklgztbukgaoycuaryzk desde este proyecto
+- [ ] Decisión pendiente: formato del correo interno (@telefono.monstore.cu vs @monstore.local)
