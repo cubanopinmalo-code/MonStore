@@ -40,7 +40,18 @@ export interface SmsSendResult {
   status?: number;
 }
 
+/**
+ * Interruptor de servidor. Con MONSTORE_SMS_MODE="simulado" no se realiza
+ * NINGUNA llamada externa (útil mientras la ruta de red al proveedor no esté
+ * disponible). Cualquier otro valor, o su ausencia, usa la API real siempre que
+ * existan credenciales.
+ */
+function simulationForced(): boolean {
+  return (process.env["MONSTORE_SMS_MODE"] ?? "").toLowerCase() === "simulado";
+}
+
 function credentials(): { email: string; password: string } | null {
+  if (simulationForced()) return null;
   const email = process.env["ZDSMS_EMAIL"];
   const password = process.env["ZDSMS_PASSWORD"];
   if (!email || !password) return null;
