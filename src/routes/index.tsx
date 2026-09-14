@@ -54,7 +54,6 @@ function AuthPage() {
 
   const [step, setStep] = useState<"telefono" | "codigo">("telefono");
   const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -131,7 +130,7 @@ function AuthPage() {
     setLoading(true);
     try {
       const result = await checkCode({
-        data: { phone, code, name, ...(ref ? { referralCode: ref } : {}) },
+        data: { phone, code, ...(ref ? { referralCode: ref } : {}) },
       });
       if (!result.ok) {
         toast.error(otpMessage(result.reason));
@@ -197,18 +196,6 @@ function AuthPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="nombre">Nombre (solo si es tu primera vez)</Label>
-              <Input
-                id="nombre"
-                name="name"
-                placeholder="Tu nombre"
-                autoComplete="name"
-                maxLength={100}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
               />
             </div>
             {ref ? (
