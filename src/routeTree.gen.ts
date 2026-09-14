@@ -38,7 +38,6 @@ import { Route as AuthenticatedAppEditarPerfilRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNotificacionesRouteImport } from './routes/_authenticated/app/notificaciones'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app/perfil'
 import { Route as AuthenticatedAppReferidosRouteImport } from './routes/_authenticated/app/referidos'
-import { Route as ApiPublicZdsmsProbeRouteImport } from './routes/api/public/zdsms-probe'
 import { Route as AuthenticatedAppComercioIndexRouteImport } from './routes/_authenticated/app/comercio/index'
 import { Route as AuthenticatedAppComercioIdRouteImport } from './routes/_authenticated/app/comercio/$id'
 import { Route as AuthenticatedAppComercioMisPublicacionesRouteImport } from './routes/_authenticated/app/comercio/mis-publicaciones'
@@ -214,11 +213,6 @@ const AuthenticatedAppReferidosRoute =
     path: '/app/referidos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicZdsmsProbeRoute = ApiPublicZdsmsProbeRouteImport.update({
-  id: '/api/public/zdsms-probe',
-  path: '/api/public/zdsms-probe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAppComercioIndexRoute =
   AuthenticatedAppComercioIndexRouteImport.update({
     id: '/app/comercio/',
@@ -331,7 +325,6 @@ export interface FileRoutesByFullPath {
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
-  '/api/public/zdsms-probe': typeof ApiPublicZdsmsProbeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -375,7 +368,6 @@ export interface FileRoutesByTo {
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
-  '/api/public/zdsms-probe': typeof ApiPublicZdsmsProbeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -422,7 +414,6 @@ export interface FileRoutesById {
   '/_authenticated/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/referidos': typeof AuthenticatedAppReferidosRoute
-  '/api/public/zdsms-probe': typeof ApiPublicZdsmsProbeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -469,7 +460,6 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
-    | '/api/public/zdsms-probe'
     | '/admin/'
     | '/app/'
     | '/app/comercio/$id'
@@ -513,7 +503,6 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
-    | '/api/public/zdsms-probe'
     | '/admin'
     | '/app'
     | '/app/comercio/$id'
@@ -559,7 +548,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/notificaciones'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/referidos'
-    | '/api/public/zdsms-probe'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/app/comercio/$id'
@@ -587,7 +575,6 @@ export interface RootRouteChildren {
   RegistroRoute: typeof RegistroRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
-  ApiPublicZdsmsProbeRoute: typeof ApiPublicZdsmsProbeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -795,13 +782,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppReferidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/zdsms-probe': {
-      id: '/api/public/zdsms-probe'
-      path: '/api/public/zdsms-probe'
-      fullPath: '/api/public/zdsms-probe'
-      preLoaderRoute: typeof ApiPublicZdsmsProbeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/app/comercio/': {
       id: '/_authenticated/app/comercio/'
       path: '/app/comercio'
@@ -1004,7 +984,6 @@ const rootRouteChildren: RootRouteChildren = {
   RegistroRoute: RegistroRoute,
   JuegosSlugRoute: JuegosSlugRoute,
   JuegosIndexRoute: JuegosIndexRoute,
-  ApiPublicZdsmsProbeRoute: ApiPublicZdsmsProbeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -137,16 +137,39 @@ export const requestOtp = createServerFn({ method: "POST" })
 
     const minutes = Math.round(limits.ttlSeconds / 60);
     const { sendSms } = await import("./zdsms.server");
-    const sms = await sendSms(phone, `MONSTORE: tu codigo es ${code}. Caduca en ${minutes} minutos.`);
+    const sms = await sendSms(
+      phone,
+      `Tu codigo de acceso a MonStore es: ${code}. Caduca en ${minutes} minutos.`,
+    );
 
-    await db.from(OTP_TABLE).insert({
-      phone_e164: phone,
-      code_hash: codeHash,
-      max_attempts: limits.maxAttempts,
-      expires_at: new Date(Date.now() + limits.ttlSeconds * 1000).toISOString(),
-      request_ip: ip,
-      provider_message_id: sms.messageId,
-    });
+    // El desafío SOLO se guarda si el proveedor aceptó el mensaje: un envío
+    // fallido no deja ningún código válido ni consume la cuota del teléfono.
+    if (sms.ok) {
+      const { data: inserted } = await db
+        .from(OTP_TABLE)
+        .insert({
+          phone_e164: phone,
+          code_hash: codeHash,
+          max_attempts: limits.maxAttempts,
+          expires_at: new Date(Date.now() + limits.ttlSeconds * 1000).toISOString(),
+          request_ip: ip,
+          provider_message_id: sms.messageId,
+        })
+        .select("id");
+
+      // Petición simultánea: nos aseguramos de que solo el último desafío quede
+      // abierto, de modo que nunca existan dos códigos válidos a la vez.
+      const newId = ((inserted ?? [])[0] as { id?: string } | undefined)?.id;
+      if (newId) {
+        await db
+          .from(OTP_TABLE)
+          .update({ consumed_at: new Date().toISOString() })
+          .eq("phone_e164", phone)
+          .is("consumed_at", null)
+          .neq("id", newId);
+      }
+    }
+
 
     await logSmsUsage({
       phoneE164: phone,

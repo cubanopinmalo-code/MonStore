@@ -40,7 +40,18 @@ export interface SmsSendResult {
   status?: number;
 }
 
+/**
+ * Interruptor de servidor. Con MONSTORE_SMS_MODE="simulado" no se realiza
+ * NINGUNA llamada externa (útil mientras la ruta de red al proveedor no esté
+ * disponible). Cualquier otro valor, o su ausencia, usa la API real siempre que
+ * existan credenciales.
+ */
+function simulationForced(): boolean {
+  return (process.env["MONSTORE_SMS_MODE"] ?? "").toLowerCase() === "simulado";
+}
+
 function credentials(): { email: string; password: string } | null {
+  if (simulationForced()) return null;
   const email = process.env["ZDSMS_EMAIL"];
   const password = process.env["ZDSMS_PASSWORD"];
   if (!email || !password) return null;
@@ -95,22 +106,16 @@ function mapSendError(status: number, body: string): SmsErrorCode {
   return "envio_fallido";
 }
 
-/** Envía un SMS. Sin credenciales configuradas, simula el envío (no hay llamada externa). */
-export async function sendSms(recipientE164: string, text: string): Promise<SmsSendResult> {
-  const auth = await getToken();
-
-  if ("error" in auth) {
-    if (auth.error === "sin_credenciales") {
-      return { ok: true, messageId: `mock-${crypto.randomUUID()}`, mode: "mock" };
-    }
-    return { ok: false, messageId: null, mode: "real", error: auth.error, ...(auth.status ? { status: auth.status } : {}) };
-  }
-
+async function postMessage(
+  token: string,
+  recipientE164: string,
+  text: string,
+): Promise<SmsSendResult> {
   try {
     const response = await withTimeout(`${ZDSMS_BASE}/v1/message/send`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${auth.token}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -129,7 +134,11 @@ export async function sendSms(recipientE164: string, text: string): Promise<SmsS
       };
     }
 
-    const payload = (await response.json()) as { id?: string | number };
+    // Respuesta inválida (no JSON o sin cuerpo esperado) se trata como fallo.
+    const payload = (await response.json().catch(() => null)) as { id?: string | number } | null;
+    if (payload == null || typeof payload !== "object") {
+      return { ok: false, messageId: null, mode: "real", error: "envio_fallido", status: response.status };
+    }
     return { ok: true, messageId: payload.id != null ? String(payload.id) : null, mode: "real" };
   } catch (error) {
     return {
@@ -139,6 +148,28 @@ export async function sendSms(recipientE164: string, text: string): Promise<SmsS
       error: (error as Error)?.name === "AbortError" ? "timeout" : "proveedor_no_disponible",
     };
   }
+}
+
+/** Envía un SMS. Sin credenciales configuradas, simula el envío (no hay llamada externa). */
+export async function sendSms(recipientE164: string, text: string): Promise<SmsSendResult> {
+  const auth = await getToken();
+
+  if ("error" in auth) {
+    if (auth.error === "sin_credenciales") {
+      return { ok: true, messageId: `mock-${crypto.randomUUID()}`, mode: "mock" };
+    }
+    return { ok: false, messageId: null, mode: "real", error: auth.error, ...(auth.status ? { status: auth.status } : {}) };
+  }
+
+  const first = await postMessage(auth.token, recipientE164, text);
+  if (first.ok || first.error !== "auth_fallida") return first;
+
+  // Token caducado: se renueva UNA vez y se reintenta. El token nunca sale del servidor.
+  const renewed = await getToken();
+  if ("error" in renewed) {
+    return { ok: false, messageId: null, mode: "real", error: renewed.error };
+  }
+  return postMessage(renewed.token, recipientE164, text);
 }
 
 /** Consulta el estado de un envío. Solo servidor. */
