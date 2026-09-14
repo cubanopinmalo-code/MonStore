@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { GameCover } from "@/components/common/GameCover";
 import { formatCUP } from "@/lib/format";
+import { deliveryLongLabel } from "@/lib/delivery";
 import { getCatalogGame } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/juegos/$slug")({
