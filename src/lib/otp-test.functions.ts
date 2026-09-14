@@ -50,7 +50,7 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 function pepper(): string {
-  return process.env["OTP_PEPPER"] ?? process.env["OTP_TEST_PEPPER"] ?? "monstore-fase-2-6-prueba";
+  return process.env["MONSTORE_OTP_PEPPER"] ?? process.env["OTP_PEPPER"] ?? process.env["OTP_TEST_PEPPER"] ?? "monstore-fase-2-6-prueba";
 }
 
 function clientIp(): string {
