@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/Logo";
 import { RouteLoading } from "@/components/common/RouteLoading";
@@ -7,12 +8,12 @@ import { RouteLoading } from "@/components/common/RouteLoading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithPhone, signUpWithPhone } from "@/lib/auth";
+import { requestOtp, verifyOtp } from "@/lib/otp.functions";
+import { otpMessage } from "@/lib/otp-messages";
+import { isValidCubanMobile } from "@/lib/phone";
 
 type AuthSearch = { ref?: string; evento?: string };
-
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): AuthSearch => {
@@ -27,16 +28,16 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "MONSTORE — Inicia sesión o crea tu cuenta" },
+      { title: "MONSTORE — Entra con tu número de teléfono" },
       {
         name: "description",
         content:
-          "Accede a MONSTORE con tu número de teléfono para recargar juegos y usar tu wallet en CUP.",
+          "Accede a MONSTORE con tu número de teléfono y un código de un solo uso para recargar juegos y usar tu wallet en CUP.",
       },
       { property: "og:title", content: "MONSTORE — Acceso" },
       {
         property: "og:description",
-        content: "Inicia sesión o crea tu cuenta MONSTORE solo con tu teléfono.",
+        content: "Entra a MONSTORE solo con tu teléfono y un código de un solo uso.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -48,11 +49,17 @@ export const Route = createFileRoute("/")({
 function AuthPage() {
   const { ref, evento } = Route.useSearch();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"login" | "registro">("login");
+  const askCode = useServerFn(requestOtp);
+  const checkCode = useServerFn(verifyOtp);
+
+  const [step, setStep] = useState<"telefono" | "codigo">("telefono");
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  // Mientras comprobamos la sesión guardada no mostramos el formulario:
-  // así quien ya entró una vez vuelve directo a su cuenta.
+  const [cooldown, setCooldown] = useState(0);
   const [checking, setChecking] = useState(true);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goToApp = () => {
     if (evento) {
@@ -76,60 +83,80 @@ function AuthPage() {
     return () => {
       active = false;
       sub.subscription.unsubscribe();
+      if (timer.current) clearInterval(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setLoading(true);
-    const { error } = await signInWithPhone(
-      String(form.get("phone") ?? ""),
-      String(form.get("password") ?? ""),
-    );
-    setLoading(false);
-    if (error) {
-      toast.error("No pudimos entrar. Revisa el teléfono y la contraseña.");
-      return;
-    }
-    toast.success("¡Bienvenido de vuelta!");
-    goToApp();
+  const startCooldown = (seconds: number) => {
+    setCooldown(seconds);
+    if (timer.current) clearInterval(timer.current);
+    timer.current = setInterval(() => {
+      setCooldown((value) => {
+        if (value <= 1 && timer.current) clearInterval(timer.current);
+        return Math.max(0, value - 1);
+      });
+    }, 1000);
   };
 
-  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const password = String(form.get("password") ?? "");
-    if (password.length < 6) {
-      toast.error("La contraseña debe tener al menos 6 caracteres.");
+    if (!isValidCubanMobile(phone)) {
+      toast.error("Ese número no parece un móvil cubano válido.");
       return;
     }
     setLoading(true);
-    const { error } = await signUpWithPhone({
-      phone: String(form.get("phone") ?? ""),
-      password,
-      name: String(form.get("name") ?? ""),
-      referralCode: ref,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(
-        error.message.toLowerCase().includes("registered")
-          ? "Ese número ya tiene una cuenta. Inicia sesión."
-          : "No pudimos crear la cuenta. Intenta de nuevo.",
-      );
-      return;
+    try {
+      const result = await askCode({ data: { phone } });
+      if (!result.ok) {
+        toast.error(otpMessage(result.reason));
+        if (result.reason === "espera" && "retryInSeconds" in result) {
+          startCooldown(Number(result.retryInSeconds ?? 60));
+        }
+        return;
+      }
+      setStep("codigo");
+      setCode("");
+      startCooldown(60);
+      toast.success("Te enviamos un código por mensaje. Caduca en 5 minutos.");
+    } catch {
+      toast.error("No pudimos enviar el código. Inténtalo nuevamente.");
+    } finally {
+      setLoading(false);
     }
-    toast.success("Cuenta creada. ¡Bienvenido a MONSTORE!");
-    goToApp();
+  };
+
+  const handleVerify = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      const result = await checkCode({
+        data: { phone, code, name, ...(ref ? { referralCode: ref } : {}) },
+      });
+      if (!result.ok) {
+        toast.error(otpMessage(result.reason));
+        return;
+      }
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: result.tokenHash,
+        type: "email",
+      });
+      if (error) {
+        toast.error("No pudimos completar el acceso. Inténtalo nuevamente.");
+        return;
+      }
+      toast.success(result.created ? "¡Bienvenido a MONSTORE!" : "¡Bienvenido de vuelta!");
+      goToApp();
+    } catch {
+      toast.error("No pudimos completar el acceso. Inténtalo nuevamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (checking) return <RouteLoading />;
 
   return (
-
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
@@ -142,7 +169,7 @@ function AuthPage() {
           <Logo />
           <h1 className="text-2xl font-bold">Bienvenido a MONSTORE</h1>
           <p className="text-sm text-muted-foreground">
-            Recargas de videojuegos y wallet en CUP. Entra con tu número de teléfono.
+            Recargas de videojuegos y wallet en CUP. Entra solo con tu número de teléfono.
           </p>
         </div>
 
@@ -150,98 +177,107 @@ function AuthPage() {
           <div className="surface-card space-y-1 p-4 text-center">
             <p className="text-sm font-semibold text-primary">Te invitaron a un evento</p>
             <p className="text-xs text-muted-foreground">
-              Crea tu cuenta o inicia sesión y te llevamos directo al evento.
+              Entra con tu teléfono y te llevamos directo al evento.
             </p>
           </div>
         ) : null}
 
-        <Tabs value={tab} onValueChange={(value) => setTab(value as "login" | "registro")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Iniciar sesión</TabsTrigger>
-            <TabsTrigger value="registro">Crear cuenta</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="login">
-            <form className="surface-card mt-4 space-y-4 p-5" onSubmit={handleLogin}>
-              <div className="space-y-1.5">
-                <Label htmlFor="login-telefono">Número de teléfono</Label>
-                <Input
-                  id="login-telefono"
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="+53 5 000 0000"
-                  autoComplete="tel"
-                  maxLength={20}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="login-clave">Contraseña</Label>
-                <Input
-                  id="login-clave"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Entrando…" : "Entrar"}
+        {step === "telefono" ? (
+          <form className="surface-card space-y-4 p-5" onSubmit={handleRequest}>
+            <div className="space-y-1.5">
+              <Label htmlFor="telefono">Número de teléfono</Label>
+              <Input
+                id="telefono"
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                placeholder="+53 5 000 0000"
+                autoComplete="tel"
+                maxLength={20}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="nombre">Nombre (solo si es tu primera vez)</Label>
+              <Input
+                id="nombre"
+                name="name"
+                placeholder="Tu nombre"
+                autoComplete="name"
+                maxLength={100}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            {ref ? (
+              <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+                Te invitó el enlace de referido <span className="font-semibold">{ref}</span>.
+              </p>
+            ) : null}
+            <Button type="submit" className="w-full" disabled={loading || cooldown > 0}>
+              {loading
+                ? "Enviando código…"
+                : cooldown > 0
+                  ? `Espera ${cooldown}s`
+                  : "Enviarme el código"}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Te enviamos un código de 6 cifras por mensaje. No necesitas contraseña.
+            </p>
+          </form>
+        ) : (
+          <form className="surface-card space-y-4 p-5" onSubmit={handleVerify}>
+            <div className="space-y-1.5">
+              <Label htmlFor="codigo">Código recibido</Label>
+              <Input
+                id="codigo"
+                name="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Enviado a {phone}. Caduca en 5 minutos.
+              </p>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading || code.length < 6}>
+              {loading ? "Comprobando…" : "Entrar"}
+            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStep("telefono");
+                  setCode("");
+                }}
+              >
+                Cambiar número
               </Button>
-            </form>
-          </TabsContent>
-
-          <TabsContent value="registro">
-            <form className="surface-card mt-4 space-y-4 p-5" onSubmit={handleSignUp}>
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-nombre">Nombre completo</Label>
-                <Input
-                  id="reg-nombre"
-                  name="name"
-                  placeholder="Tu nombre"
-                  autoComplete="name"
-                  maxLength={100}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-telefono">Número de teléfono</Label>
-                <Input
-                  id="reg-telefono"
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="+53 5 000 0000"
-                  autoComplete="tel"
-                  maxLength={20}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="reg-clave">Contraseña</Label>
-                <Input
-                  id="reg-clave"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </div>
-              {ref ? (
-                <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
-                  Te invitó el enlace de referido <span className="font-semibold">{ref}</span>.
-                </p>
-              ) : null}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creando cuenta…" : "Crear cuenta"}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={loading || cooldown > 0}
+                onClick={() => {
+                  void handleRequest({
+                    preventDefault: () => {},
+                  } as unknown as React.FormEvent<HTMLFormElement>);
+                }}
+              >
+                {cooldown > 0 ? `Reenviar en ${cooldown}s` : "Reenviar código"}
               </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+            </div>
+          </form>
+        )}
       </div>
     </main>
   );
 }
-
