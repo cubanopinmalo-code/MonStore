@@ -66,34 +66,49 @@ export type Database = {
           action: string
           actor_id: string | null
           after: Json | null
+          amount: number | null
           before: Json | null
           created_at: string
           entity_id: string | null
           entity_type: string
+          event_id: string | null
           id: string
+          line_id: string | null
+          metadata: Json
           note: string
+          target_user_id: string | null
         }
         Insert: {
           action: string
           actor_id?: string | null
           after?: Json | null
+          amount?: number | null
           before?: Json | null
           created_at?: string
           entity_id?: string | null
           entity_type: string
+          event_id?: string | null
           id?: string
+          line_id?: string | null
+          metadata?: Json
           note?: string
+          target_user_id?: string | null
         }
         Update: {
           action?: string
           actor_id?: string | null
           after?: Json | null
+          amount?: number | null
           before?: Json | null
           created_at?: string
           entity_id?: string | null
           entity_type?: string
+          event_id?: string | null
           id?: string
+          line_id?: string | null
+          metadata?: Json
           note?: string
+          target_user_id?: string | null
         }
         Relationships: []
       }
@@ -295,12 +310,17 @@ export type Database = {
           min_participants: number
           name: string
           prize: string
+          prize_delivered_at: string | null
           region: string
+          result_note: string
+          result_published_at: string | null
           room_activated_at: string | null
           room_id: string | null
           room_password: string | null
           status: Database["public"]["Enums"]["event_status"]
           updated_at: string
+          winner_subscription_id: string | null
+          winner_user_id: string | null
         }
         Insert: {
           banner_url?: string | null
@@ -319,12 +339,17 @@ export type Database = {
           min_participants?: number
           name: string
           prize?: string
+          prize_delivered_at?: string | null
           region?: string
+          result_note?: string
+          result_published_at?: string | null
           room_activated_at?: string | null
           room_id?: string | null
           room_password?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
+          winner_subscription_id?: string | null
+          winner_user_id?: string | null
         }
         Update: {
           banner_url?: string | null
@@ -343,12 +368,17 @@ export type Database = {
           min_participants?: number
           name?: string
           prize?: string
+          prize_delivered_at?: string | null
           region?: string
+          result_note?: string
+          result_published_at?: string | null
           room_activated_at?: string | null
           room_id?: string | null
           room_password?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
+          winner_subscription_id?: string | null
+          winner_user_id?: string | null
         }
         Relationships: [
           {
@@ -356,6 +386,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_winner_subscription_fk"
+            columns: ["winner_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "event_subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -517,9 +554,56 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_campaigns: {
+        Row: {
+          audience: string
+          created_at: string
+          created_by: string | null
+          delivered_count: number
+          id: string
+          message: string
+          recipients_count: number
+          sent_at: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          id?: string
+          message: string
+          recipients_count?: number
+          sent_at?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          id?: string
+          message?: string
+          recipients_count?: number
+          sent_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
+          campaign_id: string | null
           created_at: string
+          dedupe_key: string | null
           id: string
           message: string
           read: boolean
@@ -528,7 +612,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           message?: string
           read?: boolean
@@ -537,7 +623,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           message?: string
           read?: boolean
@@ -545,7 +633,56 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "notification_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_history: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          note: string
+          order_id: string
+          status_after: Database["public"]["Enums"]["order_status"]
+          status_before: Database["public"]["Enums"]["order_status"] | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string
+          order_id: string
+          status_after: Database["public"]["Enums"]["order_status"]
+          status_before?: Database["public"]["Enums"]["order_status"] | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string
+          order_id?: string
+          status_after?: Database["public"]["Enums"]["order_status"]
+          status_before?: Database["public"]["Enums"]["order_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -845,9 +982,12 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          currency: string
           id: string
           label: string
           line_number: number
+          max_pending_amount: number | null
+          notes: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           phone_number: string
           updated_at: string
@@ -855,9 +995,12 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          currency?: string
           id?: string
           label?: string
           line_number: number
+          max_pending_amount?: number | null
+          notes?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
           phone_number?: string
           updated_at?: string
@@ -865,9 +1008,12 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          currency?: string
           id?: string
           label?: string
           line_number?: number
+          max_pending_amount?: number | null
+          notes?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
           phone_number?: string
           updated_at?: string
@@ -983,6 +1129,7 @@ export type Database = {
           updated_at: string
           usd_margin_cup: number
           usd_to_cup: number
+          withdrawal_fee_pct: number
         }
         Insert: {
           allow_line_reuse?: boolean
@@ -994,6 +1141,7 @@ export type Database = {
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
+          withdrawal_fee_pct?: number
         }
         Update: {
           allow_line_reuse?: boolean
@@ -1005,17 +1153,175 @@ export type Database = {
           updated_at?: string
           usd_margin_cup?: number
           usd_to_cup?: number
+          withdrawal_fee_pct?: number
         }
         Relationships: []
+      }
+      price_history: {
+        Row: {
+          actor_id: string | null
+          batch_id: string
+          created_at: string
+          id: string
+          note: string
+          origin: string
+          price_after: number
+          price_before: number
+          product_id: string
+          provider_cost: number
+          reverted_at: string | null
+          rule_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          batch_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          origin?: string
+          price_after?: number
+          price_before?: number
+          product_id: string
+          provider_cost?: number
+          reverted_at?: string | null
+          rule_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          batch_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          origin?: string
+          price_after?: number
+          price_before?: number
+          product_id?: string
+          provider_cost?: number
+          reverted_at?: string | null
+          rule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_rules: {
+        Row: {
+          active: boolean
+          category: string | null
+          cost_max: number | null
+          cost_min: number | null
+          created_at: string
+          created_by: string | null
+          delivery_method: Database["public"]["Enums"]["delivery_method"] | null
+          ends_at: string | null
+          game_id: string | null
+          id: string
+          margin_fixed: number
+          margin_pct: number
+          max_price: number | null
+          min_price: number | null
+          note: string
+          priority: number
+          product_id: string | null
+          region: string | null
+          rounding_step: number
+          scope: string
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          cost_max?: number | null
+          cost_min?: number | null
+          created_at?: string
+          created_by?: string | null
+          delivery_method?:
+            | Database["public"]["Enums"]["delivery_method"]
+            | null
+          ends_at?: string | null
+          game_id?: string | null
+          id?: string
+          margin_fixed?: number
+          margin_pct?: number
+          max_price?: number | null
+          min_price?: number | null
+          note?: string
+          priority?: number
+          product_id?: string | null
+          region?: string | null
+          rounding_step?: number
+          scope: string
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          cost_max?: number | null
+          cost_min?: number | null
+          created_at?: string
+          created_by?: string | null
+          delivery_method?:
+            | Database["public"]["Enums"]["delivery_method"]
+            | null
+          ends_at?: string | null
+          game_id?: string | null
+          id?: string
+          margin_fixed?: number
+          margin_pct?: number
+          max_price?: number | null
+          min_price?: number | null
+          note?: string
+          priority?: number
+          product_id?: string | null
+          region?: string | null
+          rounding_step?: number
+          scope?: string
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_rules_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_rules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
           active: boolean
+          applied_rule_id: string | null
           available: boolean
           created_at: string
           currency: string
           delivery_method: Database["public"]["Enums"]["delivery_method"]
           description: string
+          discount_pct: number
+          featured: boolean
           g2bulk_cost: number
           g2bulk_product_id: string
           game_id: string
@@ -1024,16 +1330,27 @@ export type Database = {
           last_synced_at: string | null
           metadata: Json
           name: string
+          price_source: string
+          price_updated_at: string | null
+          promo_ends_at: string | null
+          promo_price: number | null
+          promo_starts_at: string | null
+          provider: string
+          region: string
           sale_price: number
+          sort_order: number
           updated_at: string
         }
         Insert: {
           active?: boolean
+          applied_rule_id?: string | null
           available?: boolean
           created_at?: string
           currency?: string
           delivery_method?: Database["public"]["Enums"]["delivery_method"]
           description?: string
+          discount_pct?: number
+          featured?: boolean
           g2bulk_cost?: number
           g2bulk_product_id?: string
           game_id: string
@@ -1042,16 +1359,27 @@ export type Database = {
           last_synced_at?: string | null
           metadata?: Json
           name: string
+          price_source?: string
+          price_updated_at?: string | null
+          promo_ends_at?: string | null
+          promo_price?: number | null
+          promo_starts_at?: string | null
+          provider?: string
+          region?: string
           sale_price?: number
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           active?: boolean
+          applied_rule_id?: string | null
           available?: boolean
           created_at?: string
           currency?: string
           delivery_method?: Database["public"]["Enums"]["delivery_method"]
           description?: string
+          discount_pct?: number
+          featured?: boolean
           g2bulk_cost?: number
           g2bulk_product_id?: string
           game_id?: string
@@ -1060,10 +1388,25 @@ export type Database = {
           last_synced_at?: string | null
           metadata?: Json
           name?: string
+          price_source?: string
+          price_updated_at?: string | null
+          promo_ends_at?: string | null
+          promo_price?: number | null
+          promo_starts_at?: string | null
+          provider?: string
+          region?: string
           sale_price?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_applied_rule_fk"
+            columns: ["applied_rule_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_rules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_game_id_fkey"
             columns: ["game_id"]
@@ -1232,6 +1575,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          idempotency_key: string | null
           reference_id: string | null
           reference_type: string | null
           status: string
@@ -1246,6 +1590,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          idempotency_key?: string | null
           reference_id?: string | null
           reference_type?: string | null
           status?: string
@@ -1260,6 +1605,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          idempotency_key?: string | null
           reference_id?: string | null
           reference_type?: string | null
           status?: string
@@ -1317,14 +1663,20 @@ export type Database = {
           created_at: string
           fee: number
           fee_pct: number
+          held_amount: number
           id: string
+          line_id: string | null
+          line_number: number | null
+          line_released_at: string | null
           net_amount: number
           payment_destination: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["request_status"]
+          transaction_id: string | null
           user_id: string
         }
         Insert: {
@@ -1333,14 +1685,20 @@ export type Database = {
           created_at?: string
           fee?: number
           fee_pct?: number
+          held_amount?: number
           id?: string
+          line_id?: string | null
+          line_number?: number | null
+          line_released_at?: string | null
           net_amount?: number
           payment_destination?: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["request_status"]
+          transaction_id?: string | null
           user_id: string
         }
         Update: {
@@ -1349,17 +1707,31 @@ export type Database = {
           created_at?: string
           fee?: number
           fee_pct?: number
+          held_amount?: number
           id?: string
+          line_id?: string | null
+          line_number?: number | null
+          line_released_at?: string | null
           net_amount?: number
           payment_destination?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["request_status"]
+          transaction_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "payment_lines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
