@@ -21,11 +21,9 @@ import {
   phoneToEmailCanonical,
 } from "./phone";
 
-const OTP_TTL_SECONDS = 300; // 5 minutos
-const OTP_MAX_ATTEMPTS = 5;
-const RESEND_COOLDOWN_SECONDS = 60;
-const MAX_PER_PHONE_PER_HOUR = 5;
-const MAX_PER_IP_PER_HOUR = 10;
+// Los límites ya NO están escritos aquí: viven en `public.otp_limits`
+// (solo servidor, ajustables sin tocar código). Ver src/lib/otp-config.server.ts.
+
 
 interface Challenge {
   id: string;
