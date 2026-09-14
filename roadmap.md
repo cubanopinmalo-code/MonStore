@@ -63,3 +63,8 @@
 - [ ] Aprobación de los límites de uso y del tope global diario de SMS — pendiente del usuario
 - [ ] Número de WhatsApp de soporte — pendiente del usuario
 
+
+## Fase 2.6 — Prueba de acceso por SMS (hecha)
+- [x] Prueba técnica completa: código por SMS -> sesión real de Supabase (APROBADA, ver FASE_2_6_AUTH_OTP_TEST.md)
+- [ ] Fase 2.7: credenciales reales de zdSMS, tope diario de SMS y prueba con envío real (pendiente de tu decisión)
+- [ ] Eliminar al cerrar: tabla temporal otp_test_challenges, usuario de prueba 55550001 y la ruta /prueba-otp
