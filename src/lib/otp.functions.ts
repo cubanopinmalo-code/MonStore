@@ -137,7 +137,10 @@ export const requestOtp = createServerFn({ method: "POST" })
 
     const minutes = Math.round(limits.ttlSeconds / 60);
     const { sendSms } = await import("./zdsms.server");
-    const sms = await sendSms(phone, `MONSTORE: tu codigo es ${code}. Caduca en ${minutes} minutos.`);
+    const sms = await sendSms(
+      phone,
+      `Tu codigo de acceso a MonStore es: ${code}. Caduca en ${minutes} minutos.`,
+    );
 
     await db.from(OTP_TABLE).insert({
       phone_e164: phone,
