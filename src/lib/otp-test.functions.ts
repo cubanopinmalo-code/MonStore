@@ -176,7 +176,7 @@ export const verifyOtpTest = createServerFn({ method: "POST" })
     code: String(input.code ?? ""),
   }))
   .handler(async ({ data }) => {
-    if (!isValidCubanMobile(data.phone) || !/^\d{6}$/.test(data.code)) {
+    if (!isValidCubanMobile(data.phone) || !/^\d{4,8}$/.test(data.code)) {
       return { ok: false as const, reason: "datos_invalidos" };
     }
 
