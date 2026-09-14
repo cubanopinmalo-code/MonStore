@@ -423,7 +423,7 @@ export type ProductDraft = {
   g2bulk_cost: number;
   sale_price: number;
   currency: string;
-  delivery_method: "via_id" | "via_cuenta";
+  delivery_method: "via_id" | "codigo" | "via_cuenta";
   active: boolean;
   available: boolean;
   image_url: string;
