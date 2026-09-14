@@ -628,6 +628,45 @@ export type Database = {
           },
         ]
       }
+      otp_test_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          max_attempts: number
+          phone_e164: string
+          provider_message_id: string | null
+          request_ip: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          max_attempts?: number
+          phone_e164: string
+          provider_message_id?: string | null
+          request_ip?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          max_attempts?: number
+          phone_e164?: string
+          provider_message_id?: string | null
+          request_ip?: string | null
+        }
+        Relationships: []
+      }
       payment_destinations: {
         Row: {
           active: boolean
