@@ -68,3 +68,12 @@
 - [x] Prueba técnica completa: código por SMS -> sesión real de Supabase (APROBADA, ver FASE_2_6_AUTH_OTP_TEST.md)
 - [ ] Fase 2.7: credenciales reales de zdSMS, tope diario de SMS y prueba con envío real (pendiente de tu decisión)
 - [ ] Eliminar al cerrar: tabla temporal otp_test_challenges, usuario de prueba 55550001 y la ruta /prueba-otp
+
+## Fase 2.6.1 — Preparación de producción para zdSMS (hecha)
+- [x] Límites del código movidos a configuración del servidor (otp_limits), 5 por número/24 h, 60 s, 6 dígitos, 5 min, 5 intentos, 10 por origen/hora
+- [x] Cliente del proveedor con credenciales de entorno (ZDSMS_EMAIL / ZDSMS_PASSWORD), token, envío y estado
+- [x] Manejo de errores sin detalles técnicos (src/lib/otp-messages.ts)
+- [x] Registro de consumo de SMS sin guardar el código (otp_sms_log)
+- [x] Comprobación de conectividad: zdsms.cu resuelve pero no responde desde este entorno (FASE_2_6_1_ZDSMS_PREPARACION.md)
+- [ ] Tope diario de SMS — pendiente de tu decisión
+- [ ] Credenciales reales de zdSMS — pendientes, no solicitadas todavía
