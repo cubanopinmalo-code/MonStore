@@ -46,3 +46,6 @@
 - [x] Auditoría de viabilidad de fusión en una sola web app (Customer App como app definitiva)
 - [ ] Fase 1 — Preparación del backend definitivo (validar esquema, estructuras aditivas, buckets, seguridad) — BLOQUEADO: sin acceso de escritura ni lectura al proyecto nklgztbukgaoycuaryzk desde este proyecto
 - [ ] Decisión pendiente: formato del correo interno (@telefono.monstore.cu vs @monstore.local)
+- [x] Decisión aprobada: identidad canónica <telefono>@telefono.monstore.cu, sin prefijo 53
+- [ ] Ajuste de WhatsApp de soporte en el backend definitivo — pendiente de acceso
+- [ ] Cuatro depósitos privados (avatars, catalog, deposit-proofs, listings) en el backend definitivo — pendiente de acceso
