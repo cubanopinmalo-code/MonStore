@@ -15,7 +15,7 @@ function updateBlocks(): string[] {
 
 describe("protección de precios en la sincronización", () => {
   it("la actualización de ofertas existentes no toca el precio de venta", () => {
-    const syncBlocks = updateBlocks().filter((block) => block.includes("g2bulk_cost"));
+    const syncBlocks = updateBlocks().filter((block) => block.includes("last_synced_at"));
     expect(syncBlocks.length).toBeGreaterThan(0);
     for (const block of syncBlocks) {
       expect(block).not.toContain("sale_price");
@@ -23,7 +23,7 @@ describe("protección de precios en la sincronización", () => {
   });
 
   it("el coste del proveedor sí se actualiza como dato técnico", () => {
-    const syncBlocks = updateBlocks().filter((block) => block.includes("g2bulk_cost"));
+    const syncBlocks = updateBlocks().filter((block) => block.includes("last_synced_at"));
     expect(syncBlocks.some((block) => block.includes("available"))).toBe(true);
   });
 });
