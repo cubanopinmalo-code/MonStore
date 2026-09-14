@@ -71,6 +71,13 @@
       "when": 1789390171553,
       "tag": "0009_otp_sms_log_and_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789397185134,
+      "tag": "0010_add_codigo_delivery_method",
+      "breakpoints": true
     }
   ]
 }
