@@ -91,7 +91,7 @@ function OrderDetailPage() {
           <Row label="Producto" value={order.products?.name ?? "—"} />
           <Row
             label="Método de entrega"
-            value={order.products?.delivery_method === "via_cuenta" ? "Por cuenta" : "Por ID"}
+            value={deliveryLabel(order.products?.delivery_method)}
           />
           <Row label="Precio unitario" value={formatCUP(order.unit_price)} />
           <Row label="Total" value={formatCUP(order.total_amount)} />
