@@ -649,7 +649,9 @@ export const syncProviderCatalog = createServerFn({ method: "POST" })
         g2bulk_cost: Number(product.unit_price ?? 0),
         sale_price: priceFromCost(Number(product.unit_price ?? 0), rate),
         currency: "CUP",
-        delivery_method: "via_cuenta",
+        // Los productos automáticos del proveedor entregan un código/tarjeta.
+        // "via_cuenta" queda reservado al comercio de cuentas entre usuarios.
+        delivery_method: "codigo",
         active: true,
         available: Number(product.stock ?? 0) > 0,
         metadata: { fields: [] },
