@@ -628,6 +628,78 @@ export type Database = {
           },
         ]
       }
+      otp_limits: {
+        Row: {
+          code_length: number
+          daily_sms_cap: number | null
+          id: boolean
+          max_attempts: number
+          max_per_ip_per_hour: number
+          max_per_phone_per_day: number
+          resend_cooldown_seconds: number
+          ttl_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          code_length?: number
+          daily_sms_cap?: number | null
+          id?: boolean
+          max_attempts?: number
+          max_per_ip_per_hour?: number
+          max_per_phone_per_day?: number
+          resend_cooldown_seconds?: number
+          ttl_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          code_length?: number
+          daily_sms_cap?: number | null
+          id?: boolean
+          max_attempts?: number
+          max_per_ip_per_hour?: number
+          max_per_phone_per_day?: number
+          resend_cooldown_seconds?: number
+          ttl_seconds?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      otp_sms_log: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          id: string
+          ip_hash: string | null
+          outcome: string
+          phone_hash: string
+          phone_masked: string
+          provider_message_id: string | null
+          provider_mode: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          ip_hash?: string | null
+          outcome: string
+          phone_hash: string
+          phone_masked: string
+          provider_message_id?: string | null
+          provider_mode?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          ip_hash?: string | null
+          outcome?: string
+          phone_hash?: string
+          phone_masked?: string
+          provider_message_id?: string | null
+          provider_mode?: string | null
+        }
+        Relationships: []
+      }
       otp_test_challenges: {
         Row: {
           attempts: number

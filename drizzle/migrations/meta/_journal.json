@@ -64,6 +64,13 @@
       "when": 1789308448206,
       "tag": "0008_account_credentials_encryption",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789390171553,
+      "tag": "0009_otp_sms_log_and_limits",
+      "breakpoints": true
     }
   ]
 }
