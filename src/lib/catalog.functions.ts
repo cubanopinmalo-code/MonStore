@@ -74,7 +74,14 @@ export const DEFAULT_USD_MARGIN = 150;
 
 export type Pricing = { rate: number; margin: number };
 
-/** Precio de venta en CUP: costo USD × (base del dólar + ganancia por dólar). */
+/**
+ * Precio inicial sugerido en CUP: costo USD × (base del dólar + ganancia por dólar).
+ *
+ * Solo se usa al dar de alta una oferta nueva o cuando el administrador pide
+ * expresamente recalcular. La sincronización con el proveedor NUNCA lo aplica
+ * sobre ofertas que ya existen: el precio de venta es un dato comercial de
+ * MONSTORE y el costo del proveedor es un dato técnico.
+ */
 export function priceFromCost(costUsd: number, pricing: Pricing): number {
   const cost = Number(costUsd ?? 0);
   return Math.round(cost * (pricing.rate + pricing.margin) * 100) / 100;
