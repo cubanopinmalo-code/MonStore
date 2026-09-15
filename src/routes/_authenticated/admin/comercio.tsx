@@ -160,7 +160,7 @@ function AdminListingCard({ listing }: { listing: Listing }) {
           ) : null}
           {tab === "vendida" ? (
             <p className="text-xs font-medium text-success">
-              Vendida el {formatDateTime(listing.sold_at ?? listing.updated_at)} ·{" "}
+              Vendida el {formatDateTime(listing.sold_at ?? listing.created_at)} ·{" "}
               {listing.funds_status === "liberado"
                 ? "pago acreditado al vendedor"
                 : listing.funds_status === "pendiente_liberacion"
