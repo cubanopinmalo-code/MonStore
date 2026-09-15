@@ -7,7 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
  * Lovable Cloud: no hay datos inventados ni tablas nuevas.
  */
 
-const ACTIVE_EVENT_STATES = ["inscripciones_abiertas", "meta_alcanzada", "sala_activa"] as const;
+const ACTIVE_EVENT_STATES = [
+  "proximamente",
+  "inscripciones_abiertas",
+  "meta_alcanzada",
+  "sala_activa",
+  "evento_iniciado",
+] as const;
 
 export interface AdminAlert {
   id: string;
