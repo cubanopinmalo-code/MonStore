@@ -183,13 +183,6 @@ async function loadPanel(): Promise<AdminPanelData> {
       to: "/admin/configuracion",
     });
 
-  const activity: AdminActivityItem[] = (auditRes.data ?? []).map((row) => ({
-    id: row.id,
-    title: String(row.action ?? "").replace(/_/g, " ") || "Movimiento",
-    detail: row.note || String(row.entity_type ?? ""),
-    created_at: row.created_at,
-  }));
-
   return {
     deposits_pending: depositsPending.length,
     deposits_stale: depositsStale.length,
