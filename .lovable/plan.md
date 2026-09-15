@@ -53,6 +53,19 @@ Vendida la cuenta, el vendedor pierde el acceso a credenciales finales, clave, Q
 - Panel: el dashboard muestra fondos retenidos por comercio de cuentas (número de ventas, importe total, próximas liberaciones, liberaciones pendientes e incidencias), separado de la retención por retiros. En Fondos e historial se distinguen depósito, retiro, compra de cuenta y liberación de venta.
 - Auditoría financiera completa de compra y liberación, con actor, estado anterior y nuevo, para poder reconstruir cada CUP.
 
+## Cuentas vendidas (historial permanente)
+
+Al confirmarse la compra se avisa de inmediato a las dos partes. Al vendedor: "tu cuenta fue vendida", con juego, precio, fecha y hora, pago "retenido" y hora estimada de liberación, sin decir en ningún caso que ya recibió el dinero. Al comprador: "compra completada, la cuenta ya está disponible y tienes 24 horas para asegurarla", con fecha y hora, precio pagado, estado de la transferencia, inicio y fin de las 24 horas, y el aviso de que sus datos de acceso y el doble factor están en su área privada. Sin avisos duplicados.
+
+La cuenta sale del comercio pero nunca se borra: queda como registro comercial permanente, con sus fotos conservadas. Estados propios de la venta —vendida, fondos retenidos, fondos liberados— separados de los estados de publicación.
+
+Nueva sección "Cuentas vendidas" en el panel:
+- Lista con foto principal, juego, región, precio, vendedor, comprador, fecha de venta y estado del pago.
+- Ficha con la información pública completa (todas las fotos, juego, región, plataforma, descripción, características, precio, fechas de publicación y venta, días contratados), vendedor y comprador con nombre, identificador y teléfono, finanzas (importe, retenido, hora de compra, liberación programada, liberación real, estado) y transferencia (credenciales entregadas, estado de entrega, inicio y fin de las 24 horas, aseguramiento).
+- Filtros por fecha, juego, región, vendedor, comprador, precio, estado de fondos y estado de transferencia, y búsqueda por teléfono, nombre o identificador de operación.
+
+El registro está conectado con Fondos: la misma venta aparece en las retenciones de comercio de cuentas y su estado financiero se actualiza solo al liberarse. Todo se refresca en vivo (solicitudes, publicaciones, cuentas vendidas, retenciones, próximas liberaciones y actividad) sin recargar. Los teléfonos y cualquier dato privado solo los ve un administrador autorizado, comprobado en el servidor.
+
 ## Pantallas
 
 **Vendedor**
