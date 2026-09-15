@@ -60,7 +60,6 @@ export interface AdminPanelData {
   held_funds: number;
   wallets_total: number;
   alerts: AdminAlert[];
-  activity: AdminActivityItem[];
 }
 
 async function loadPanel(): Promise<AdminPanelData> {
@@ -77,7 +76,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     profilesRes,
     walletsRes,
     settingsRes,
-    auditRes,
   ] = await Promise.all([
     supabase
       .from("orders")
@@ -92,11 +90,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     supabase.from("profiles").select("id, status"),
     supabase.from("wallets").select("balance, held_balance"),
     supabase.from("platform_settings").select("usd_to_cup, usd_margin_cup").maybeSingle(),
-    supabase
-      .from("audit_log")
-      .select("id, action, entity_type, note, amount, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10),
   ]);
 
   const orders = ordersRes.data ?? [];
@@ -190,13 +183,6 @@ async function loadPanel(): Promise<AdminPanelData> {
       to: "/admin/configuracion",
     });
 
-  const activity: AdminActivityItem[] = (auditRes.data ?? []).map((row) => ({
-    id: row.id,
-    title: String(row.action ?? "").replace(/_/g, " ") || "Movimiento",
-    detail: row.note || String(row.entity_type ?? ""),
-    created_at: row.created_at,
-  }));
-
   return {
     deposits_pending: depositsPending.length,
     deposits_stale: depositsStale.length,
@@ -215,7 +201,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     held_funds: wallets.reduce((total, row) => total + Number(row.held_balance ?? 0), 0),
     wallets_total: wallets.reduce((total, row) => total + Number(row.balance ?? 0), 0),
     alerts,
-    activity,
   };
 }
 
@@ -223,6 +208,32 @@ export function useAdminPanel() {
   return useQuery({ queryKey: ["admin-panel"], queryFn: loadPanel });
 }
 
+export const ACTIVITY_QUERY_KEY = "admin-activity";
+
+async function loadActivity(): Promise<AdminActivityItem[]> {
+  const { data, error } = await supabase
+    .from("audit_log")
+    .select("id, action, entity_type, note, amount, created_at")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: String(row.action ?? "").replace(/_/g, " ") || "Movimiento",
+    detail: row.note || String(row.entity_type ?? ""),
+    created_at: row.created_at,
+  }));
+}
+
+/** Actividad reciente: se refresca sola, sin recalcular el resto del panel. */
+export function useAdminActivity() {
+  return useQuery({ queryKey: [ACTIVITY_QUERY_KEY], queryFn: loadActivity });
+}
+
+/**
+ * Tablas de datos operativos: un cambio aquí sí obliga a recalcular los
+ * indicadores del panel y de la pantalla que las está mirando.
+ */
 const REALTIME_TABLES = [
   "deposits",
   "withdrawals",
@@ -231,12 +242,15 @@ const REALTIME_TABLES = [
   "event_subscriptions",
   "orders",
   "wallets",
-  "wallet_transactions",
   "platform_settings",
-  "audit_log",
   "game_account_sales",
-  "game_account_events",
 ] as const;
+
+/**
+ * La auditoría solo alimenta "Actividad reciente": su propio canal evita que
+ * un apunte nuevo dispare el recálculo completo del panel.
+ */
+const ACTIVITY_TABLE = "audit_log";
 
 /** Refresca el panel en cuanto cambia algo relevante, sin recargar la página. */
 export function useAdminRealtime(keys: string[] = ["admin-panel"]) {
@@ -252,6 +266,13 @@ export function useAdminRealtime(keys: string[] = ["admin-panel"]) {
         }
       });
     }
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: ACTIVITY_TABLE },
+      () => {
+        void queryClient.invalidateQueries({ queryKey: [ACTIVITY_QUERY_KEY] });
+      },
+    );
     channel.subscribe();
     return () => {
       void supabase.removeChannel(channel);

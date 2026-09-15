@@ -14,7 +14,7 @@ import { AdminShell } from "@/components/layout/AdminShell";
 import { StatCard } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAdminPanel, useAdminRealtime } from "@/hooks/useAdminPanel";
+import { useAdminActivity, useAdminPanel, useAdminRealtime } from "@/hooks/useAdminPanel";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -40,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminDashboard() {
   const { data, isLoading } = useAdminPanel();
+  const { data: activity } = useAdminActivity();
   useAdminRealtime(["admin-panel"]);
 
   return (
@@ -175,12 +176,12 @@ function AdminDashboard() {
           </Button>
         </div>
         <div className="mt-4 grid gap-2">
-          {(data?.activity ?? []).length === 0 ? (
+          {(activity ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Todavía no hay movimientos registrados en la auditoría.
             </p>
           ) : (
-            (data?.activity ?? []).map((item) => (
+            (activity ?? []).map((item) => (
               <div
                 key={item.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 p-3"
