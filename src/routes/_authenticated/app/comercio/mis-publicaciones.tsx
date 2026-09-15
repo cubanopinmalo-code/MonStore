@@ -37,9 +37,41 @@ function MyListingCard({ listing }: { listing: Listing }) {
   const images = useSignedImages(listing.images as string[]);
   const cover = images[0];
   const remaining = listing.status === "aprobada" ? remainingLabel(listing.expires_at) : null;
+  const queryClient = useQueryClient();
+  const { data: fees } = useListingFee();
+  const [days, setDays] = useState(listing.duration_days);
+  const [price, setPrice] = useState(String(listing.price));
+  const [working, setWorking] = useState(false);
+  const sold = Boolean(listing.buyer_id) || listing.status === "vendida";
+  const canRepublish = !sold && (listing.status === "expirada" || listing.status === "retirada");
+  const republishFee = feeForDays(fees, days);
+
+  async function republish() {
+    setWorking(true);
+    try {
+      const { error } = await supabase.rpc("republish_game_account", {
+        p_listing: listing.id,
+        p_title: listing.title,
+        p_description: listing.description,
+        p_images: listing.images as string[],
+        p_price: Number(price),
+        p_days: days,
+      });
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries();
+      toast.success("Enviada a revisión", {
+        description: `Se cobró ${formatCUP(republishFee)} por ${days} día(s).`,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No pudimos volver a publicarla.");
+    } finally {
+      setWorking(false);
+    }
+  }
 
   return (
-    <article className="surface-card flex gap-3 p-3">
+    <article className="surface-card space-y-3 p-3">
+    <div className="flex gap-3">
       {cover ? (
         <img
           src={cover}
