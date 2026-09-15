@@ -40,7 +40,7 @@ function ListingDetailPage() {
     try {
       const { error } = await supabase.rpc("buy_game_account", {
         p_listing: id,
-        p_idempotency_key: "",
+        p_idempotency: "",
       });
       if (error) throw new Error(error.message);
       await queryClient.invalidateQueries();
