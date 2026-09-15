@@ -40,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminDashboard() {
   const { data, isLoading } = useAdminPanel();
+  const { data: activity } = useAdminActivity();
   useAdminRealtime(["admin-panel"]);
 
   return (
