@@ -8,6 +8,8 @@ import { AdminShell } from "@/components/layout/AdminShell";
 import { StatCard } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CardListSkeleton } from "@/components/common/states";
 import {
   getProviderStatus,
@@ -15,7 +17,13 @@ import {
   syncMissingGameOffers,
   syncProviderCatalog,
 } from "@/lib/catalog.functions";
+import {
+  previewControlledPurchase,
+  runControlledPurchase,
+  type ControlledPreview,
+} from "@/lib/orders.functions";
 import { savePlatformSettings } from "@/lib/settings.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/g2bulk")({
   head: () => ({
@@ -201,11 +209,14 @@ function AdminProviderPage() {
         </Button>
       </section>
 
+      <ControlledPurchaseCard />
+
       {lastRun ? (
         <p className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
           Última sincronización de esta sesión: {lastRun}
         </p>
       ) : null}
+
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Juegos guardados" value={String(totalGames)} />
@@ -274,5 +285,135 @@ function AdminProviderPage() {
         antes de cobrar a un cliente.
       </p>
     </AdminShell>
+  );
+}
+
+/**
+ * Compra real controlada: una única operación confirmada por el administrador,
+ * con su propio saldo, incluso con las compras generales pausadas.
+ */
+function ControlledPurchaseCard() {
+  const preview = useServerFn(previewControlledPurchase);
+  const run = useServerFn(runControlledPurchase);
+  const [productId, setProductId] = useState("");
+  const [playerId, setPlayerId] = useState("");
+  const [serverId, setServerId] = useState("");
+  const [charname, setCharname] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [check, setCheck] = useState<ControlledPreview | null>(null);
+  const [outcome, setOutcome] = useState<string | null>(null);
+
+  async function handlePreview() {
+    setBusy(true);
+    setOutcome(null);
+    try {
+      const result = await preview({
+        data: { product_id: productId.trim(), player_id: playerId.trim(), server_id: serverId.trim(), charname: charname.trim() },
+      });
+      setCheck(result);
+    } catch (error) {
+      setCheck(null);
+      toast.error(error instanceof Error ? error.message : "No se pudo comprobar la compra.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRun() {
+    if (!check?.ready) return;
+    if (
+      !window.confirm(
+        `Vas a comprar de verdad ${check.productName} por ${check.priceCup} CUP con tu propio saldo. ¿Continuar?`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await run({
+        data: {
+          product_id: productId.trim(),
+          player_id: playerId.trim(),
+          server_id: serverId.trim(),
+          charname: charname.trim(),
+          idempotency_key: crypto.randomUUID(),
+          confirm: true,
+        },
+      });
+      setOutcome(`Pedido #${result.code} · ${result.status} · ${result.message}`);
+      setCheck(null);
+      toast.success("Compra controlada enviada.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo realizar la compra.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold">Compra real controlada</h2>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Prueba una única recarga real con tu propio saldo antes de abrir las compras a los
+          clientes. Primero se comprueba precio, disponibilidad, cuenta del jugador y saldo del
+          proveedor; nada se cobra hasta que confirmas.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="cp-product">Identificador de la oferta</Label>
+          <Input id="cp-product" value={productId} onChange={(event) => setProductId(event.target.value)} placeholder="Cópialo desde Productos" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cp-player">ID del jugador</Label>
+          <Input id="cp-player" value={playerId} onChange={(event) => setPlayerId(event.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cp-server">Servidor (si el juego lo pide)</Label>
+          <Input id="cp-server" value={serverId} onChange={(event) => setServerId(event.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cp-char">Nombre del personaje (si el juego lo pide)</Label>
+          <Input id="cp-char" value={charname} onChange={(event) => setCharname(event.target.value)} />
+        </div>
+      </div>
+
+      {check ? (
+        <dl className="grid gap-1.5 rounded-lg border border-border bg-muted/40 p-4 text-sm">
+          <Line label="Oferta" value={`${check.productName} (${check.providerOfferName})`} />
+          <Line label="Juego en el proveedor" value={check.gameCode ?? "—"} />
+          <Line label="Cuenta del jugador" value={check.playerName ?? (check.playerValid ? "válida" : "sin validar")} />
+          <Line label="Costo del proveedor" value={`USD ${check.costUsd.toFixed(3)}`} />
+          <Line label="Precio al cliente" value={`${check.priceCup} CUP`} />
+          <Line label="Ganancia estimada" value={`${check.profitCup} CUP`} />
+          <Line label="Saldo del proveedor" value={`USD ${check.providerBalance.toFixed(2)}`} />
+          {check.problem ? <Line label="Aviso" value={check.problem} /> : null}
+        </dl>
+      ) : null}
+
+      {outcome ? (
+        <p className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">{outcome}</p>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={handlePreview} disabled={busy || !productId.trim() || !playerId.trim()}>
+          {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+          Comprobar antes de comprar
+        </Button>
+        <Button onClick={handleRun} disabled={busy || !check?.ready}>
+          Comprar una vez
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function Line({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium">{value}</dd>
+    </div>
   );
 }

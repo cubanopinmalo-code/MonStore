@@ -25,7 +25,9 @@ import {
   getCatalogGame,
   type CatalogProduct,
 } from "@/lib/catalog.functions";
+import { placeOrder } from "@/lib/orders.functions";
 import { formatCUP } from "@/lib/format";
+
 import { deliveryLongLabel } from "@/lib/delivery";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
@@ -64,7 +66,10 @@ function PurchaseFlowPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [payment, setPayment] = useState("wallet");
   const [status, setStatus] = useState<OrderStatus>("procesando");
+  const [resultMessage, setResultMessage] = useState("");
+  const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
   const [submitting, setSubmitting] = useState(false);
+
   const navigate = useNavigate();
   const { data: wallet } = useWallet();
   const balance = Number(wallet?.balance ?? 0);
@@ -81,8 +86,10 @@ function PurchaseFlowPage() {
   const gameCode = codeFor(product, game.g2bulk_id);
   const playerKey = fields.find((field) => PLAYER_KEYS.includes(field.key))?.key ?? null;
   const playerId = playerKey ? (values[playerKey] ?? "").trim() : "";
-  const serverId = (values["server_id"] ?? "").trim();
-  const needsServer = fields.some((field) => field.key === "server_id" && field.required);
+  const serverKey = fields.find((field) => SERVER_KEYS.includes(field.key))?.key ?? null;
+  const serverId = serverKey ? (values[serverKey] ?? "").trim() : "";
+  const needsServer = Boolean(serverKey);
+
 
   useEffect(() => {
     if (!gameCode || !playerId || playerId.length < 4 || (needsServer && !serverId)) {
@@ -122,7 +129,7 @@ function PurchaseFlowPage() {
     setStep(1);
   }
 
-  function confirm() {
+  async function confirm() {
     if (submitting || !product) return;
     if (balance < product.sale_price) {
       const missingAmount = Math.ceil(product.sale_price - balance);
@@ -135,14 +142,37 @@ function PurchaseFlowPage() {
       });
       return;
     }
+    if (!playerId) {
+      toast.error("Faltan los datos de tu cuenta del juego.");
+      return;
+    }
     setSubmitting(true);
     setStatus("procesando");
     setStep(3);
-    window.setTimeout(() => {
-      setStatus("completado");
+    setResultMessage("Estamos enviando tu recarga.");
+    try {
+      const result = await placeOrder({
+        data: {
+          product_id: product.id,
+          player_id: playerId,
+          player_data: values,
+          idempotency_key: orderKey,
+        },
+      });
+      setStatus(result.status as OrderStatus);
+      setResultMessage(result.message);
+      // Una nueva compra necesita su propia clave: así una repetición no cobra dos veces.
+      setOrderKey(crypto.randomUUID());
+    } catch (error) {
+      setStatus("error");
+      setResultMessage(
+        error instanceof Error ? error.message : "No pudimos completar tu recarga.",
+      );
+    } finally {
       setSubmitting(false);
-    }, 1600);
+    }
   }
+
 
   return (
     <UserShell>
@@ -335,8 +365,8 @@ function PurchaseFlowPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Prototipo: no se descuenta saldo real. El cobro se validará en el servidor en la
-                próxima fase.
+                Al confirmar se descuenta el importe de tu wallet. Si la recarga no se entrega, te
+                devolvemos el dinero automáticamente.
               </p>
             </div>
           </section>
@@ -352,7 +382,11 @@ function PurchaseFlowPage() {
               )}
             </span>
             <h2 className="text-lg font-bold">
-              {status === "completado" ? "Recarga completada" : "Procesando tu pedido"}
+              {status === "completado"
+                ? "Recarga completada"
+                : status === "error"
+                  ? "No se pudo completar"
+                  : "Procesando tu pedido"}
             </h2>
             <div className="flex justify-center">
               <StatusBadge status={status} />
@@ -360,6 +394,7 @@ function PurchaseFlowPage() {
             <p className="text-sm text-muted-foreground">
               {product.name} · {game.name} · {formatCUP(product.sale_price)}
             </p>
+            {resultMessage ? <p className="text-sm">{resultMessage}</p> : null}
             <div className="grid gap-2 sm:grid-cols-2">
               <Button asChild variant="outline">
                 <Link to="/app/pedidos">Ver mis pedidos</Link>
@@ -369,14 +404,13 @@ function PurchaseFlowPage() {
                   setStep(0);
                   setProduct(null);
                   setValues({});
+                  setResultMessage("");
                 }}
               >
                 Nueva recarga
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Estados simulados posibles: pendiente, procesando, completado, error y reembolsado.
-            </p>
+
           </section>
         )}
       </div>
@@ -409,8 +443,11 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
       userid: "ID del jugador",
       uid: "ID del jugador",
       server_id: "Servidor",
+      serverid: "Servidor",
       charname: "Nombre del personaje",
       zone_id: "ID de zona",
+      zoneid: "ID de zona",
+
     };
     return {
       key,
@@ -423,6 +460,8 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
 }
 
 const PLAYER_KEYS = ["player_id", "user_id", "userid", "uid"];
+const SERVER_KEYS = ["server_id", "serverid", "zone_id", "zoneid"];
+
 
 function codeFor(product: CatalogProduct | null, gameRef: string | null): string | null {
   const metadata = product?.metadata as { game_code?: unknown } | null;

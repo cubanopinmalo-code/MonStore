@@ -207,27 +207,71 @@ export async function gameCatalogue(code: string): Promise<ProviderOffer[]> {
   return data.catalogues ?? [];
 }
 
-export async function gameFields(code: string): Promise<string[]> {
+/**
+ * Campos que pide cada juego (POST /games/fields).
+ * Un 404 significa "este juego no publica campos": se usa el ID por defecto.
+ */
+export async function gameFieldsInfo(
+  code: string,
+): Promise<{ fields: string[]; notes: string }> {
   try {
-    const data = await call<{ info?: { fields?: string[] } }>("/games/fields", {
+    const data = await call<{ info?: { fields?: string[]; notes?: string } }>("/games/fields", {
       method: "POST",
       body: { game: code },
     });
-    return data.info?.fields ?? [];
+    return {
+      fields: (data.info?.fields ?? []).map(String),
+      notes: String(data.info?.notes ?? ""),
+    };
   } catch {
-    return [];
+    return { fields: [], notes: "" };
   }
 }
 
-export async function gameServers(code: string): Promise<string[]> {
+export async function gameFields(code: string): Promise<string[]> {
+  return (await gameFieldsInfo(code)).fields;
+}
+
+/**
+ * Servidores del juego (POST /games/servers).
+ * El proveedor responde 403 «Game does not requires any servers» cuando el
+ * juego no usa servidor: es una respuesta válida, no un fallo de integración.
+ */
+export async function gameServers(
+  code: string,
+): Promise<{ required: boolean; servers: Array<{ id: string; name: string }> }> {
   try {
-    const data = await call<{ servers?: Record<string, string> }>("/games/servers", {
+    const data = await call<{ servers?: Record<string, string> | Array<Record<string, unknown>> }>(
+      "/games/servers",
+      { method: "POST", body: { game: code } },
+    );
+    const raw = data.servers ?? {};
+    const servers = Array.isArray(raw)
+      ? raw.map((item) => ({
+          id: String(item["id"] ?? item["server_id"] ?? ""),
+          name: String(item["name"] ?? item["server_name"] ?? item["id"] ?? ""),
+        }))
+      : Object.entries(raw).map(([id, name]) => ({ id, name: String(name) }));
+    return { required: servers.length > 0, servers: servers.filter((item) => item.id) };
+  } catch (error) {
+    if (error instanceof ProviderError && (error.status === 403 || error.status === 404)) {
+      return { required: false, servers: [] };
+    }
+    throw error;
+  }
+}
+
+/** Estimación de entrega (POST /games/eta). Nunca es una garantía. */
+export async function gameEta(code: string, denomId: string): Promise<string | null> {
+  try {
+    const data = await call<{ eta?: string; info?: { eta?: string } }>("/games/eta", {
       method: "POST",
-      body: { game: code },
+      body: { game_code: code, denom_id: denomId },
     });
-    return Object.keys(data.servers ?? {});
+    const eta = data.eta ?? data.info?.eta ?? null;
+    return eta === null ? null : String(eta);
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -245,6 +289,7 @@ export async function checkPlayerId(body: {
     name: data.name || data.nickname || data.username || null,
   }));
 }
+
 
 export async function providerBalance(): Promise<{
   balance: number;
@@ -325,6 +370,37 @@ export async function providerOrderStatus(orderId: string): Promise<ProviderOrde
   }
 }
 
+/** Estado oficial de un pedido de recarga (POST /games/order/status). */
+export async function topUpOrderStatus(
+  code: string,
+  orderId: string,
+): Promise<ProviderOrderStatus> {
+  try {
+    const data = await call<{
+      status?: string;
+      order?: { status?: string; order_id?: number | string };
+      order_status?: string;
+      message?: string;
+    }>("/games/order/status", {
+      method: "POST",
+      body: { game: code, order_id: Number(orderId) || orderId },
+      requiresKey: true,
+    });
+    const raw = data.status ?? data.order_status ?? data.order?.status ?? "unknown";
+    return {
+      status: String(raw).toUpperCase(),
+      transactionId: orderId,
+      items: [],
+      found: true,
+    };
+  } catch (error) {
+    if (error instanceof ProviderError && (error.status === 404 || error.status === 400)) {
+      return { status: "NOT_FOUND", transactionId: null, items: [], found: false };
+    }
+    throw error;
+  }
+}
+
 export type ProviderTopUpOrder = {
   order_id?: number;
   status?: string;
@@ -339,6 +415,7 @@ export async function placeTopUpOrder(
     server_id?: string;
     charname?: string;
     remark?: string;
+    callback_url?: string;
   },
   idempotencyKey: string,
 ): Promise<ProviderTopUpOrder> {
@@ -350,3 +427,4 @@ export async function placeTopUpOrder(
     attempts: 1,
   });
 }
+
