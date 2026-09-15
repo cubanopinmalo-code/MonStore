@@ -15,7 +15,7 @@
 - [ ] Mis pedidos y detalle de pedido con datos reales
 - [ ] Panel: pedidos (ver, completar, reembolsar)
 - [ ] Comercio (cuentas) con datos reales
-- [ ] Eventos con datos reales
+- [x] Eventos con datos reales
 - [ ] Conectar la clave del proveedor cuando el administrador la entregue
 
 ## Pendiente de decisiones
@@ -99,12 +99,12 @@
 - [ ] Siguiente: Solicitudes de cuentas (fotos/WhatsApp), Eventos (sala, ganador, premio) y Configuración de valores dinámicos
 
 
-- [ ] Eventos: activacion/cobro solo 15 min antes de la hora; cancelacion automatica si falta meta o sala; recordatorios 30/5 min idempotentes.
-- [ ] Eventos (ajuste): activacion y cobro en la hora exacta; 15 min antes solo alerta admin + ventana de preparacion de sala con cuenta regresiva; zona America/Havana.
-- [ ] Eventos (ajuste 2): sala editable hasta la hora exacta, sin cancelar en los 15 min; auditar cada cambio de sala; bloqueo al activarse.
-- [ ] Eventos: proteger la ruta del proceso programado con secreto propio; clientes no pueden invocarla; idempotencia ante reintentos.
-- [ ] Eventos: 5 estados operativos (inscripciones/activo/iniciado/finalizado/cancelado) con validacion server-side.
-- [ ] Eventos: SMS via relay al pasar a INICIADO, idempotente y registrado; bloqueo de inscripciones/accesos.
-- [ ] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
-- [ ] Eventos: auditoria de sala sin valores (solo que se modifico ID/contrasena); SMS de inicio solo a inscritos confirmados.
-- [ ] Eventos: activacion solo automatica en la hora exacta; admin solo activo->iniciado->finalizado y cancelar.
+- [x] Eventos: activacion/cobro solo 15 min antes de la hora; cancelacion automatica si falta meta o sala; recordatorios 30/5 min idempotentes.
+- [x] Eventos (ajuste): activacion y cobro en la hora exacta; 15 min antes solo alerta admin + ventana de preparacion de sala con cuenta regresiva; zona America/Havana.
+- [x] Eventos (ajuste 2): sala editable hasta la hora exacta, sin cancelar en los 15 min; auditar cada cambio de sala; bloqueo al activarse.
+- [x] Eventos: proceso programado solo para el sistema (permisos revocados a clientes) del proceso programado con secreto propio; clientes no pueden invocarla; idempotencia ante reintentos.
+- [x] Eventos: 5 estados operativos (inscripciones/activo/iniciado/finalizado/cancelado) con validacion server-side.
+- [x] Eventos: SMS via relay al pasar a INICIADO, idempotente y registrado; bloqueo de inscripciones/accesos.
+- [x] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
+- [x] Eventos: auditoria de sala sin valores (solo que se modifico ID/contrasena); SMS de inicio solo a inscritos confirmados.
+- [x] Eventos: activacion solo automatica en la hora exacta; admin solo activo->iniciado->finalizado y cancelar.
