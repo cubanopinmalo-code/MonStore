@@ -180,7 +180,7 @@ function AdminFinancePage() {
         />
         <StatCard
           label="USD vendidos"
-          value={`${(data?.usd_sold ?? data?.usdSold ?? 0).toFixed(2)} USD`}
+          value={`${(data?.usdSold ?? 0).toFixed(2)} USD`}
           hint={data?.usdToCup ? `1 USD = ${formatCUP(data.usdToCup)}` : "Falta el valor del USD"}
         />
         <StatCard
