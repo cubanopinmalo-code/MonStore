@@ -105,7 +105,7 @@ function AdminWithdrawalsPage() {
                           disabled={review.isPending}
                           onClick={() => review.mutate({ id: withdrawal.id, approve: true })}
                         >
-                          Aprobar
+                          Retiro completado
                         </Button>
                         <Button
                           size="sm"
