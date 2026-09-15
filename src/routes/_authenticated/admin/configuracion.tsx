@@ -752,7 +752,8 @@ function PaymentDestinationsCard() {
         <h2 className="text-base font-semibold">Métodos de pago del cliente</h2>
         <p className="text-xs text-muted-foreground">
           Números de tarjeta, datos del Monedero Mi Transfer e instrucciones que verá el cliente.
-          Nada de esto está escrito dentro de la aplicación: todo se edita aquí.
+          Nada de esto está escrito dentro de la aplicación: todo se edita aquí. El interruptor de
+          cada destino es el que decide si el cliente puede usarlo al agregar fondos.
         </p>
       </div>
 
@@ -828,7 +829,7 @@ function PaymentDestinationsCard() {
                 </div>
               </div>
 
-              {item.kind === "monedero" || item.kind === "app" ? (
+              {item.kind === "monedero" || item.channel === "iphone" ? (
                 <div className="space-y-1.5">
                   <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
                   <Textarea
@@ -840,7 +841,7 @@ function PaymentDestinationsCard() {
                 </div>
               ) : null}
 
-              {item.channel === "enzona" || item.kind === "app" ? (
+              {item.channel === "enzona" || item.channel === "iphone" ? (
                 <label className="flex items-center gap-2 text-sm">
                   <Switch
                     checked={draft.requires_proof}
