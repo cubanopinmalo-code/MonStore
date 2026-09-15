@@ -108,3 +108,7 @@
 - [x] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
 - [x] Eventos: auditoria de sala sin valores (solo que se modifico ID/contrasena); SMS de inicio solo a inscritos confirmados.
 - [x] Eventos: activacion solo automatica en la hora exacta; admin solo activo->iniciado->finalizado y cancelar.
+
+## Auditorias de validacion (fase actual)
+- [ ] Auditoria de validacion de Configuracion (comision unica, nuevos parametros, integracion cliente, seguridad, historico) — solo informe
+- [ ] Diagnostico de Metodo de pago -> Saldo movil: 3 lineas, almacenamiento, asignacion, numeros editables, hardcodes — solo informe
