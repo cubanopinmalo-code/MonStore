@@ -74,7 +74,7 @@ El registro está conectado con Fondos: la misma venta aparece en las retencione
 - Mis publicaciones: estado, tiempo restante en vivo, aviso de expiración, acceso privado a los datos actuales de su cuenta y botón "Volver a publicar" (permite cambiar precio, fotos y descripción antes de pagar la nueva comisión).
 
 **Administrador**
-- Solicitudes de cuentas: lista con pendientes, publicadas, vendidas, expiradas y devueltas, en tiempo real.
+- Solicitudes de cuentas: lista con Pendientes, Publicadas, Vendidas, Expiradas y Listas para republicar, en tiempo real. No existe ninguna categoría "devuelta".
 - Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar y retirar. La entrega al comprador solo se consulta, no se ejecuta a mano; existe un "reintentar entrega" idempotente para fallos técnicos que nunca entrega dos veces.
 
 **Comprador**
