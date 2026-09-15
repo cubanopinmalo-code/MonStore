@@ -94,14 +94,35 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (error) throw new Error("No se pudo comprobar esta oferta.");
     if (!product) throw new Error("Esta oferta ya no está disponible.");
 
-    for (const field of fieldsOf(product.metadata)) {
-      if (!data.player_data[field]?.trim()) {
-        throw new Error(`Falta el dato «${field}» que pide esta oferta.`);
+    // Cada juego pide sus propios datos: se exige exactamente lo que el
+    // proveedor declaró para esa oferta, con los nombres equivalentes aceptados.
+    const values = data.player_data;
+    const valueOf = (field: string): string => {
+      const alias =
+        field === "userid" || field === "user_id"
+          ? ["userid", "user_id", "player_id", "uid"]
+          : field === "serverid" || field === "server_id"
+            ? ["serverid", "server_id", "zoneid", "zone_id"]
+            : [field];
+      for (const key of alias) {
+        const value = values[key]?.trim();
+        if (value) return value;
       }
+      if (alias.includes("userid")) return data.player_id;
+      return "";
+    };
+    const fields = fieldsOf(product.metadata);
+    for (const field of fields) {
+      const value = valueOf(field);
+      if (!value) throw new Error(`Falta el dato «${field}» que pide esta oferta.`);
+      values[field] = value;
     }
+    if (values["serverid"] && !values["server_id"]) values["server_id"] = values["serverid"];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { fulfillOrder, realPurchasesEnabled } = await import("./g2bulk-orders.server");
+    const { fulfillOrder, quoteOrder, realPurchasesEnabled } = await import(
+      "./g2bulk-orders.server"
+    );
 
     // Interruptor del panel: con las compras reales apagadas no se cobra nada
     // ni se crea ningún pedido, aunque el catálogo siga visible.
@@ -111,12 +132,45 @@ export const placeOrder = createServerFn({ method: "POST" })
       );
     }
 
+    // Comprobación previa al cobro: precio vigente, disponibilidad y saldo del
+    // proveedor. Si algo no cuadra, no se cobra ni se crea el pedido.
+    const quote = await quoteOrder(data.product_id);
+    if (quote.problem) throw new Error(quote.problem);
+
+    // Validación del jugador antes de cobrar, cuando el juego la admite.
+    if (quote.gameCode) {
+      const { checkPlayerId } = await import("./g2bulk.server");
+      try {
+        const body: { game: string; user_id: string; server_id?: string; charname?: string } = {
+          game: quote.gameCode,
+          user_id: data.player_id,
+        };
+        const server = values["serverid"] ?? values["server_id"];
+        if (server) body.server_id = server;
+        if (values["charname"]) body.charname = values["charname"];
+        const check = await checkPlayerId(body);
+        const flag = check.valid.toLowerCase();
+        if (!["valid", "true", "1", "ok"].includes(flag)) {
+          throw new Error(
+            "No encontramos una cuenta con esos datos. Compruébalos antes de continuar.",
+          );
+        }
+        if (check.name) values["player_name"] = check.name;
+      } catch (error) {
+        throw new Error(
+          error instanceof Error
+            ? error.message
+            : "No pudimos comprobar tu cuenta del juego ahora mismo.",
+        );
+      }
+    }
+
     // El pedido se registra con la sesión del propio cliente: la función valida auth.uid().
     const placed = await supabase.rpc("place_wallet_order", {
       p_user: userId,
       p_product: data.product_id,
       p_player_id: data.player_id,
-      p_player_data: data.player_data,
+      p_player_data: values,
       p_idempotency_key: data.idempotency_key,
     });
     if (placed.error) throw new Error(placed.error.message);
@@ -140,6 +194,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     // Todo lo demás (costo vigente, disponibilidad, compra real, idempotencia,
     // reembolso y registro) lo decide el servidor en un solo camino.
     const outcome = await fulfillOrder(order.id);
+
 
     return {
       order_id: order.id,
