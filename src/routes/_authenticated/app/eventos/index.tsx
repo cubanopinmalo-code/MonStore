@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Trophy } from "lucide-react";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/events/EventCard";
 import { EmptyState, ErrorState, GridSkeleton } from "@/components/common/states";
-import { useEvents } from "@/hooks/useEvents";
+import { useEventResults, useEvents, useEventsRealtime } from "@/hooks/useEvents";
+import { formatEventDate } from "@/lib/events";
 
 export const Route = createFileRoute("/_authenticated/app/eventos/")({
   head: () => ({
@@ -12,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
       {
         name: "description",
         content:
-          "Salas personalizadas con premios: suscríbete antes de que comiencen y entra cuando la sala esté activa.",
+          "Salas personalizadas con premios: inscríbete antes de que comiencen y entra cuando el evento se active.",
       },
       { property: "og:title", content: "Eventos actuales — MONSTORE" },
       {
@@ -28,13 +30,15 @@ export const Route = createFileRoute("/_authenticated/app/eventos/")({
 
 function EventsPage() {
   const { data: events, isLoading, isError, refetch } = useEvents();
+  const { data: results } = useEventResults(10);
+  useEventsRealtime();
 
   return (
     <UserShell>
       <div className="space-y-6">
         <PageHeader
           title="Eventos actuales"
-          description="Salas personalizadas con premios. El pago se realiza solo al entrar a la sala."
+          description="Inscribirte es gratis. El pago se descuenta solo cuando el evento comienza."
         />
 
         {isLoading ? (
@@ -53,6 +57,31 @@ function EventsPage() {
             ))}
           </div>
         )}
+
+        {results && results.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="font-display text-lg font-semibold">Resultados recientes</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {results.map((result) => (
+                <div key={result.event_id} className="surface-card space-y-1 p-4">
+                  <p className="flex items-center gap-1.5 font-semibold">
+                    <Trophy className="size-4 text-primary" aria-hidden="true" />
+                    {result.event_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Ganador: {result.winner_character_name ?? "Por publicar"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Premio: {result.prize}
+                    {result.finished_at
+                      ? ` · ${formatEventDate(result.finished_at.slice(0, 10))}`
+                      : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </UserShell>
   );

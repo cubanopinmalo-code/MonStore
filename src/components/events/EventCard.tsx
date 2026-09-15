@@ -3,10 +3,9 @@ import { CalendarDays, Trophy, Users } from "lucide-react";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { GameCover } from "@/components/common/GameCover";
 import { Progress } from "@/components/ui/progress";
-import { EVENT_STATUS_LABEL, formatEventDate } from "@/lib/events";
+import { eventStageLabel, formatEventDate } from "@/lib/events";
 import { formatCUP } from "@/lib/format";
 import type { EventRow } from "@/hooks/useEvents";
-import type { EventStatus } from "@/types";
 
 export function EventCard({ event }: { event: EventRow }) {
   const progress = Math.min(
@@ -28,7 +27,7 @@ export function EventCard({ event }: { event: EventRow }) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold leading-tight">{event.name}</p>
-          <StatusBadge status={EVENT_STATUS_LABEL[event.status as EventStatus] ?? event.status} />
+          <StatusBadge status={eventStageLabel(event.status)} />
         </div>
         <p className="text-xs text-muted-foreground">
           {event.games?.name ?? "Evento"} · {event.region}
