@@ -85,33 +85,44 @@ Todo con claves anti-duplicado para que no haya doble activación, doble cancela
 
 Lista con filtros por estado y buscador, y ficha de evento con:
 - información: juego, región, tipo, fecha, hora, precio, premio, descripción, estado;
-- resumen: participantes actuales, confirmados, mínimo, máximo, porcentaje, estado de la meta, sala configurada o no, hora de inicio, hora crítica de los 15 minutos, hora de cierre de entrada, tiempo restante, ingresos por inscripción, premio y cuántos entraron;
-- alertas visibles: "Meta alcanzada", "Faltan datos de sala" y "Faltan X minutos para la evaluación automática";
+- resumen: participantes actuales, confirmados, mínimo, máximo, porcentaje, estado de la meta, sala configurada o no, hora de inicio, hora de cierre de entrada, cuenta regresiva hasta la hora exacta, ingresos por inscripción, premio y cuántos entraron;
+- alertas visibles: "Meta alcanzada", "El evento comienza en 15 minutos. Configura la sala.", "Faltan datos de la sala" y "Faltan 14:59…" hasta 00:00;
 - participantes en tiempo real ordenados por fecha de inscripción: nombre, identificador, teléfono, personaje, fecha/hora, estado, estado del cobro, hora de entrada y participación;
-- sala: identificador y contraseña, editables antes de la hora crítica;
+- sala: identificador y contraseña, editables cuantas veces se quiera hasta la hora exacta de inicio y bloqueados a partir de la activación;
 - resultado: registrar ganador por identificador de personaje con pantalla de confirmación, entregar premio, ver estado de entrega y reintentar si falló;
 - acciones: crear, editar, cerrar entrada, finalizar y cancelar (con confirmación y motivo).
 
 ## 7. Aplicación del cliente
 
 - Lista de eventos con precio o etiqueta de gratuito, participantes actuales/mínimo/máximo, barra de progreso y estado (incluida la marca de meta alcanzada), actualizada en vivo.
-- Ficha del evento: datos, premio, cuenta atrás hasta la hora crítica, inscripción con identificador del personaje, aviso claro de que no se cobra al inscribirse ni al alcanzar la meta, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso.
+- Ficha del evento: datos, premio, cuenta atrás hasta la hora exacta de inicio, inscripción con identificador del personaje, aviso claro de que solo se cobra al activarse el evento en su hora exacta, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso.
 - La sala nunca aparece antes de la activación ni para quien no participa o no quedó confirmado.
 - Nueva sección de resultados: eventos finalizados con ganador, premio, juego, tipo, fecha y hora.
 
 ## 8. Dinero, avisos, auditoría y tiempo real
 
 - Los cobros de inscripción, las devoluciones y los premios usan tipos de operación propios, separados de recargas, fondos, retiros y comercio de cuentas.
-- Avisos, todos con clave única: meta alcanzada (administrador e inscritos), recordatorio de 30 minutos, evento activo con sala disponible, cancelación por falta de meta, cancelación por falta de sala, 5 minutos antes del cierre de entrada y cierre de la entrada. Cada uno queda registrado con evento, usuario, tipo, fecha/hora y estado.
-- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada y su aviso, recordatorio de 30 minutos, evaluación de los 15 minutos, validación de sala, activación, cancelación por falta de meta, cancelación por falta de sala, cobros, confirmaciones, apertura y cierre de entrada, acceso, finalización, ganador, premio, publicación del resultado y devoluciones, con administrador o usuario, estado anterior y nuevo, fecha/hora y operación relacionada.
+- Avisos, todos con clave única: meta alcanzada (administrador e inscritos), recordatorio de 30 minutos, alerta administrativa de 15 minutos, sala configurada correctamente, evento activo con sala disponible, cancelación por falta de meta, cancelación por sala no configurada a tiempo, cancelación por confirmados insuficientes con su devolución, 5 minutos antes del cierre de entrada y cierre de la entrada. Cada uno queda registrado con evento, usuario, tipo, fecha/hora y estado.
+- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada y su aviso, recordatorio de 30 minutos, alerta de 15 minutos, cada apertura y guardado de los datos de sala por el administrador (con administrador, fecha/hora, valor anterior y nuevo del identificador y de la contraseña, siempre protegidos y nunca visibles para clientes), evaluación final, activación, cancelaciones con su motivo, cobros, confirmaciones, apertura y cierre de entrada, acceso, finalización, ganador, premio, publicación del resultado y devoluciones, con administrador o usuario, estado anterior y nuevo, fecha/hora y operación relacionada.
 - Eventos e inscripciones se sincronizan en vivo en cliente y administración, sin recargar.
 
 ## 9. Pruebas de extremo a extremo
 
-Se ejecutan las 17 pruebas del pedido con un evento gratuito y uno de pago creados temporalmente, más los tres casos de la evaluación de los 15 minutos: sin meta (cancela), con meta y sin sala (cancela) y con meta y sala pero confirmados insuficientes tras el cobro (cancela y devuelve). También se comprueba que no se cobra al inscribirse ni al alcanzar la meta, que la sala solo se ve activada y confirmada, y que repetir cualquier operación no duplica cobros, avisos ni premios. Al terminar se eliminan los datos de prueba y se revierten los saldos usados.
+Se ejecutan las pruebas del pedido con un evento gratuito y uno de pago creados temporalmente:
+- meta alcanzada temprano: sin cobro, sin sala visible y sin activación;
+- recordatorio de 30 minutos y alerta administrativa de 15 minutos;
+- a los 15 minutos con la sala vacía: el evento NO se cancela;
+- cambios de identificador y contraseña a 10, 5 y 1 minuto del inicio: permitidos, se usa el último guardado;
+- hora exacta con meta y sala: cobro, activación y sala disponible solo para confirmados;
+- hora exacta sin identificador, sin contraseña o sin meta: cancelación sin cobros;
+- participantes sin saldo: cobros válidos, los demás sin acceso, y si los confirmados quedan por debajo de la meta, cancelación con devolución exacta;
+- intentar modificar la sala con el evento ya activo: bloqueado;
+- repetir la tarea programada: sin duplicar cobros, avisos, activaciones, cancelaciones ni devoluciones.
+
+Al terminar se eliminan los datos de prueba y se revierten los saldos usados.
 
 ## 10. Nota técnica
 
-Estados añadidos al enum `event_status`; columnas nuevas en `events` (momento de inicio, hora crítica, apertura/cierre de entrada, gratuito/pago, estado del premio, ingreso cobrado, marcas de meta/activación/cancelación con motivo) y en `event_subscriptions` (cobro, movimiento asociado, motivo de fallo, cancelación, unicidad usuario+evento); tabla `event_prize_deliveries`; funciones `SECURITY DEFINER` (`admin_create_event`, `admin_update_event`, `evaluate_event_activation`, `close_event_entry`, `finish_event`, `find_event_participant`, `register_event_winner`, `deliver_event_prize`, `cancel_event`, `cancel_event_subscription`, `process_event_schedule`) con `GRANT` explícitos por rol; `subscribe_event` y `enter_event_room` se endurecen manteniendo su firma; movimientos con tipos `event_entry`, `event_refund`, `event_prize`; realtime en `events` y `event_subscriptions`; tarea programada cada minuto vía la ruta pública de cron ya usada por el comercio de cuentas.
+Estados añadidos al enum `event_status`; columnas nuevas en `events` (momento exacto de inicio calculado en zona America/Havana, apertura/cierre de entrada, gratuito/pago, estado del premio, ingreso cobrado, marcas de meta, alerta de 15 minutos, activación y cancelación con motivo, y marcas de última edición de sala) y en `event_subscriptions` (cobro, movimiento asociado, motivo de fallo, cancelación, unicidad usuario+evento); tabla `event_prize_deliveries`; funciones `SECURITY DEFINER` (`admin_create_event`, `admin_update_event`, `admin_set_event_room`, `evaluate_event_activation`, `close_event_entry`, `finish_event`, `find_event_participant`, `register_event_winner`, `deliver_event_prize`, `cancel_event`, `cancel_event_subscription`, `process_event_schedule`) con `GRANT` explícitos por rol; `subscribe_event` y `enter_event_room` se endurecen manteniendo su firma; movimientos con tipos `event_entry`, `event_refund`, `event_prize`; realtime en `events` y `event_subscriptions`; tarea programada cada minuto vía la ruta pública de cron ya usada por el comercio de cuentas.
 
-Nota sobre la frecuencia: la comprobación corre cada minuto (1440 veces al día) porque la evaluación debe caer exactamente en los 15 minutos previos; comprobar tan seguido mantiene la base de datos activa aunque no haya eventos y puede aumentar algo el costo. La alternativa más económica sería revisar cada 5 minutos, con hasta 5 minutos de desfase en la activación.
+Nota sobre la frecuencia: la comprobación corre cada minuto (1440 veces al día) porque la activación y el cobro deben caer en el minuto exacto de inicio; comprobar tan seguido mantiene la base de datos activa aunque no haya eventos y puede aumentar algo el costo. La alternativa más económica sería revisar cada 5 minutos, con hasta 5 minutos de desfase en la activación.
