@@ -614,6 +614,7 @@ function AdminSettingsPage() {
 }
 
 const CHANNEL_TITLES: Record<string, string> = {
+  tarjeta_cup: "Tarjeta CUP",
   transfermovil: "Transfermóvil",
   enzona: "EnZona",
   metropolitana: "Metropolitana",
