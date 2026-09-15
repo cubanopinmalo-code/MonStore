@@ -1578,9 +1578,16 @@ export type Database = {
           id: boolean
           listing_fee_days: Json
           listing_fee_per_day: number
+          maintenance_mode: boolean
+          marketplace_enabled: boolean
+          min_deposit_cup: number
+          min_withdrawal_cup: number
+          referral_reward_cup: number
+          registration_open: boolean
           saldo_conversion_rate: number
           support_whatsapp: string
           updated_at: string
+          updated_by: string | null
           usd_margin_cup: number
           usd_to_cup: number
           withdrawal_fee_pct: number
@@ -1591,9 +1598,16 @@ export type Database = {
           id?: boolean
           listing_fee_days?: Json
           listing_fee_per_day?: number
+          maintenance_mode?: boolean
+          marketplace_enabled?: boolean
+          min_deposit_cup?: number
+          min_withdrawal_cup?: number
+          referral_reward_cup?: number
+          registration_open?: boolean
           saldo_conversion_rate?: number
           support_whatsapp?: string
           updated_at?: string
+          updated_by?: string | null
           usd_margin_cup?: number
           usd_to_cup?: number
           withdrawal_fee_pct?: number
@@ -1604,9 +1618,16 @@ export type Database = {
           id?: boolean
           listing_fee_days?: Json
           listing_fee_per_day?: number
+          maintenance_mode?: boolean
+          marketplace_enabled?: boolean
+          min_deposit_cup?: number
+          min_withdrawal_cup?: number
+          referral_reward_cup?: number
+          registration_open?: boolean
           saldo_conversion_rate?: number
           support_whatsapp?: string
           updated_at?: string
+          updated_by?: string | null
           usd_margin_cup?: number
           usd_to_cup?: number
           withdrawal_fee_pct?: number
@@ -2330,7 +2351,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_campaign_audience_count: {
+        Args: { p_audience: string; p_event?: string }
+        Returns: number
+      }
       admin_create_event: { Args: { p_payload: Json }; Returns: Json }
+      admin_find_user_by_phone: { Args: { p_phone: string }; Returns: Json }
+      admin_send_campaign: {
+        Args: {
+          p_audience: string
+          p_event?: string
+          p_idempotency?: string
+          p_message: string
+          p_title: string
+        }
+        Returns: Json
+      }
       admin_set_event_room: {
         Args: { p_event: string; p_room_id: string; p_room_password: string }
         Returns: Json
@@ -2346,6 +2382,10 @@ export type Database = {
       }
       admin_set_listing_totp: {
         Args: { p_active: boolean; p_listing: string; p_secret: string }
+        Returns: Json
+      }
+      admin_set_user_block: {
+        Args: { p_blocked: boolean; p_reason?: string; p_user: string }
         Returns: Json
       }
       admin_start_event: { Args: { p_event: string }; Returns: Json }
@@ -2364,6 +2404,10 @@ export type Database = {
           p_region: string
           p_title: string
         }
+        Returns: Json
+      }
+      admin_update_platform_settings: {
+        Args: { p_payload: Json }
         Returns: Json
       }
       buy_game_account: {
