@@ -104,7 +104,7 @@ export function PrivateAccountPanel({
                   <Timer className="size-3" aria-hidden="true" />
                   Cambia en {seconds ?? 0} s
                 </p>
-                {data.viewer !== "comprador" || true ? (
+                {data.totp_secret ? (
                   <p className="mt-1 break-all text-muted-foreground">
                     Clave para tu app de autenticación: {data.totp_secret}
                   </p>
