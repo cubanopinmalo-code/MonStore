@@ -365,8 +365,8 @@ function PurchaseFlowPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Prototipo: no se descuenta saldo real. El cobro se validará en el servidor en la
-                próxima fase.
+                Al confirmar se descuenta el importe de tu wallet. Si la recarga no se entrega, te
+                devolvemos el dinero automáticamente.
               </p>
             </div>
           </section>
@@ -382,7 +382,11 @@ function PurchaseFlowPage() {
               )}
             </span>
             <h2 className="text-lg font-bold">
-              {status === "completado" ? "Recarga completada" : "Procesando tu pedido"}
+              {status === "completado"
+                ? "Recarga completada"
+                : status === "error"
+                  ? "No se pudo completar"
+                  : "Procesando tu pedido"}
             </h2>
             <div className="flex justify-center">
               <StatusBadge status={status} />
@@ -390,6 +394,7 @@ function PurchaseFlowPage() {
             <p className="text-sm text-muted-foreground">
               {product.name} · {game.name} · {formatCUP(product.sale_price)}
             </p>
+            {resultMessage ? <p className="text-sm">{resultMessage}</p> : null}
             <div className="grid gap-2 sm:grid-cols-2">
               <Button asChild variant="outline">
                 <Link to="/app/pedidos">Ver mis pedidos</Link>
@@ -399,14 +404,13 @@ function PurchaseFlowPage() {
                   setStep(0);
                   setProduct(null);
                   setValues({});
+                  setResultMessage("");
                 }}
               >
                 Nueva recarga
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Estados simulados posibles: pendiente, procesando, completado, error y reembolsado.
-            </p>
+
           </section>
         )}
       </div>
