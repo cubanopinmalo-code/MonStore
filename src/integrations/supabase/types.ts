@@ -2330,6 +2330,11 @@ export type Database = {
       }
     }
     Functions: {
+      admin_create_event: { Args: { p_payload: Json }; Returns: Json }
+      admin_set_event_room: {
+        Args: { p_event: string; p_room_id: string; p_room_password: string }
+        Returns: Json
+      }
       admin_set_listing_secrets: {
         Args: {
           p_final_email: string
@@ -2341,6 +2346,11 @@ export type Database = {
       }
       admin_set_listing_totp: {
         Args: { p_active: boolean; p_listing: string; p_secret: string }
+        Returns: Json
+      }
+      admin_start_event: { Args: { p_event: string }; Returns: Json }
+      admin_update_event: {
+        Args: { p_event: string; p_payload: Json }
         Returns: Json
       }
       admin_update_listing: {
@@ -2360,6 +2370,11 @@ export type Database = {
         Args: { p_idempotency: string; p_listing: string }
         Returns: Json
       }
+      cancel_event: {
+        Args: { p_event: string; p_reason: string }
+        Returns: Json
+      }
+      cancel_event_subscription: { Args: { p_event: string }; Returns: Json }
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
       complete_withdrawal: {
         Args: {
@@ -2369,7 +2384,9 @@ export type Database = {
         }
         Returns: Json
       }
+      deliver_event_prize: { Args: { p_event: string }; Returns: Json }
       enter_event_room: { Args: { p_event: string }; Returns: Json }
+      evaluate_event_activation: { Args: { p_event: string }; Returns: Json }
       event_participant_counts: {
         Args: never
         Returns: {
@@ -2377,7 +2394,25 @@ export type Database = {
           participants: number
         }[]
       }
+      event_start_moment: {
+        Args: { p_date: string; p_time: string }
+        Returns: string
+      }
       expire_due_listings: { Args: never; Returns: Json }
+      find_event_participant: {
+        Args: { p_event: string; p_game_account_id: string }
+        Returns: Json
+      }
+      finish_event: {
+        Args: {
+          p_character_name: string
+          p_event: string
+          p_game_account_id: string
+          p_reward_amount: number
+          p_reward_note: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2387,6 +2422,29 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       listing_fee_for_days: { Args: { p_days: number }; Returns: number }
+      mark_event_sms: {
+        Args: {
+          p_error: string
+          p_id: string
+          p_provider_id: string
+          p_status: string
+        }
+        Returns: Json
+      }
+      notify_event_admins: {
+        Args: { p_key: string; p_message: string; p_title: string }
+        Returns: undefined
+      }
+      notify_event_users: {
+        Args: {
+          p_event: string
+          p_key: string
+          p_message: string
+          p_only_confirmed?: boolean
+          p_title: string
+        }
+        Returns: undefined
+      }
       place_wallet_order: {
         Args: {
           p_idempotency_key: string
@@ -2398,6 +2456,7 @@ export type Database = {
         Returns: Json
       }
       process_due_account_sales: { Args: never; Returns: Json }
+      process_event_schedule: { Args: never; Returns: Json }
       provision_user_account: {
         Args: { _phone: string; _referral_code?: string; _user_id: string }
         Returns: Json
@@ -2419,6 +2478,7 @@ export type Database = {
       }
       read_account_credentials: { Args: { p_account: string }; Returns: Json }
       read_listing_secrets: { Args: { p_account: string }; Returns: Json }
+      refund_event_charges: { Args: { p_event: string }; Returns: Json }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }
         Returns: Json
