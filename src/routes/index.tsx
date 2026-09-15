@@ -77,20 +77,24 @@ function AuthPage() {
     }
     const end = new Date(blockedUntil).getTime();
     const reference = serverNow ? new Date(serverNow).getTime() : Date.now();
-    setBlockUntil(Date.now() + Math.max(0, end - reference));
+    const local = Date.now() + Math.max(0, end - reference);
+    setBlockUntil(local);
+    setBlockLeft(Math.max(0, Math.ceil((local - Date.now()) / 1000)));
   };
 
+  // Un único reloj: descuenta cada segundo mientras quede bloqueo activo.
   useEffect(() => {
-    if (!blockUntil) return;
-    const tick = () => setBlockLeft(Math.max(0, Math.ceil((blockUntil - Date.now()) / 1000)));
-    tick();
-    const id = setInterval(tick, 1000);
+    const id = setInterval(() => {
+      setBlockUntil((end) => {
+        if (!end) return end;
+        const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+        setBlockLeft(left);
+        return left === 0 ? null : end;
+      });
+    }, 1000);
     return () => clearInterval(id);
-  }, [blockUntil]);
+  }, []);
 
-  useEffect(() => {
-    if (blockUntil && blockLeft === 0) setBlockUntil(null);
-  }, [blockLeft, blockUntil]);
 
   // Al escribir un número válido se consulta al servidor si sigue bloqueado.
   useEffect(() => {
