@@ -1842,6 +1842,14 @@ export type Database = {
     }
     Functions: {
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
+      complete_withdrawal: {
+        Args: {
+          p_note?: string
+          p_transaction_id?: string
+          p_withdrawal: string
+        }
+        Returns: Json
+      }
       enter_event_room: { Args: { p_event: string }; Returns: Json }
       event_participant_counts: {
         Args: never
