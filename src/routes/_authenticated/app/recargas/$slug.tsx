@@ -439,8 +439,11 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
       userid: "ID del jugador",
       uid: "ID del jugador",
       server_id: "Servidor",
+      serverid: "Servidor",
       charname: "Nombre del personaje",
       zone_id: "ID de zona",
+      zoneid: "ID de zona",
+
     };
     return {
       key,
@@ -453,6 +456,8 @@ function fieldsFor(product: CatalogProduct): ProductField[] {
 }
 
 const PLAYER_KEYS = ["player_id", "user_id", "userid", "uid"];
+const SERVER_KEYS = ["server_id", "serverid", "zone_id", "zoneid"];
+
 
 function codeFor(product: CatalogProduct | null, gameRef: string | null): string | null {
   const metadata = product?.metadata as { game_code?: unknown } | null;
