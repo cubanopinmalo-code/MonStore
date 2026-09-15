@@ -29,7 +29,16 @@ Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
 - Vencimiento sin comprador: al pasar la fecha y solo si nadie compró, la publicación sale del comercio, cambia a "publicación expirada", el vendedor original recibe los datos actuales (los administrados por MonStore, no los originales) más la configuración y el código de doble factor, y se le notifica que puede asegurar la cuenta y volver a publicar pagando nueva comisión.
 - Si la cuenta se vendió, el comprador pasa a ser el propietario y el vendedor pierde el acceso a credenciales y doble factor. Las 24 horas son solo el período inicial de aseguramiento: al terminar no devuelven la cuenta al vendedor. La cuenta vuelve a estar disponible para el vendedor únicamente cuando la publicación vence sin haber sido comprada.
 
-Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad de la publicación; el navegador nunca decide.
+## Doble factor de la cuenta del juego
+
+El doble factor pertenece únicamente a la cuenta del videojuego en venta: no tiene ninguna relación con el acceso a MonStore, el código por SMS ni la entrada de administradores o clientes. La clave se guarda cifrada, los códigos de 6 dígitos nunca se almacenan y el código actual se calcula en el servidor con la clave y la hora.
+
+Quién puede verlo, siempre comprobado en el servidor por identidad, rol y propiedad de la publicación:
+- Antes de la venta: solo el administrador autorizado. El comprador ve exclusivamente información pública, sin contraseña, correo, clave, QR ni código.
+- Después de la venta: solo el comprador de esa publicación, que además puede seguir consultando el código durante las 24 horas mientras cambia contraseña, correo, teléfono y recuperación.
+- Publicación vencida sin venta: solo el vendedor original, que recibe la configuración actual y el código para volver a asegurar la cuenta antes de republicarla.
+
+Vendida la cuenta, el vendedor pierde el acceso a credenciales finales, clave, QR y código.
 
 ## Dinero de la venta: retención de 8 horas
 
