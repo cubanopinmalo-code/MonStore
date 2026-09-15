@@ -496,6 +496,7 @@ function mapDestination(row: Record<string, unknown>): PaymentDestination {
     description: String(row["description"] ?? ""),
     holder_name: String(row["holder_name"] ?? ""),
     destination_value: String(row["destination_value"] ?? ""),
+    confirm_phone: String(row["confirm_phone"] ?? ""),
     instructions: String(row["instructions"] ?? ""),
     guide_image_path: String(row["guide_image_path"] ?? ""),
     guide_image_url: null,
