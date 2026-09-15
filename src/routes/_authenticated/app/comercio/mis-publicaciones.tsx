@@ -109,7 +109,68 @@ function MyListingCard({ listing }: { listing: Listing }) {
             Motivo del rechazo: {listing.rejection_reason}
           </p>
         ) : null}
+        {sold ? (
+          <p className="rounded-md border border-success/30 bg-success/10 p-2 text-xs text-muted-foreground">
+            Cuenta vendida. Ya pertenece al comprador y no vuelve a estar disponible para ti.
+            {listing.funds_status === "liberado"
+              ? " El pago ya está en tu saldo."
+              : " El pago se acredita a tu saldo 8 horas después de la compra."}
+          </p>
+        ) : null}
+        {listing.status === "expirada" ? (
+          <p className="text-xs text-muted-foreground">
+            Venció sin comprador. Recupera los datos actuales, asegúrala y vuelve a publicarla.
+          </p>
+        ) : null}
+        {listing.withdrawn_reason ? (
+          <p className="text-xs text-muted-foreground">
+            Retirada por el equipo: {listing.withdrawn_reason}
+          </p>
+        ) : null}
       </div>
+    </div>
+
+      {canRepublish ? <PrivateAccountPanel listingId={listing.id} /> : null}
+
+      {canRepublish ? (
+        <div className="space-y-2 rounded-md border border-border/60 p-3 text-xs">
+          <p className="font-semibold">Volver a publicar</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor={`price-${listing.id}`}>Precio (CUP)</Label>
+              <Input
+                id={`price-${listing.id}`}
+                inputMode="numeric"
+                value={price}
+                onChange={(event) => setPrice(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor={`days-${listing.id}`}>Días publicada</Label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((option) => (
+                  <Button
+                    key={option}
+                    type="button"
+                    size="sm"
+                    variant={days === option ? "gradient" : "outline"}
+                    aria-pressed={days === option}
+                    onClick={() => setDays(option)}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-muted-foreground">
+            Comisión por {days} día(s): {formatCUP(republishFee)} (se cobra de tu saldo).
+          </p>
+          <Button size="sm" disabled={working} onClick={() => void republish()}>
+            {working ? "Enviando…" : "Pagar y enviar a revisión"}
+          </Button>
+        </div>
+      ) : null}
     </article>
   );
 }
