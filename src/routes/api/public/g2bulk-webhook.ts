@@ -1,9 +1,11 @@
 /**
  * Aviso del proveedor cuando una recarga termina.
  *
- * - Solo se acepta con la firma compartida guardada en el backend.
+ * - Si hay una firma compartida configurada, se exige; si no, se acepta el
+ *   aviso pero nunca se confía en su contenido.
  * - No se confía en el estado recibido: se vuelve a consultar al proveedor.
  * - Repetir el aviso no cambia dos veces el pedido ni devuelve dinero dos veces.
+ * - Se responde 2xx en cuanto el aviso queda aceptado.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -11,25 +13,28 @@ export const Route = createFileRoute("/api/public/g2bulk-webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["G2BULK_WEBHOOK_SECRET"];
-        if (!secret) return new Response("Not configured", { status: 503 });
-
         const body = await request.text();
-        const provided =
-          request.headers.get("x-webhook-secret") ??
-          /^Bearer ([^\s,]+)$/.exec(request.headers.get("authorization") ?? "")?.[1] ??
-          "";
+        const secret = process.env["G2BULK_WEBHOOK_SECRET"];
 
-        const { createHash, timingSafeEqual } = await import("node:crypto");
-        const digest = (value: string) => createHash("sha256").update(value, "utf8").digest();
-        if (!provided || !timingSafeEqual(digest(provided), digest(secret))) {
-          return new Response("Unauthorized", { status: 401 });
+        if (secret) {
+          const provided =
+            request.headers.get("x-webhook-secret") ??
+            /^Bearer ([^\s,]+)$/.exec(request.headers.get("authorization") ?? "")?.[1] ??
+            "";
+          const { createHash, timingSafeEqual } = await import("node:crypto");
+          const digest = (value: string) => createHash("sha256").update(value, "utf8").digest();
+          if (!provided || !timingSafeEqual(digest(provided), digest(secret))) {
+            return new Response("Unauthorized", { status: 401 });
+          }
         }
 
         let payload: Record<string, unknown> = {};
         try {
           payload = JSON.parse(body) as Record<string, unknown>;
         } catch {
+          return new Response("Invalid body", { status: 400 });
+        }
+        if (typeof payload !== "object" || payload === null) {
           return new Response("Invalid body", { status: 400 });
         }
 
@@ -41,10 +46,14 @@ export const Route = createFileRoute("/api/public/g2bulk-webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: order } = await supabaseAdmin
           .from("orders")
-          .select("id")
+          .select("id, status")
           .eq("g2bulk_transaction_id", reference)
           .maybeSingle();
+        // Aviso de un pedido que no es nuestro o ya cerrado: se acepta y se ignora.
         if (!order) return new Response("ok", { status: 200 });
+        if (order.status !== "procesando") {
+          return Response.json({ received: true, status: order.status });
+        }
 
         const { reconcileOrder } = await import("@/lib/g2bulk-orders.server");
         try {
