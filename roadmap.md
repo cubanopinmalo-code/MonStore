@@ -112,3 +112,4 @@
 ## Auditorias de validacion (fase actual)
 - [ ] Auditoria de validacion de Configuracion (comision unica, nuevos parametros, integracion cliente, seguridad, historico) — solo informe
 - [ ] Diagnostico de Metodo de pago -> Saldo movil: 3 lineas, almacenamiento, asignacion, numeros editables, hardcodes — solo informe
+- [ ] Lineas de saldo movil: ciclo de vida ocupada/libre; liberacion automatica y atomica al pasar la solicitud a estado terminal (aprobado, rechazado, cancelado, expirado)
