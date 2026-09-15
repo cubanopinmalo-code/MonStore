@@ -41,6 +41,8 @@ import { Route as AuthenticatedAppEditarPerfilRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNotificacionesRouteImport } from './routes/_authenticated/app/notificaciones'
 import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authenticated/app/perfil'
 import { Route as AuthenticatedAppReferidosRouteImport } from './routes/_authenticated/app/referidos'
+import { Route as ApiPublicG2bulkReconcileRouteImport } from './routes/api/public/g2bulk-reconcile'
+import { Route as ApiPublicG2bulkWebhookRouteImport } from './routes/api/public/g2bulk-webhook'
 import { Route as AuthenticatedAppComercioIndexRouteImport } from './routes/_authenticated/app/comercio/index'
 import { Route as AuthenticatedAppComercioIdRouteImport } from './routes/_authenticated/app/comercio/$id'
 import { Route as AuthenticatedAppComercioMisComprasRouteImport } from './routes/_authenticated/app/comercio/mis-compras'
@@ -235,6 +237,17 @@ const AuthenticatedAppReferidosRoute =
     path: '/app/referidos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicG2bulkReconcileRoute =
+  ApiPublicG2bulkReconcileRouteImport.update({
+    id: '/api/public/g2bulk-reconcile',
+    path: '/api/public/g2bulk-reconcile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicG2bulkWebhookRoute = ApiPublicG2bulkWebhookRouteImport.update({
+  id: '/api/public/g2bulk-webhook',
+  path: '/api/public/g2bulk-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppComercioIndexRoute =
   AuthenticatedAppComercioIndexRouteImport.update({
     id: '/app/comercio/',
@@ -356,6 +369,8 @@ export interface FileRoutesByFullPath {
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/api/public/g2bulk-reconcile': typeof ApiPublicG2bulkReconcileRoute
+  '/api/public/g2bulk-webhook': typeof ApiPublicG2bulkWebhookRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -403,6 +418,8 @@ export interface FileRoutesByTo {
   '/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/api/public/g2bulk-reconcile': typeof ApiPublicG2bulkReconcileRoute
+  '/api/public/g2bulk-webhook': typeof ApiPublicG2bulkWebhookRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -453,6 +470,8 @@ export interface FileRoutesById {
   '/_authenticated/app/notificaciones': typeof AuthenticatedAppNotificacionesRoute
   '/_authenticated/app/perfil': typeof AuthenticatedAppPerfilRoute
   '/_authenticated/app/referidos': typeof AuthenticatedAppReferidosRoute
+  '/api/public/g2bulk-reconcile': typeof ApiPublicG2bulkReconcileRoute
+  '/api/public/g2bulk-webhook': typeof ApiPublicG2bulkWebhookRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
@@ -503,6 +522,8 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
+    | '/api/public/g2bulk-reconcile'
+    | '/api/public/g2bulk-webhook'
     | '/admin/'
     | '/app/'
     | '/app/comercio/$id'
@@ -550,6 +571,8 @@ export interface FileRouteTypes {
     | '/app/notificaciones'
     | '/app/perfil'
     | '/app/referidos'
+    | '/api/public/g2bulk-reconcile'
+    | '/api/public/g2bulk-webhook'
     | '/admin'
     | '/app'
     | '/app/comercio/$id'
@@ -599,6 +622,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/notificaciones'
     | '/_authenticated/app/perfil'
     | '/_authenticated/app/referidos'
+    | '/api/public/g2bulk-reconcile'
+    | '/api/public/g2bulk-webhook'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/app/comercio/$id'
@@ -627,6 +652,8 @@ export interface RootRouteChildren {
   RegistroRoute: typeof RegistroRoute
   JuegosSlugRoute: typeof JuegosSlugRoute
   JuegosIndexRoute: typeof JuegosIndexRoute
+  ApiPublicG2bulkReconcileRoute: typeof ApiPublicG2bulkReconcileRoute
+  ApiPublicG2bulkWebhookRoute: typeof ApiPublicG2bulkWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -855,6 +882,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppReferidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/g2bulk-reconcile': {
+      id: '/api/public/g2bulk-reconcile'
+      path: '/api/public/g2bulk-reconcile'
+      fullPath: '/api/public/g2bulk-reconcile'
+      preLoaderRoute: typeof ApiPublicG2bulkReconcileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/g2bulk-webhook': {
+      id: '/api/public/g2bulk-webhook'
+      path: '/api/public/g2bulk-webhook'
+      fullPath: '/api/public/g2bulk-webhook'
+      preLoaderRoute: typeof ApiPublicG2bulkWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/comercio/': {
       id: '/_authenticated/app/comercio/'
       path: '/app/comercio'
@@ -1074,6 +1115,8 @@ const rootRouteChildren: RootRouteChildren = {
   RegistroRoute: RegistroRoute,
   JuegosSlugRoute: JuegosSlugRoute,
   JuegosIndexRoute: JuegosIndexRoute,
+  ApiPublicG2bulkReconcileRoute: ApiPublicG2bulkReconcileRoute,
+  ApiPublicG2bulkWebhookRoute: ApiPublicG2bulkWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
