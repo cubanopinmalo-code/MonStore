@@ -288,6 +288,9 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
   
   const [conversion, setConversion] = useState(String(method.withdrawal_conversion_pct));
   const [saving, setSaving] = useState(false);
+  // El estado de las transferencias en CUP se deriva de los destinos activos:
+  // una sola fuente de verdad para el administrador y el cliente.
+  const derived = method.payment_method === "tarjeta_cup";
 
   function updateField(index: number, key: keyof TransferField, value: string) {
     setFields((current) =>
@@ -328,14 +331,22 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold">{method.label}</h2>
           <p className="text-xs text-muted-foreground">
-            {active ? "Visible para los clientes" : "Oculto para los clientes"}
+            {derived
+              ? active
+                ? "Visible para los clientes (hay destinos activos abajo)"
+                : "Oculto: activa un destino en «Métodos de pago del cliente»"
+              : active
+                ? "Visible para los clientes"
+                : "Oculto para los clientes"}
           </p>
         </div>
-        <Switch
-          checked={active}
-          onCheckedChange={setActive}
-          aria-label={`Activar ${method.label}`}
-        />
+        {derived ? null : (
+          <Switch
+            checked={active}
+            onCheckedChange={setActive}
+            aria-label={`Activar ${method.label}`}
+          />
+        )}
       </div>
 
       <div className="space-y-1.5">
@@ -752,7 +763,8 @@ function PaymentDestinationsCard() {
         <h2 className="text-base font-semibold">Métodos de pago del cliente</h2>
         <p className="text-xs text-muted-foreground">
           Números de tarjeta, datos del Monedero Mi Transfer e instrucciones que verá el cliente.
-          Nada de esto está escrito dentro de la aplicación: todo se edita aquí.
+          Nada de esto está escrito dentro de la aplicación: todo se edita aquí. El interruptor de
+          cada destino es el que decide si el cliente puede usarlo al agregar fondos.
         </p>
       </div>
 
@@ -828,7 +840,7 @@ function PaymentDestinationsCard() {
                 </div>
               </div>
 
-              {item.kind === "monedero" || item.kind === "app" ? (
+              {item.kind === "monedero" || item.channel === "iphone" ? (
                 <div className="space-y-1.5">
                   <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
                   <Textarea
@@ -840,7 +852,7 @@ function PaymentDestinationsCard() {
                 </div>
               ) : null}
 
-              {item.channel === "enzona" || item.kind === "app" ? (
+              {item.channel === "enzona" || item.channel === "iphone" ? (
                 <label className="flex items-center gap-2 text-sm">
                   <Switch
                     checked={draft.requires_proof}
