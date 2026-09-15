@@ -25,7 +25,7 @@ Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
 - Doble factor: generar clave, entregar el QR y la clave de configuración al administrador, comprobar un código, activar, desactivar y regenerar.
 - Código actual: se calcula en el servidor a partir de la clave y la hora; nunca se guarda ningún código.
 - Compra: verifica publicación activa, no vencida, no vendida, precio vigente y saldo; bloquea la fila para que dos compradores simultáneos no puedan comprar la misma cuenta; cobra al comprador, abona al vendedor, marca vendida, inicia las 24 horas, notifica a ambos y audita.
-- Entrega al comprador: devuelve credenciales finales y datos de doble factor solo al comprador de esa publicación.
+- Entrega al comprador: forma parte de la misma operación de compra, sin paso manual. Al completarse el pago se marca vendida, se registra comprador y operación, se entregan credenciales finales y doble factor, arrancan las 24 horas, se audita y se notifica a ambas partes. La consulta posterior de esos datos solo la puede hacer el comprador de esa publicación.
 - Vencimiento sin comprador: al pasar la fecha y solo si nadie compró, la publicación sale del comercio, cambia a "publicación expirada", el vendedor original recibe los datos actuales (los administrados por MonStore, no los originales) más la configuración y el código de doble factor, y se le notifica que puede asegurar la cuenta y volver a publicar pagando nueva comisión.
 - Si la cuenta se vendió, pertenece al comprador: no existe devolución ni reversión automática hacia el vendedor, y el vendedor pierde el acceso a credenciales y doble factor.
 
@@ -39,7 +39,7 @@ Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad 
 
 **Administrador**
 - Solicitudes de cuentas: lista con pendientes, publicadas, vendidas, expiradas y devueltas, en tiempo real.
-- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar, retirar y marcar entregada.
+- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar y retirar. La entrega al comprador solo se consulta, no se ejecuta a mano; existe un "reintentar entrega" idempotente para fallos técnicos que nunca entrega dos veces.
 
 **Comprador**
 - Comercio y detalle: solo información pública.
