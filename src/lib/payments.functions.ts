@@ -231,8 +231,9 @@ export const reviewDeposit = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.rpc("review_deposit", {
+    // Se ejecuta con la sesión del administrador: la función de base de datos
+    // vuelve a comprobar el rol real antes de mover dinero.
+    const { error } = await context.supabase.rpc("review_deposit", {
       p_deposit: data.depositId,
       p_approve: data.approve,
       p_reason: data.reason,
@@ -241,6 +242,7 @@ export const reviewDeposit = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { reviewed: true };
   });
+
 
 /** El cliente cobra el premio de referidos cuando completó la barra. */
 export const claimReferralReward = createServerFn({ method: "POST" })
