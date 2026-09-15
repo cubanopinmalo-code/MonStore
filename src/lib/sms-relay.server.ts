@@ -1,25 +1,29 @@
 /**
- * FASE 2.17 — Cliente del RELAY de SMS. SOLO SERVIDOR.
+ * Cliente del RELAY de SMS. SOLO SERVIDOR.
  *
- * Este módulo NO cambia el sistema OTP: no genera, no guarda y no valida
- * códigos. Su única responsabilidad es pedir a un relay externo (situado en una
- * infraestructura con conectividad hacia zdsms.cu) que entregue un SMS.
+ * Este módulo NO genera, NO guarda y NO valida códigos OTP: eso sigue siendo
+ * responsabilidad exclusiva de MonStore (src/lib/otp.functions.ts). Aquí solo
+ * se pide a un relay externo con salida hacia Cuba que entregue un SMS.
  *
- * Estado: PREPARADO PERO INACTIVO. Mientras `RELAY_URL` y `RELAY_SHARED_SECRET`
- * no estén configurados, `sendOtpSms()` delega en el envío directo actual
- * (`sendSms`), de modo que el comportamiento de producción no cambia.
+ * Contrato del relay:
+ *   POST {RELAY_URL}/sms/send
+ *   headers: x-monstore-timestamp, x-monstore-nonce, x-monstore-signature
+ *   body:    { request_id, recipient, message }
+ *   firma:   HMAC_SHA256_HEX(`${timestamp}.${nonce}.${requestId}.${recipient}.${message}`,
+ *                            RELAY_SHARED_SECRET)
  *
- * Las credenciales ZDSMS_EMAIL / ZDSMS_PASSWORD no se usan aquí y no deben
- * viajar nunca al relay: el relay las tiene en su propio entorno.
+ * `recipient` va en formato cubano sin símbolos: 535XXXXXXXX.
+ *
+ * Secretos (leídos SIEMPRE dentro de la función, nunca en el módulo):
+ *   RELAY_URL, RELAY_SHARED_SECRET. Nunca viajan al navegador ni a los logs.
+ *   Las credenciales de zdSMS NO se usan aquí: viven solo en el relay.
  */
 
-import { sendSms, type SmsSendResult, type SmsErrorCode } from "./zdsms.server";
+import type { SmsSendResult, SmsErrorCode } from "./zdsms.server";
+import { nationalPhone } from "./phone";
 
 const RELAY_TIMEOUT_MS = 20_000;
-/** Ventana temporal aceptada por el relay para la firma (segundos). */
-export const RELAY_TIMESTAMP_WINDOW_SECONDS = 120;
 
-/** Configuración leída SIEMPRE dentro del manejador, nunca en el módulo. */
 function relayConfig(): { url: string; secret: string } | null {
   const url = process.env["RELAY_URL"];
   const secret = process.env["RELAY_SHARED_SECRET"];
@@ -27,32 +31,21 @@ function relayConfig(): { url: string; secret: string } | null {
   return { url: url.replace(/\/+$/, ""), secret };
 }
 
-/** true cuando el relay está configurado y se usará en lugar del envío directo. */
+/** true cuando el relay está configurado (envío real disponible). */
 export function relayEnabled(): boolean {
   return relayConfig() != null;
 }
 
-interface RelayPayload {
-  recipient: string;
-  message: string;
-  request_id: string;
-  timestamp: string;
-  nonce: string;
+/** Formato exigido por el relay: 535XXXXXXXX (sin +, sin 00, sin espacios). */
+export function relayRecipient(phone: string): string {
+  return `53${nationalPhone(phone)}`;
 }
 
-interface RelayResponse {
-  success?: boolean;
-  request_id?: string;
-  provider_message_id?: string | number | null;
-  error_code?: string;
-  timestamp?: string;
-}
-
-/** Códigos del relay -> vocabulario interno ya existente de MonStore. */
 function mapRelayError(code: string | undefined): SmsErrorCode {
   switch ((code ?? "").toUpperCase()) {
     case "AUTH_FAILED":
     case "PROVIDER_AUTH_FAILED":
+    case "INVALID_SIGNATURE":
       return "auth_fallida";
     case "NO_BALANCE":
       return "sin_saldo";
@@ -77,13 +70,8 @@ function toHex(buffer: ArrayBuffer): string {
     .join("");
 }
 
-/** HMAC_SHA256(secret, `${timestamp}.${nonce}.${body}`) en hexadecimal. */
-async function signRequest(
-  secret: string,
-  timestamp: string,
-  nonce: string,
-  body: string,
-): Promise<string> {
+/** HMAC_SHA256 hexadecimal del payload canónico exacto del relay. */
+async function signCanonical(secret: string, canonical: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -91,20 +79,43 @@ async function signRequest(
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(`${timestamp}.${nonce}.${body}`),
-  );
-  return toHex(signature);
+  return toHex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical)));
 }
 
-async function postToRelay(
-  config: { url: string; secret: string },
-  payload: RelayPayload,
+interface RelayResponse {
+  success?: boolean;
+  ok?: boolean;
+  request_id?: string;
+  provider_message_id?: string | number | null;
+  message_id?: string | number | null;
+  error_code?: string;
+  error?: string;
+}
+
+/**
+ * Única entrada de envío de SMS de OTP.
+ *
+ * Un solo intento por llamada (sin reintentos automáticos) para no producir
+ * SMS duplicados; la idempotencia queda garantizada por `request_id`.
+ * Sin relay configurado NO se simula: se devuelve fallo controlado.
+ */
+export async function sendOtpSms(
+  phone: string,
+  message: string,
+  requestId: string = crypto.randomUUID(),
 ): Promise<SmsSendResult> {
-  const body = JSON.stringify(payload);
-  const signature = await signRequest(config.secret, payload.timestamp, payload.nonce, body);
+  const config = relayConfig();
+  if (!config) {
+    return { ok: false, messageId: null, mode: "real", error: "proveedor_no_disponible" };
+  }
+
+  const recipient = relayRecipient(phone);
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const nonce = crypto.randomUUID();
+  const signature = await signCanonical(
+    config.secret,
+    `${timestamp}.${nonce}.${requestId}.${recipient}.${message}`,
+  );
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), RELAY_TIMEOUT_MS);
@@ -114,16 +125,14 @@ async function postToRelay(
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "X-Monstore-Signature": `v1=${signature}`,
-        "X-Monstore-Timestamp": payload.timestamp,
-        "X-Monstore-Nonce": payload.nonce,
-        "X-Monstore-Request-Id": payload.request_id,
+        "x-monstore-timestamp": timestamp,
+        "x-monstore-nonce": nonce,
+        "x-monstore-signature": signature,
       },
-      body,
+      body: JSON.stringify({ request_id: requestId, recipient, message }),
       signal: controller.signal,
     });
 
-    // 409 = mismo request_id/nonce ya procesado: NO se reintenta, no se duplica SMS.
     const parsed = (await response.json().catch(() => null)) as RelayResponse | null;
 
     if (!response.ok || parsed == null || typeof parsed !== "object") {
@@ -131,26 +140,28 @@ async function postToRelay(
         ok: false,
         messageId: null,
         mode: "real",
-        error: parsed?.error_code ? mapRelayError(parsed.error_code) : "proveedor_no_disponible",
+        error: parsed?.error_code
+          ? mapRelayError(parsed.error_code)
+          : response.status >= 500
+            ? "proveedor_no_disponible"
+            : "envio_fallido",
         status: response.status,
       };
     }
 
-    if (parsed.success !== true) {
+    const accepted = parsed.success === true || parsed.ok === true;
+    if (!accepted) {
       return {
         ok: false,
         messageId: null,
         mode: "real",
-        error: mapRelayError(parsed.error_code),
+        error: mapRelayError(parsed.error_code ?? parsed.error),
         status: response.status,
       };
     }
 
-    return {
-      ok: true,
-      messageId: parsed.provider_message_id != null ? String(parsed.provider_message_id) : null,
-      mode: "real",
-    };
+    const id = parsed.provider_message_id ?? parsed.message_id ?? null;
+    return { ok: true, messageId: id != null ? String(id) : requestId, mode: "real" };
   } catch (error) {
     return {
       ok: false,
@@ -161,46 +172,4 @@ async function postToRelay(
   } finally {
     clearTimeout(timer);
   }
-}
-
-/**
- * Única entrada de envío de SMS de OTP.
- *
- * - Relay configurado: firma la petición y la envía al relay. Un solo reintento,
- *   con el MISMO `request_id`, y solo cuando no hubo respuesta del relay
- *   (timeout o 5xx); la idempotencia del relay evita el SMS duplicado.
- * - Relay no configurado: comportamiento actual sin cambios (envío directo).
- */
-export async function sendOtpSms(
-  recipientE164: string,
-  message: string,
-  requestId: string = crypto.randomUUID(),
-): Promise<SmsSendResult> {
-  const config = relayConfig();
-  if (!config) return sendSms(recipientE164, message);
-
-  const payload: RelayPayload = {
-    recipient: recipientE164,
-    message,
-    request_id: requestId,
-    timestamp: new Date().toISOString(),
-    nonce: toHex(crypto.getRandomValues(new Uint8Array(16)).buffer),
-  };
-
-  const first = await postToRelay(config, payload);
-  if (first.ok) return first;
-
-  const retryable =
-    first.error === "timeout" ||
-    (first.error === "proveedor_no_disponible" && (first.status ?? 500) >= 500);
-  if (!retryable) return first;
-
-  await new Promise((resolve) => setTimeout(resolve, 2_000));
-  // Mismo request_id: si el primer intento llegó a enviarse, el relay devuelve
-  // el resultado anterior en lugar de mandar un segundo SMS.
-  return postToRelay(config, {
-    ...payload,
-    timestamp: new Date().toISOString(),
-    nonce: toHex(crypto.getRandomValues(new Uint8Array(16)).buffer),
-  });
 }

@@ -136,10 +136,13 @@ export const requestOtp = createServerFn({ method: "POST" })
       .is("consumed_at", null);
 
     const minutes = Math.round(limits.ttlSeconds / 60);
-    const { sendSms } = await import("./zdsms.server");
-    const sms = await sendSms(
+    // Envío REAL a través del relay seguro (server-side, firmado con HMAC).
+    // Un único intento por solicitud, con request_id propio (idempotencia).
+    const { sendOtpSms } = await import("./sms-relay.server");
+    const sms = await sendOtpSms(
       phone,
       `Tu codigo de acceso a MonStore es: ${code}. Caduca en ${minutes} minutos.`,
+      crypto.randomUUID(),
     );
 
     // El desafío SOLO se guarda si el proveedor aceptó el mensaje: un envío
