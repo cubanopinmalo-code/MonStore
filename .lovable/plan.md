@@ -34,7 +34,7 @@ Tabla nueva mínima: `event_prize_deliveries` (una fila por intento de entrega, 
 
 Administración (solo con rol de administrador, validado en el servidor):
 - crear y editar evento con validación de campos (mínimo ≤ máximo, precio ≥ 0, fecha/hora válida, premio y juego obligatorios);
-- activar evento manualmente cuando ya alcanzó la meta;
+- guardar identificador y contraseña de sala antes de la evaluación automática (sin ellos el evento se cancela solo);
 - cerrar entrada, marcar en curso y finalizar;
 - buscar participante por identificador de personaje (devuelve nombre, usuario, personaje, juego, evento y premio para confirmar) y registrar ganador solo si ese personaje pertenece a un participante del evento;
 - entregar premio de forma idempotente, con reintento seguro que primero verifica que no se entregó;
@@ -46,28 +46,42 @@ Cliente:
 - cancelar su inscripción mientras el evento no se haya activado;
 - entrar al evento: el servidor comprueba sesión, inscripción confirmada, cobro correcto, evento activo y ventana abierta antes de devolver la sala, y guarda la hora de entrada.
 
-Activación y cobro (una sola transacción, idempotente):
-al alcanzarse el mínimo el evento pasa a meta alcanzada y activo; en eventos de pago se cobra el precio configurado de ese evento a cada participante confirmado, se registra un movimiento por inscripción y se marca cada cobro; quien no tiene saldo queda como no confirmado, con el fallo registrado y sin acceso, nunca con un cobro parcial; los eventos gratuitos no generan ningún movimiento.
+## 4. Cuándo se activa y cuándo se cobra (regla definitiva)
 
-## 4. Proceso automático programado
+Alcanzar la meta mínima NO activa el evento y NO cobra nada. Solo indica que ya se cumplen las condiciones preliminares: se marca meta alcanzada, se avisa al administrador y a los inscritos, se muestra visualmente en la app y las inscripciones siguen abiertas hasta el cierre, salvo que se llene el máximo.
 
-Una tarea del servidor cada 5 minutos, independiente de que alguien abra la aplicación:
-- abre inscripciones de eventos programados que llegan a su fecha;
-- activa y cobra los eventos que alcanzaron la meta;
-- cierra inscripciones 5 minutos antes de la hora de inicio;
-- abre la ventana de entrada de 15 minutos y la cierra al agotarse;
-- marca en curso y finalizado;
-- envía los avisos: 30 minutos antes, evento activo, quedan 5 minutos y acceso cerrado, cada uno con clave anti-duplicado.
+La activación real ocurre exactamente 15 minutos antes de la fecha y hora programadas. En ese momento el servidor cierra nuevas inscripciones y evalúa, en una sola operación atómica e idempotente:
 
-## 5. Panel de administración
+1. Si los inscritos son menos que la meta mínima → el evento se cancela solo. No hubo cobros, por lo que no hay devoluciones. Se avisa al administrador y a los inscritos: "El evento fue cancelado porque no se alcanzó la cantidad mínima de participantes."
+2. Si la meta se cumple pero falta el identificador o la contraseña de la sala → el evento se cancela solo, sin cobros ni devoluciones: "El evento fue cancelado porque la sala no fue configurada a tiempo."
+3. Si la meta se cumple y la sala está completa → en eventos de pago se cobra el precio de ese evento a cada inscrito: quien tiene saldo queda confirmado con su movimiento registrado; quien no tiene saldo queda no confirmado, con el motivo del fallo y sin acceso, nunca con un cobro parcial. Los eventos gratuitos no generan ningún movimiento.
+4. Si tras el cobro los participantes confirmados quedan por debajo de la meta mínima → el evento se cancela, no se abre la sala y se devuelve su importe exacto, una sola vez, a quienes ya habían pagado.
+5. Si los confirmados alcanzan la meta → el evento pasa a activo con entrada abierta durante exactamente 15 minutos; la sala solo se entrega a participantes confirmados y la entrada se cierra sola al agotarse la ventana.
+
+Ejemplo con inicio a las 8:00 PM: 7:30 PM recordatorio; 7:45 PM cierre de inscripciones, evaluación, comprobación de sala y cobros; 7:45–8:00 PM ventana de acceso.
+
+## 5. Proceso automático programado
+
+Una tarea del servidor cada minuto, con la hora del servidor como única fuente de verdad e independiente de que alguien abra la aplicación o el panel:
+- abre inscripciones de los eventos programados que llegan a su fecha;
+- marca meta alcanzada y avisa cuando se cruza el mínimo;
+- envía el recordatorio de 30 minutos;
+- ejecuta la evaluación crítica de los 15 minutos con sus cinco casos;
+- avisa 5 minutos antes del cierre de entrada y al cerrarla;
+- marca en curso y finalizado.
+
+Todo con claves anti-duplicado para que no haya doble activación, doble cancelación, doble cobro ni doble aviso, aunque la tarea se repita o se reinicie.
+
+## 6. Panel de administración
 
 Lista con filtros por estado y buscador, y ficha de evento con:
 - información: juego, región, tipo, fecha, hora, precio, premio, descripción, estado;
-- resumen: participantes actuales, mínimo, máximo, porcentaje, tiempo restante, hora de inicio, hora de cierre de entrada, ventana de acceso, ingresos por inscripción, premio y cuántos entraron;
+- resumen: participantes actuales, confirmados, mínimo, máximo, porcentaje, estado de la meta, sala configurada o no, hora de inicio, hora crítica de los 15 minutos, hora de cierre de entrada, tiempo restante, ingresos por inscripción, premio y cuántos entraron;
+- alertas visibles: "Meta alcanzada", "Faltan datos de sala" y "Faltan X minutos para la evaluación automática";
 - participantes en tiempo real ordenados por fecha de inscripción: nombre, identificador, teléfono, personaje, fecha/hora, estado, estado del cobro, hora de entrada y participación;
-- sala: identificador y contraseña, editables;
+- sala: identificador y contraseña, editables antes de la hora crítica;
 - resultado: registrar ganador por identificador de personaje con pantalla de confirmación, entregar premio, ver estado de entrega y reintentar si falló;
-- acciones: crear, editar, activar, cerrar entrada, finalizar y cancelar (con confirmación y motivo).
+- acciones: crear, editar, cerrar entrada, finalizar y cancelar (con confirmación y motivo).
 
 ## 6. Aplicación del cliente
 
