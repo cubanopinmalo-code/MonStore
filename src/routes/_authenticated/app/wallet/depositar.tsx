@@ -58,15 +58,20 @@ const METHOD_ICONS: Record<string, typeof Smartphone> = {
 };
 
 const CHANNEL_ICONS: Record<string, typeof Smartphone> = {
+  tarjeta_cup: CreditCard,
   transfermovil: Smartphone,
   enzona: Wallet,
   iphone: Apple,
 };
 
 const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
+  tarjeta_cup: {
+    title: "Tarjeta CUP",
+    hint: "Transferencia directa a la tarjeta en CUP de MONSTORE.",
+  },
   transfermovil: {
     title: "Transfermóvil",
-    hint: "Paga desde la app Transfermóvil con tu tarjeta BANDEC, BPA o Metropolitano.",
+    hint: "Paga desde la app Transfermóvil con BANDEC, BPA o Metropolitana.",
   },
   enzona: {
     title: "EnZona",
@@ -83,6 +88,12 @@ const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
 };
 
 const BANK_LABELS: Record<string, { title: string; hint: string }> = {
+  Bandec: { title: "BANDEC", hint: "Transferencia a tarjeta BANDEC." },
+  BPA: { title: "BPA", hint: "Transferencia a tarjeta BPA." },
+  Metropolitana: {
+    title: "METROPOLITANA",
+    hint: "El pago se hace por el Monedero Mi Transfer.",
+  },
   bandec: { title: "BANDEC", hint: "Transferencia a tarjeta BANDEC." },
   bpa: { title: "BPA", hint: "Transferencia a tarjeta BPA." },
   metropolitano: {
@@ -809,6 +820,26 @@ function DepositPage() {
                   transferir.
                 </p>
               )}
+              {destination.confirm_phone ? (
+                <div className="rounded-lg border border-border/60 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Móvil a confirmar (escríbelo en la app al hacer el pago)
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="min-w-0 flex-1 font-display text-base font-bold">
+                      {destination.confirm_phone}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copy(destination.confirm_phone)}
+                      aria-label="Copiar móvil a confirmar"
+                    >
+                      <Copy className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               {destination.bank || destination.holder_name ? (
                 <div className="space-y-1 rounded-lg border border-border/60 p-3 text-sm">
                   {destination.bank ? (

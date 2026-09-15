@@ -7,6 +7,7 @@ import {
   CreditCard,
   Gamepad2,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   PiggyBank,
@@ -21,6 +22,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -136,9 +138,17 @@ export function AdminShell({
         <div className="flex-1 overflow-y-auto">
           <NavList />
         </div>
-        <Button asChild variant="outline" size="sm" className="mt-4">
-          <Link to="/">Salir del panel</Link>
-        </Button>
+        <div className="mt-4 grid gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/app">Ir a la tienda</Link>
+          </Button>
+          <SignOutDialog>
+            <Button variant="outline" size="sm">
+              <LogOut className="size-4" aria-hidden="true" />
+              Cerrar sesión
+            </Button>
+          </SignOutDialog>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -171,6 +181,12 @@ export function AdminShell({
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+            <SignOutDialog>
+              <Button variant="outline" size="sm" className="ml-auto">
+                <LogOut className="size-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Cerrar sesión</span>
+              </Button>
+            </SignOutDialog>
           </div>
         </header>
 

@@ -467,6 +467,8 @@ export interface PaymentDestination {
   description: string;
   holder_name: string;
   destination_value: string;
+  /** Móvil que el cliente debe dar para confirmar la transferencia. */
+  confirm_phone: string;
   instructions: string;
   guide_image_path: string;
   /** Enlace temporal de la imagen educativa, listo para mostrar. */
@@ -480,7 +482,7 @@ export interface PaymentDestination {
 }
 
 const DESTINATION_COLUMNS =
-  "id, channel, bank, kind, label, description, holder_name, destination_value, instructions, guide_image_path, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
+  "id, channel, bank, kind, label, description, holder_name, destination_value, confirm_phone, instructions, guide_image_path, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
 
 export const GUIDE_BUCKET = "payment-guides";
 
@@ -494,6 +496,7 @@ function mapDestination(row: Record<string, unknown>): PaymentDestination {
     description: String(row["description"] ?? ""),
     holder_name: String(row["holder_name"] ?? ""),
     destination_value: String(row["destination_value"] ?? ""),
+    confirm_phone: String(row["confirm_phone"] ?? ""),
     instructions: String(row["instructions"] ?? ""),
     guide_image_path: String(row["guide_image_path"] ?? ""),
     guide_image_url: null,
@@ -570,6 +573,7 @@ export interface PaymentDestinationDraft {
   bank: string;
   holder_name: string;
   destination_value: string;
+  confirm_phone: string;
   instructions: string;
   requires_transaction_id: boolean;
   requires_proof: boolean;
@@ -584,6 +588,7 @@ const DESTINATION_ERRORS: Record<string, string> = {
   formato_invalido: "Ese destino no tiene un formato válido.",
   tarjeta_invalida: "El número de tarjeta debe tener entre 16 y 19 dígitos.",
   monedero_invalido: "El número del monedero debe tener entre 8 y 16 dígitos.",
+  movil_invalido: "El móvil a confirmar debe ser un móvil cubano válido (8 dígitos, empieza por 5).",
 };
 
 /** El administrador cambia los datos de un destino de pago (con auditoría). */
@@ -599,6 +604,7 @@ export const savePaymentDestination = createServerFn({ method: "POST" })
       bank: String(data?.bank ?? "").trim().slice(0, 60),
       holder_name: String(data?.holder_name ?? "").trim().slice(0, 80),
       destination_value: String(data?.destination_value ?? "").trim().slice(0, 120),
+      confirm_phone: String(data?.confirm_phone ?? "").replace(/\D/g, "").slice(0, 8),
       instructions: String(data?.instructions ?? "").trim().slice(0, 800),
       requires_transaction_id: Boolean(data?.requires_transaction_id),
       requires_proof: Boolean(data?.requires_proof),
@@ -615,6 +621,7 @@ export const savePaymentDestination = createServerFn({ method: "POST" })
         p_bank: data.bank,
         p_holder: data.holder_name,
         p_value: data.destination_value,
+        p_confirm_phone: data.confirm_phone,
         p_instructions: data.instructions,
         p_requires_transaction_id: data.requires_transaction_id,
         p_requires_proof: data.requires_proof,
