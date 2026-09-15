@@ -81,6 +81,8 @@ Una tarea del servidor cada minuto, con la hora del servidor (zona America/Havan
 
 Todo con claves anti-duplicado para que no haya doble activación, doble cancelación, doble cobro, doble devolución ni doble aviso, aunque la tarea se repita, pierda conexión o se reinicie.
 
+El proceso está protegido: la dirección que ejecuta activaciones, cobros, cancelaciones, devoluciones y avisos exige la credencial propia del proceso programado (la misma protección que ya usa el comercio de cuentas) y las operaciones internas de dinero solo son ejecutables por el propio proceso. Ningún cliente ni usuario autenticado puede lanzarla a mano: sin la credencial la llamada se rechaza sin procesar nada.
+
 ## 6. Panel de administración
 
 Lista con filtros por estado y buscador, y ficha de evento con:
