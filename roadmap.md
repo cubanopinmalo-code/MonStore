@@ -106,3 +106,4 @@
 - [ ] Eventos: 5 estados operativos (inscripciones/activo/iniciado/finalizado/cancelado) con validacion server-side.
 - [ ] Eventos: SMS via relay al pasar a INICIADO, idempotente y registrado; bloqueo de inscripciones/accesos.
 - [ ] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
+- [ ] Eventos: auditoria de sala sin valores (solo que se modifico ID/contrasena); SMS de inicio solo a inscritos confirmados.
