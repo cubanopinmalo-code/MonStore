@@ -317,7 +317,16 @@ function DepositPage() {
           ? "confirmar"
           : "datos";
 
+  // Referencia única de esta solicitud: se usa para el QR y queda guardada con el depósito.
+  const [qrRef, setQrRef] = useState(newQrRef);
+  const qrIssuedAt = useRef(new Date().toISOString());
+  const showQr = Boolean(
+    destination?.destination_value && destination.confirm_phone && !destination.requires_proof,
+  );
+
   function resetFlow() {
+    setQrRef(newQrRef());
+    qrIssuedAt.current = new Date().toISOString();
     setChannel(null);
     setDestinationId(null);
     setProof(null);
