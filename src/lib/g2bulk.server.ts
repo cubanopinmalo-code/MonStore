@@ -170,6 +170,31 @@ export async function listProviderProducts(): Promise<ProviderProduct[]> {
   return data.products ?? [];
 }
 
+/** Costo y disponibilidad vigentes de un producto concreto del proveedor. */
+export async function providerProduct(
+  productId: string,
+): Promise<{ found: boolean; unit_price: number; stock?: number }> {
+  try {
+    const data = await call<{ product?: ProviderProduct; unit_price?: number; stock?: number }>(
+      `/products/${encodeURIComponent(productId)}`,
+    );
+    const product = data.product ?? (data as unknown as ProviderProduct);
+    const price = Number(product?.unit_price ?? data.unit_price ?? 0);
+    const stock = product?.stock ?? data.stock;
+    const result: { found: boolean; unit_price: number; stock?: number } = {
+      found: price > 0,
+      unit_price: price,
+    };
+    if (stock !== undefined) result.stock = Number(stock);
+    return result;
+  } catch (error) {
+    if (error instanceof ProviderError && error.status === 404) {
+      return { found: false, unit_price: 0 };
+    }
+    throw error;
+  }
+}
+
 export async function listTopUpGames(): Promise<ProviderGame[]> {
   const data = await call<{ games?: ProviderGame[] }>("/games");
   return data.games ?? [];
