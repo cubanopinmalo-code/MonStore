@@ -291,12 +291,33 @@ function AuthPage() {
                 Te invitó el enlace de referido <span className="font-semibold">{ref}</span>.
               </p>
             ) : null}
-            <Button type="submit" className="w-full" disabled={loading || cooldown > 0}>
+            {blockLeft > 0 ? (
+              <div
+                className="space-y-1 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 text-center"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm font-semibold text-destructive">
+                  Límite de códigos alcanzado
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Has utilizado tus 3 códigos SMS permitidos. Podrás solicitar un nuevo código en:
+                </p>
+                <p className="font-mono text-2xl font-bold tabular-nums">{blockClock}</p>
+              </div>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || cooldown > 0 || blockLeft > 0}
+            >
               {loading
                 ? "Enviando código…"
-                : cooldown > 0
-                  ? `Espera ${cooldown}s`
-                  : "Enviarme el código"}
+                : blockLeft > 0
+                  ? `Disponible en ${blockClock}`
+                  : cooldown > 0
+                    ? `Espera ${cooldown}s`
+                    : "Solicitar código"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Te enviamos un código de 6 cifras por mensaje. No necesitas contraseña.
