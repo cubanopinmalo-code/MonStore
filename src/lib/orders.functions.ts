@@ -101,7 +101,15 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { fulfillOrder } = await import("./g2bulk-orders.server");
+    const { fulfillOrder, realPurchasesEnabled } = await import("./g2bulk-orders.server");
+
+    // Interruptor del panel: con las compras reales apagadas no se cobra nada
+    // ni se crea ningún pedido, aunque el catálogo siga visible.
+    if (!(await realPurchasesEnabled())) {
+      throw new Error(
+        "Las recargas están pausadas ahora mismo. Vuelve a intentarlo en unos minutos.",
+      );
+    }
 
     // El pedido se registra con la sesión del propio cliente: la función valida auth.uid().
     const placed = await supabase.rpc("place_wallet_order", {
