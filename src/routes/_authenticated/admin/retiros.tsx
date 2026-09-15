@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
 import { useAdminWithdrawals } from "@/hooks/useAdmin";
+import { completeWithdrawal, rejectWithdrawal } from "@/lib/funds.functions";
 import { formatCUP, formatDateTime } from "@/lib/format";
+
 
 export const Route = createFileRoute("/_authenticated/admin/retiros")({
   head: () => ({
