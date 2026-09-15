@@ -189,6 +189,16 @@ export const requestDeposit = createServerFn({ method: "POST" })
       throw new Error("El comprobante no corresponde a tu cuenta.");
     }
 
+    // Importe mínimo definido por el administrador en la configuración global.
+    const { data: platform } = await context.supabase
+      .from("platform_settings")
+      .select("min_deposit_cup")
+      .maybeSingle();
+    const minimum = Number(platform?.min_deposit_cup ?? 0);
+    if (minimum > 0 && data.amount < minimum) {
+      throw new Error(`El importe mínimo para enviar fondos es ${minimum} CUP.`);
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: result, error } = await supabaseAdmin.rpc("request_deposit_v2", {
       p_user: context.userId,

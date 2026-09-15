@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OperationalSettingsCard } from "@/components/admin/settings/OperationalSettingsCard";
+import { UserBlockCard } from "@/components/admin/settings/UserBlockCard";
+import { CampaignCard } from "@/components/admin/settings/CampaignCard";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
 import { getListingFees, setListingFees } from "@/lib/marketplace.functions";
 import { formatCUP } from "@/lib/format";
@@ -481,86 +485,56 @@ function PaymentLinesCard() {
   );
 }
 
+/** Centro de control: cada pestaña agrupa una categoría de parámetros. */
 function AdminSettingsPage() {
   const { methods } = Route.useLoaderData();
 
   return (
-    <AdminShell title="Configuración" description="Ajustes generales de la plataforma.">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <UsdRateCard />
-        <SaldoRateCard />
-        <PaymentLinesCard />
-        <PaymentDestinationsCard />
-        <SupportWhatsappCard />
-        <ListingFeesCard />
+    <AdminShell title="Configuración" description="Centro de control de MonStore.">
+      <Tabs defaultValue="economia">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          <TabsTrigger value="economia">Valores económicos</TabsTrigger>
+          <TabsTrigger value="comisiones">Comisiones y límites</TabsTrigger>
+          <TabsTrigger value="pagos">Métodos de pago</TabsTrigger>
+          <TabsTrigger value="comercio">Comercio de cuentas</TabsTrigger>
+          <TabsTrigger value="usuarios">Seguridad y usuarios</TabsTrigger>
+          <TabsTrigger value="avisos">Notificaciones</TabsTrigger>
+          <TabsTrigger value="otros">Otros parámetros</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="economia" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <UsdRateCard />
+          <SaldoRateCard />
+        </TabsContent>
 
-        {methods.map((method) => (
-          <PaymentMethodCard key={method.payment_method} method={method} />
-        ))}
+        <TabsContent value="comisiones" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <OperationalSettingsCard />
+        </TabsContent>
 
-        <section className="surface-card space-y-4 p-5">
-          <h2 className="text-base font-semibold">Límites</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="min-dep">Depósito mínimo (CUP)</Label>
-              <Input id="min-dep" inputMode="numeric" defaultValue="500" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="min-ret">Retiro mínimo (CUP)</Label>
-              <Input id="min-ret" inputMode="numeric" defaultValue="1000" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="referido">Recompensa por referido (CUP)</Label>
-            <Input id="referido" inputMode="numeric" defaultValue="250" />
-          </div>
-        </section>
+        <TabsContent value="pagos" className="mt-4 grid gap-4 lg:grid-cols-2">
+          {methods.map((method) => (
+            <PaymentMethodCard key={method.payment_method} method={method} />
+          ))}
+          <PaymentDestinationsCard />
+          <PaymentLinesCard />
+        </TabsContent>
 
-        <section className="surface-card space-y-4 p-5">
-          <h2 className="text-base font-semibold">Estado de la plataforma</h2>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>
-              Modo mantenimiento
-              <span className="block text-xs text-muted-foreground">
-                Muestra un aviso y desactiva las compras.
-              </span>
-            </span>
-            <Switch />
-          </label>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>
-              Registro abierto
-              <span className="block text-xs text-muted-foreground">
-                Permite crear nuevas cuentas.
-              </span>
-            </span>
-            <Switch defaultChecked />
-          </label>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>
-              Comercio de cuentas
-              <span className="block text-xs text-muted-foreground">
-                Habilita la publicación de cuentas.
-              </span>
-            </span>
-            <Switch defaultChecked />
-          </label>
-        </section>
+        <TabsContent value="comercio" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <ListingFeesCard />
+        </TabsContent>
 
-        <div className="lg:col-span-2">
-          <Button
-            type="button"
-            onClick={() =>
-              toast.info(
-                "Los límites y el estado de la plataforma aún no se guardan en el servidor.",
-              )
-            }
-          >
-            Guardar cambios
-          </Button>
-        </div>
-      </div>
+        <TabsContent value="usuarios" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <UserBlockCard />
+        </TabsContent>
+
+        <TabsContent value="avisos" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <CampaignCard />
+        </TabsContent>
+
+        <TabsContent value="otros" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <SupportWhatsappCard />
+        </TabsContent>
+      </Tabs>
     </AdminShell>
   );
 }

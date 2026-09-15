@@ -18,6 +18,7 @@ import {
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import { supabase } from "@/integrations/supabase/client";
 import { listPaymentMethods } from "@/lib/payments.functions";
+import { getPlatformSettings } from "@/lib/settings.functions";
 import { useWallet } from "@/hooks/useAccount";
 import { formatCUP } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
@@ -38,12 +39,20 @@ function WithdrawPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchMethods = useServerFn(listPaymentMethods);
+  const fetchSettings = useServerFn(getPlatformSettings);
   const { data: wallet } = useWallet();
 
   const { data: methods } = useQuery({
     queryKey: ["payment-methods"],
     staleTime: 5 * 60 * 1000,
     queryFn: () => fetchMethods(),
+  });
+
+  /** Comisión y mínimo vienen de la configuración del administrador. */
+  const { data: settings } = useQuery({
+    queryKey: ["platform-settings"],
+    staleTime: 60 * 1000,
+    queryFn: () => fetchSettings(),
   });
 
   const available = useMemo(
@@ -61,11 +70,13 @@ function WithdrawPage() {
   const parsed = Number(amount) || 0;
 
   const conversionPct = selected?.withdrawal_conversion_pct ?? 0;
-  const feePct = selected?.withdrawal_fee_pct ?? 5;
+  const feePct = settings?.withdrawal_fee_pct ?? selected?.withdrawal_fee_pct ?? 5;
+  const minimum = Number(settings?.min_withdrawal_cup ?? 0);
   const conversion = Math.round((parsed * conversionPct) / 100);
   const fee = Math.round(((parsed - conversion) * feePct) / 100);
   const net = Math.max(parsed - conversion - fee, 0);
   const tooMuch = parsed > balance;
+  const tooLow = minimum > 0 && parsed > 0 && parsed < minimum;
 
   const request = useMutation({
     mutationFn: async () => {
@@ -144,9 +155,15 @@ function WithdrawPage() {
               placeholder="2000"
               onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ""))}
             />
-            <p className="text-xs text-muted-foreground">Disponible: {formatCUP(balance)}</p>
+            <p className="text-xs text-muted-foreground">
+              Disponible: {formatCUP(balance)}
+              {minimum > 0 ? ` · Mínimo: ${formatCUP(minimum)}` : ""}
+            </p>
             {tooMuch ? (
               <p className="text-xs text-destructive">La cantidad supera tu saldo disponible.</p>
+            ) : null}
+            {tooLow ? (
+              <p className="text-xs text-destructive">El retiro mínimo es {formatCUP(minimum)}.</p>
             ) : null}
           </div>
 
@@ -186,7 +203,7 @@ function WithdrawPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={tooMuch || parsed <= 0 || request.isPending}
+            disabled={tooMuch || tooLow || parsed <= 0 || request.isPending}
           >
             Solicitar retiro
           </Button>

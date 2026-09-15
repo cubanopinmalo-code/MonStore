@@ -57,6 +57,26 @@ export async function isAdminPhone(phoneE164: string): Promise<boolean> {
 /** Roles considerados administrativos. Ampliable sin tocar la lógica. */
 const ADMIN_ROLES = new Set(["admin", "superadmin", "owner", "staff"]);
 
+/**
+ * ¿La cuenta de ese teléfono está bloqueada por un administrador?
+ * El estado permanente vive en `public.profiles.status` y solo lo cambia la
+ * función administrativa `admin_set_user_block`.
+ */
+export async function isBlockedPhone(phoneE164: string): Promise<boolean> {
+  try {
+    const db = await admin();
+    const { data } = await db
+      .from("profiles")
+      .select("status")
+      .eq("phone", nationalPhone(phoneE164))
+      .maybeSingle();
+    const status = (data as { status?: string } | null)?.status;
+    return Boolean(status) && status !== "activo";
+  } catch {
+    return false;
+  }
+}
+
 async function readState(phoneE164: string): Promise<PhoneState | null> {
   const db = await admin();
   const { data } = await db

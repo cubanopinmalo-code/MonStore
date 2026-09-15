@@ -73,7 +73,14 @@ export const requestOtp = createServerFn({ method: "POST" })
     const ip = clientIp();
     const { getOtpLimits } = await import("./otp-config.server");
     const { logSmsUsage, smsSentLast24h, logAuthEvent } = await import("./otp-usage.server");
-    const { checkPhoneQuota, consumePhoneQuota, isAdminPhone } = await import("./otp-rate.server");
+    const { checkPhoneQuota, consumePhoneQuota, isAdminPhone, isBlockedPhone } =
+      await import("./otp-rate.server");
+
+    // Bloqueo permanente decidido por un administrador: no se envía código.
+    if (await isBlockedPhone(phone)) {
+      await logAuthEvent({ action: "otp_bloqueado", phoneE164: phone, reason: "cuenta_bloqueada" });
+      return { ok: false as const, reason: "cuenta_bloqueada" };
+    }
     const limits = await getOtpLimits();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as ChallengeClient;
@@ -273,6 +280,12 @@ export const verifyOtp = createServerFn({ method: "POST" })
     const { logAuthEvent } = await import("./otp-usage.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as ChallengeClient;
+
+    const { isBlockedPhone } = await import("./otp-rate.server");
+    if (await isBlockedPhone(phone)) {
+      await logAuthEvent({ action: "otp_rechazado", phoneE164: phone, reason: "cuenta_bloqueada" });
+      return { ok: false as const, reason: "cuenta_bloqueada" };
+    }
 
     const { data: rows } = await db
       .from(OTP_TABLE)
