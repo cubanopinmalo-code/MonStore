@@ -26,6 +26,8 @@ export interface PlatformSettings {
   maintenance_mode: boolean;
   registration_open: boolean;
   marketplace_enabled: boolean;
+  /** Compras reales al proveedor de recargas. Apagado = nada se compra fuera. */
+  g2bulk_purchases_enabled: boolean;
   allow_line_reuse: boolean;
   support_whatsapp: string;
   updated_at: string | null;
@@ -52,6 +54,7 @@ function shape(row: Record<string, unknown> | null): PlatformSettings {
     registration_open: row?.["registration_open"] === undefined ? true : Boolean(row["registration_open"]),
     marketplace_enabled:
       row?.["marketplace_enabled"] === undefined ? true : Boolean(row["marketplace_enabled"]),
+    g2bulk_purchases_enabled: Boolean(row?.["g2bulk_purchases_enabled"]),
     allow_line_reuse: Boolean(row?.["allow_line_reuse"]),
     support_whatsapp: String(row?.["support_whatsapp"] ?? ""),
     updated_at: (row?.["updated_at"] as string | undefined) ?? null,
@@ -59,7 +62,7 @@ function shape(row: Record<string, unknown> | null): PlatformSettings {
 }
 
 const COLUMNS =
-  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, maintenance_mode, registration_open, marketplace_enabled, allow_line_reuse, support_whatsapp, updated_at";
+  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, maintenance_mode, registration_open, marketplace_enabled, g2bulk_purchases_enabled, allow_line_reuse, support_whatsapp, updated_at";
 
 /** Lectura de los parámetros vigentes (sin secretos). */
 export const getPlatformSettings = createServerFn({ method: "GET" }).handler(
@@ -83,6 +86,7 @@ export interface PlatformSettingsPatch {
   maintenance_mode?: boolean;
   registration_open?: boolean;
   marketplace_enabled?: boolean;
+  g2bulk_purchases_enabled?: boolean;
   allow_line_reuse?: boolean;
   support_whatsapp?: string;
 }
@@ -102,6 +106,7 @@ const BOOLEAN_KEYS = [
   "maintenance_mode",
   "registration_open",
   "marketplace_enabled",
+  "g2bulk_purchases_enabled",
   "allow_line_reuse",
 ] as const;
 
