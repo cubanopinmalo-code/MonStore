@@ -811,15 +811,60 @@ function PaymentDestinationsCard() {
                 </div>
               </div>
 
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor={`dest-bank-${item.id}`}>Banco o entidad</Label>
+                  <Input
+                    id={`dest-bank-${item.id}`}
+                    value={draft.bank}
+                    placeholder="Banco Metropolitano"
+                    onChange={(event) => update(item.id, { bank: event.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`dest-holder-${item.id}`}>Nombre del titular</Label>
+                  <Input
+                    id={`dest-holder-${item.id}`}
+                    value={draft.holder_name}
+                    placeholder="Nombre que aparece en la cuenta"
+                    onChange={(event) => update(item.id, { holder_name: event.target.value })}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
                 <Textarea
                   id={`dest-inst-${item.id}`}
-                  rows={2}
+                  rows={3}
                   value={draft.instructions}
                   onChange={(event) => update(item.id, { instructions: event.target.value })}
                 />
               </div>
+
+              <div className="flex flex-wrap gap-5">
+                <label className="flex items-center gap-2 text-sm">
+                  <Switch
+                    checked={draft.requires_transaction_id}
+                    onCheckedChange={(value) =>
+                      update(item.id, { requires_transaction_id: value })
+                    }
+                    aria-label="Pedir número de transacción"
+                  />
+                  Pedir número de transacción
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Switch
+                    checked={draft.requires_proof}
+                    onCheckedChange={(value) => update(item.id, { requires_proof: value })}
+                    aria-label="Captura de pantalla obligatoria"
+                  />
+                  Captura de pantalla obligatoria
+                </label>
+              </div>
+
+              {item.kind === "monedero" ? <GuideImageField destination={item} /> : null}
+
 
               <div className="flex items-center gap-3">
                 <Button
