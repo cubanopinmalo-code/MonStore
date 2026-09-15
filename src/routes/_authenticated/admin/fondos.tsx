@@ -813,7 +813,7 @@ const METHOD_OPTIONS = [
 
 function HistoryPanel() {
   const historyFn = useServerFn(getFundsHistory);
-  const [filters, setFilters] = useState<FundsHistoryFilters>({
+  const [filters, setFilters] = useState<Required<FundsHistoryFilters>>({
     kind: "todos",
     status: "todos",
     method: "todos",
