@@ -60,7 +60,6 @@ export interface AdminPanelData {
   held_funds: number;
   wallets_total: number;
   alerts: AdminAlert[];
-  activity: AdminActivityItem[];
 }
 
 async function loadPanel(): Promise<AdminPanelData> {
