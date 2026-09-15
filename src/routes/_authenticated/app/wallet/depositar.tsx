@@ -805,6 +805,30 @@ function DepositPage() {
                   transferir.
                 </p>
               )}
+              {destination.bank || destination.holder_name ? (
+                <div className="space-y-1 rounded-lg border border-border/60 p-3 text-sm">
+                  {destination.bank ? (
+                    <p>
+                      <span className="text-muted-foreground">Banco: </span>
+                      {destination.bank}
+                    </p>
+                  ) : null}
+                  {destination.holder_name ? (
+                    <p>
+                      <span className="text-muted-foreground">A nombre de: </span>
+                      {destination.holder_name}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {destination.guide_image_url ? (
+                <img
+                  src={destination.guide_image_url}
+                  alt={`Dónde tocar para enviar el dinero a ${destination.label}`}
+                  className="w-full rounded-lg border border-border/60 object-contain"
+                  loading="lazy"
+                />
+              ) : null}
               {destination.instructions ? (
                 <p className="text-sm text-muted-foreground">{destination.instructions}</p>
               ) : null}
