@@ -39,6 +39,14 @@ import {
 
 type DepositSearch = { necesario?: number; metodo?: string };
 
+/** Identificador corto y único por solicitud, usado dentro del QR y guardado con el depósito. */
+function newQrRef(): string {
+  return `MS-${Date.now().toString(36).toUpperCase()}-${Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase()}`;
+}
+
 /** Atajos históricos del enlace «me falta saldo» y nombres completos del método. */
 const METHOD_ALIASES: Record<string, string> = {
   movil: "saldo_movil",
