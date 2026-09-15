@@ -90,11 +90,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     supabase.from("profiles").select("id, status"),
     supabase.from("wallets").select("balance, held_balance"),
     supabase.from("platform_settings").select("usd_to_cup, usd_margin_cup").maybeSingle(),
-    supabase
-      .from("audit_log")
-      .select("id, action, entity_type, note, amount, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10),
   ]);
 
   const orders = ordersRes.data ?? [];
