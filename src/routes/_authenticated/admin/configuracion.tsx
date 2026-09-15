@@ -786,75 +786,61 @@ function PaymentDestinationsCard() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
+                {item.kind === "app" ? null : (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`dest-value-${item.id}`}>
+                      {item.kind === "monedero"
+                        ? "Número de Monedero Mi Transfer"
+                        : item.kind === "tarjeta"
+                          ? "Número de cuenta/tarjeta receptora"
+                          : "Cuenta o usuario de destino"}
+                    </Label>
+                    <Input
+                      id={`dest-value-${item.id}`}
+                      inputMode="numeric"
+                      value={draft.destination_value}
+                      placeholder={
+                        item.kind === "tarjeta" ? "9200 0000 0000 0000" : "Número del destino"
+                      }
+                      onChange={(event) =>
+                        update(item.id, { destination_value: event.target.value })
+                      }
+                    />
+                  </div>
+                )}
                 <div className="space-y-1.5">
-                  <Label htmlFor={`dest-label-${item.id}`}>Nombre visible</Label>
+                  <Label htmlFor={`dest-confirm-${item.id}`}>Móvil a confirmar</Label>
                   <Input
-                    id={`dest-label-${item.id}`}
-                    value={draft.label}
-                    onChange={(event) => update(item.id, { label: event.target.value })}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`dest-value-${item.id}`}>
-                    {item.kind === "tarjeta"
-                      ? "Número de tarjeta para recibir el pago"
-                      : item.kind === "monedero"
-                        ? "Datos del Monedero Mi Transfer"
-                        : "Cuenta o dato de destino"}
-                  </Label>
-                  <Input
-                    id={`dest-value-${item.id}`}
-                    value={draft.destination_value}
-                    placeholder={item.kind === "tarjeta" ? "9200 0000 0000 0000" : "Datos del destino"}
+                    id={`dest-confirm-${item.id}`}
+                    inputMode="tel"
+                    maxLength={8}
+                    value={draft.confirm_phone}
+                    placeholder="5XXXXXXX"
                     onChange={(event) =>
-                      update(item.id, { destination_value: event.target.value })
+                      update(item.id, {
+                        confirm_phone: event.target.value.replace(/\D/g, "").slice(0, 8),
+                      })
                     }
                   />
+                  <p className="text-[11px] text-muted-foreground">
+                    Número que el cliente debe dar para confirmar la transferencia.
+                  </p>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              {item.kind === "monedero" || item.kind === "app" ? (
                 <div className="space-y-1.5">
-                  <Label htmlFor={`dest-bank-${item.id}`}>Banco o entidad</Label>
-                  <Input
-                    id={`dest-bank-${item.id}`}
-                    value={draft.bank}
-                    placeholder="Banco Metropolitano"
-                    onChange={(event) => update(item.id, { bank: event.target.value })}
+                  <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
+                  <Textarea
+                    id={`dest-inst-${item.id}`}
+                    rows={3}
+                    value={draft.instructions}
+                    onChange={(event) => update(item.id, { instructions: event.target.value })}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`dest-holder-${item.id}`}>Nombre del titular</Label>
-                  <Input
-                    id={`dest-holder-${item.id}`}
-                    value={draft.holder_name}
-                    placeholder="Nombre que aparece en la cuenta"
-                    onChange={(event) => update(item.id, { holder_name: event.target.value })}
-                  />
-                </div>
-              </div>
+              ) : null}
 
-              <div className="space-y-1.5">
-                <Label htmlFor={`dest-inst-${item.id}`}>Instrucciones para el cliente</Label>
-                <Textarea
-                  id={`dest-inst-${item.id}`}
-                  rows={3}
-                  value={draft.instructions}
-                  onChange={(event) => update(item.id, { instructions: event.target.value })}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-5">
-                <label className="flex items-center gap-2 text-sm">
-                  <Switch
-                    checked={draft.requires_transaction_id}
-                    onCheckedChange={(value) =>
-                      update(item.id, { requires_transaction_id: value })
-                    }
-                    aria-label="Pedir número de transacción"
-                  />
-                  Pedir número de transacción
-                </label>
+              {item.channel === "enzona" || item.kind === "app" ? (
                 <label className="flex items-center gap-2 text-sm">
                   <Switch
                     checked={draft.requires_proof}
@@ -863,9 +849,11 @@ function PaymentDestinationsCard() {
                   />
                   Captura de pantalla obligatoria
                 </label>
-              </div>
+              ) : null}
 
               {item.kind === "monedero" ? <GuideImageField destination={item} /> : null}
+
+
 
 
               <div className="flex items-center gap-3">
