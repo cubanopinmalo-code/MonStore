@@ -417,10 +417,16 @@ function PaymentLinesCard() {
                   id={`line-phone-${line.id}`}
                   inputMode="tel"
                   value={draft.phone_number}
+                  placeholder="5XXXXXXX"
                   onChange={(event) =>
                     update(line.id, { phone_number: event.target.value.replace(/\D/g, "") })
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  {draft.phone_number.length === 0
+                    ? "Sin número todavía: escribe el móvil que recibirá el saldo."
+                    : "Móvil cubano de 8 dígitos que empieza por 5. No puede repetirse en otra línea."}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <Switch
