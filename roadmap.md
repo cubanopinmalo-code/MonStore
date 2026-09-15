@@ -103,3 +103,6 @@
 - [ ] Eventos (ajuste): activacion y cobro en la hora exacta; 15 min antes solo alerta admin + ventana de preparacion de sala con cuenta regresiva; zona America/Havana.
 - [ ] Eventos (ajuste 2): sala editable hasta la hora exacta, sin cancelar en los 15 min; auditar cada cambio de sala; bloqueo al activarse.
 - [ ] Eventos: proteger la ruta del proceso programado con secreto propio; clientes no pueden invocarla; idempotencia ante reintentos.
+- [ ] Eventos: 5 estados operativos (inscripciones/activo/iniciado/finalizado/cancelado) con validacion server-side.
+- [ ] Eventos: SMS via relay al pasar a INICIADO, idempotente y registrado; bloqueo de inscripciones/accesos.
+- [ ] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
