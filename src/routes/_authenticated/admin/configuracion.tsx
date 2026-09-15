@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
+import { getListingFees, setListingFees } from "@/lib/marketplace.functions";
 import { formatCUP } from "@/lib/format";
 import {
   getLinePolicy,
@@ -40,16 +41,18 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
     ],
   }),
   loader: async () => {
-    const [pricing, saldo, methods, lines, linePolicy, destinations, support] = await Promise.all([
-      getUsdRate(),
-      getSaldoRate(),
-      listPaymentMethods(),
-      listPaymentLines(),
-      getLinePolicy(),
-      listAllPaymentDestinations(),
-      getSupportWhatsapp(),
-    ]);
-    return { pricing, saldo, methods, lines, linePolicy, destinations, support };
+    const [pricing, saldo, methods, lines, linePolicy, destinations, support, listingFees] =
+      await Promise.all([
+        getUsdRate(),
+        getSaldoRate(),
+        listPaymentMethods(),
+        listPaymentLines(),
+        getLinePolicy(),
+        listAllPaymentDestinations(),
+        getSupportWhatsapp(),
+        getListingFees(),
+      ]);
+    return { pricing, saldo, methods, lines, linePolicy, destinations, support, listingFees };
   },
 
   errorComponent: () => (
