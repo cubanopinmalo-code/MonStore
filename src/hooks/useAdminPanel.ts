@@ -156,7 +156,7 @@ async function loadPanel(): Promise<AdminPanelData> {
       id: "events-goal",
       level: "atencion",
       title: `${eventsGoal.length} evento(s) alcanzaron la meta`,
-      detail: "活 Activa la sala y comparte el acceso a los participantes.",
+      detail: "Activa la sala y comparte el acceso a los participantes.",
       to: "/admin/eventos",
     });
   if (prizesPending.length > 0)
