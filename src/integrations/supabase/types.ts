@@ -806,6 +806,7 @@ export type Database = {
       }
       otp_limits: {
         Row: {
+          block_seconds: number
           code_length: number
           daily_sms_cap: number | null
           id: boolean
@@ -817,6 +818,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          block_seconds?: number
           code_length?: number
           daily_sms_cap?: number | null
           id?: boolean
@@ -828,6 +830,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          block_seconds?: number
           code_length?: number
           daily_sms_cap?: number | null
           id?: boolean
@@ -837,6 +840,33 @@ export type Database = {
           resend_cooldown_seconds?: number
           ttl_seconds?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      otp_phone_state: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          phone_e164: string
+          request_count: number
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          phone_e164: string
+          request_count?: number
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          phone_e164?: string
+          request_count?: number
+          updated_at?: string
+          window_started_at?: string
         }
         Relationships: []
       }

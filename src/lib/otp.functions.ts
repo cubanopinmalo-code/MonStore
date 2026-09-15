@@ -73,11 +73,27 @@ export const requestOtp = createServerFn({ method: "POST" })
     const ip = clientIp();
     const { getOtpLimits } = await import("./otp-config.server");
     const { logSmsUsage, smsSentLast24h, logAuthEvent } = await import("./otp-usage.server");
+    const { checkPhoneQuota, consumePhoneQuota, isAdminPhone } = await import("./otp-rate.server");
     const limits = await getOtpLimits();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as ChallengeClient;
     const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
     const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+
+    // Rol real en la base de datos: los administradores no tienen límite de
+    // solicitudes diarias (el teléfono solo localiza la cuenta, no autoriza).
+    const isAdmin = await isAdminPhone(phone);
+
+    const quota = await checkPhoneQuota(phone, limits.maxPerPhonePerDay, isAdmin);
+    if (!quota.allowed) {
+      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_telefono" });
+      await logAuthEvent({ action: "otp_bloqueado", phoneE164: phone, reason: "limite_telefono" });
+      return {
+        ok: false as const,
+        reason: "limite_telefono",
+        blockedUntil: quota.blockedUntil ?? null,
+      };
+    }
 
     const { data: recent } = await db
       .from(OTP_TABLE)
@@ -87,11 +103,6 @@ export const requestOtp = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false });
 
     const list = (recent ?? []) as Array<{ created_at: string }>;
-    if (list.length >= limits.maxPerPhonePerDay) {
-      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_telefono" });
-      await logAuthEvent({ action: "otp_bloqueado", phoneE164: phone, reason: "limite_telefono" });
-      return { ok: false as const, reason: "limite_telefono" };
-    }
     const last = list[0];
     if (last) {
       const elapsed = (Date.now() - new Date(last.created_at).getTime()) / 1000;
@@ -147,6 +158,7 @@ export const requestOtp = createServerFn({ method: "POST" })
 
     // El desafío SOLO se guarda si el proveedor aceptó el mensaje: un envío
     // fallido no deja ningún código válido ni consume la cuota del teléfono.
+    let blockedUntil: string | null = null;
     if (sms.ok) {
       const { data: inserted } = await db
         .from(OTP_TABLE)
@@ -171,6 +183,15 @@ export const requestOtp = createServerFn({ method: "POST" })
           .is("consumed_at", null)
           .neq("id", newId);
       }
+
+      // Consumo persistente de la cuota de SOLICITUDES (no de intentos).
+      const consumed = await consumePhoneQuota(
+        phone,
+        limits.maxPerPhonePerDay,
+        limits.blockSeconds,
+        isAdmin,
+      );
+      blockedUntil = consumed.blockedUntil;
     }
 
 
@@ -202,8 +223,39 @@ export const requestOtp = createServerFn({ method: "POST" })
     }
 
     // Respuesta idéntica exista o no la cuenta: no permite enumerar usuarios.
-    return { ok: true as const, mode: sms.mode, expiresInSeconds: limits.ttlSeconds };
+    return {
+      ok: true as const,
+      mode: sms.mode,
+      expiresInSeconds: limits.ttlSeconds,
+      blockedUntil,
+    };
   });
+
+/**
+ * Estado de la cuota de SOLICITUDES para un teléfono. Solo devuelve hasta
+ * cuándo está bloqueado (marca de tiempo del servidor), para que la pantalla
+ * de acceso pueda mostrar el temporizador aunque se recargue o se cambie de
+ * dispositivo. La decisión real sigue siendo server-side en `requestOtp`.
+ */
+export const otpRequestStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: { phone: string }) => ({ phone: String(input.phone ?? "") }))
+  .handler(async ({ data }) => {
+    if (!isValidCubanMobile(data.phone)) {
+      return { blockedUntil: null as string | null, serverNow: new Date().toISOString() };
+    }
+    const phone = e164Phone(data.phone);
+    const { getOtpLimits } = await import("./otp-config.server");
+    const { checkPhoneQuota, isAdminPhone } = await import("./otp-rate.server");
+    const limits = await getOtpLimits();
+    const isAdmin = await isAdminPhone(phone);
+    const quota = await checkPhoneQuota(phone, limits.maxPerPhonePerDay, isAdmin);
+    return {
+      blockedUntil: quota.allowed ? null : (quota.blockedUntil ?? null),
+      serverNow: new Date().toISOString(),
+    };
+  });
+
+
 
 
 export const verifyOtp = createServerFn({ method: "POST" })

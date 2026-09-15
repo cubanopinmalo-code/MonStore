@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { requestOtp, verifyOtp } from "@/lib/otp.functions";
+import { otpRequestStatus, requestOtp, verifyOtp } from "@/lib/otp.functions";
 import { otpMessage } from "@/lib/otp-messages";
 import { isValidCubanMobile } from "@/lib/phone";
 
@@ -51,6 +51,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const askCode = useServerFn(requestOtp);
   const checkCode = useServerFn(verifyOtp);
+  const askStatus = useServerFn(otpRequestStatus);
 
   const [step, setStep] = useState<"telefono" | "codigo">("telefono");
   const [phone, setPhone] = useState("");
@@ -58,7 +59,63 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [checking, setChecking] = useState(true);
+  /** Fin del bloqueo, en tiempo local ya corregido con la hora del servidor. */
+  const [blockUntil, setBlockUntil] = useState<number | null>(null);
+  const [blockLeft, setBlockLeft] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /**
+   * El servidor manda la marca de tiempo y su hora actual: el temporizador se
+   * calcula sobre esa diferencia, así que recargar la página, reabrir el
+   * navegador o cambiar el reloj del dispositivo no reinicia el bloqueo.
+   */
+  const applyBlock = (blockedUntil: string | null | undefined, serverNow?: string) => {
+    if (!blockedUntil) {
+      setBlockUntil(null);
+      setBlockLeft(0);
+      return;
+    }
+    const end = new Date(blockedUntil).getTime();
+    const reference = serverNow ? new Date(serverNow).getTime() : Date.now();
+    const local = Date.now() + Math.max(0, end - reference);
+    setBlockUntil(local);
+    setBlockLeft(Math.max(0, Math.ceil((local - Date.now()) / 1000)));
+  };
+
+  // Un único reloj: descuenta cada segundo mientras quede bloqueo activo.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setBlockUntil((end) => {
+        if (!end) return end;
+        const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+        setBlockLeft(left);
+        return left === 0 ? null : end;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+
+  // Al escribir un número válido se consulta al servidor si sigue bloqueado.
+  useEffect(() => {
+    if (!isValidCubanMobile(phone)) {
+      setBlockUntil(null);
+      return;
+    }
+    let active = true;
+    const id = setTimeout(() => {
+      void askStatus({ data: { phone } })
+        .then((result) => {
+          if (active) applyBlock(result.blockedUntil, result.serverNow);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone]);
 
   /**
    * Destino después del acceso. El rol se consulta SIEMPRE por UUID en
@@ -123,6 +180,9 @@ function AuthPage() {
       toast.error("Ese número no parece un móvil cubano válido.");
       return;
     }
+    // Sin reintentos inútiles: si el servidor ya dijo que está bloqueado,
+    // no se vuelve a pedir hasta que el temporizador llegue a cero.
+    if (blockLeft > 0) return;
     setLoading(true);
     try {
       const result = await askCode({ data: { phone } });
@@ -131,8 +191,12 @@ function AuthPage() {
         if (result.reason === "espera" && "retryInSeconds" in result) {
           startCooldown(Number(result.retryInSeconds ?? 60));
         }
+        if (result.reason === "limite_telefono" && "blockedUntil" in result) {
+          applyBlock(result.blockedUntil as string | null);
+        }
         return;
       }
+      if ("blockedUntil" in result) applyBlock(result.blockedUntil);
       setStep("codigo");
       setCode("");
       startCooldown(60);
@@ -143,6 +207,15 @@ function AuthPage() {
       setLoading(false);
     }
   };
+
+  /** Tiempo restante del bloqueo en formato HH:MM:SS. */
+  const blockClock = [
+    Math.floor(blockLeft / 3600),
+    Math.floor((blockLeft % 3600) / 60),
+    blockLeft % 60,
+  ]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
 
   const handleVerify = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -222,12 +295,33 @@ function AuthPage() {
                 Te invitó el enlace de referido <span className="font-semibold">{ref}</span>.
               </p>
             ) : null}
-            <Button type="submit" className="w-full" disabled={loading || cooldown > 0}>
+            {blockLeft > 0 ? (
+              <div
+                className="space-y-1 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 text-center"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm font-semibold text-destructive">
+                  Límite de códigos alcanzado
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Has utilizado tus 3 códigos SMS permitidos. Podrás solicitar un nuevo código en:
+                </p>
+                <p className="font-mono text-2xl font-bold tabular-nums">{blockClock}</p>
+              </div>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || cooldown > 0 || blockLeft > 0}
+            >
               {loading
                 ? "Enviando código…"
-                : cooldown > 0
-                  ? `Espera ${cooldown}s`
-                  : "Enviarme el código"}
+                : blockLeft > 0
+                  ? `Disponible en ${blockClock}`
+                  : cooldown > 0
+                    ? `Espera ${cooldown}s`
+                    : "Solicitar código"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Te enviamos un código de 6 cifras por mensaje. No necesitas contraseña.
@@ -271,14 +365,18 @@ function AuthPage() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={loading || cooldown > 0}
+                disabled={loading || cooldown > 0 || blockLeft > 0}
                 onClick={() => {
                   void handleRequest({
                     preventDefault: () => {},
                   } as unknown as React.FormEvent<HTMLFormElement>);
                 }}
               >
-                {cooldown > 0 ? `Reenviar en ${cooldown}s` : "Reenviar código"}
+                {blockLeft > 0
+                  ? `Disponible en ${blockClock}`
+                  : cooldown > 0
+                    ? `Reenviar en ${cooldown}s`
+                    : "Reenviar código"}
               </Button>
             </div>
           </form>
