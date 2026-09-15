@@ -81,8 +81,10 @@ function PurchaseFlowPage() {
   const gameCode = codeFor(product, game.g2bulk_id);
   const playerKey = fields.find((field) => PLAYER_KEYS.includes(field.key))?.key ?? null;
   const playerId = playerKey ? (values[playerKey] ?? "").trim() : "";
-  const serverId = (values["server_id"] ?? "").trim();
-  const needsServer = fields.some((field) => field.key === "server_id" && field.required);
+  const serverKey = fields.find((field) => SERVER_KEYS.includes(field.key))?.key ?? null;
+  const serverId = serverKey ? (values[serverKey] ?? "").trim() : "";
+  const needsServer = Boolean(serverKey);
+
 
   useEffect(() => {
     if (!gameCode || !playerId || playerId.length < 4 || (needsServer && !serverId)) {
@@ -122,7 +124,7 @@ function PurchaseFlowPage() {
     setStep(1);
   }
 
-  function confirm() {
+  async function confirm() {
     if (submitting || !product) return;
     if (balance < product.sale_price) {
       const missingAmount = Math.ceil(product.sale_price - balance);
@@ -135,14 +137,37 @@ function PurchaseFlowPage() {
       });
       return;
     }
+    if (!playerId) {
+      toast.error("Faltan los datos de tu cuenta del juego.");
+      return;
+    }
     setSubmitting(true);
     setStatus("procesando");
     setStep(3);
-    window.setTimeout(() => {
-      setStatus("completado");
+    setResultMessage("Estamos enviando tu recarga.");
+    try {
+      const result = await placeOrder({
+        data: {
+          product_id: product.id,
+          player_id: playerId,
+          player_data: values,
+          idempotency_key: orderKey,
+        },
+      });
+      setStatus(result.status as OrderStatus);
+      setResultMessage(result.message);
+      // Una nueva compra necesita su propia clave: así una repetición no cobra dos veces.
+      setOrderKey(crypto.randomUUID());
+    } catch (error) {
+      setStatus("error");
+      setResultMessage(
+        error instanceof Error ? error.message : "No pudimos completar tu recarga.",
+      );
+    } finally {
       setSubmitting(false);
-    }, 1600);
+    }
   }
+
 
   return (
     <UserShell>
