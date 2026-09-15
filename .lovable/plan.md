@@ -114,21 +114,22 @@ Lista con filtros por estado y buscador, y ficha de evento con:
 - resultado: buscar y confirmar ganador por identificador de personaje, escribir la recompensa, finalizar, ver estado de entrega y reintentar si falló;
 - acciones: crear, editar, marcar evento iniciado, finalizar y cancelar (con confirmación y motivo).
 
-## 7. Aplicación del cliente
+## 9. Aplicación del cliente
 
-- Lista de eventos con precio o etiqueta de gratuito, participantes actuales/mínimo/máximo, barra de progreso y estado (incluida la marca de meta alcanzada), actualizada en vivo.
-- Ficha del evento: datos, premio, cuenta atrás hasta la hora exacta de inicio, inscripción con identificador del personaje, aviso claro de que solo se cobra al activarse el evento en su hora exacta, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso.
+- Lista de eventos con precio o etiqueta de gratuito, participantes actuales/mínimo/máximo, barra de progreso y el estado operativo con su color, actualizada en vivo; los finalizados salen de "Eventos actuales".
+- Ficha del evento: datos, premio, cuenta atrás hasta la hora exacta de inicio, inscripción con identificador del personaje, aviso claro de que solo se cobra al activarse el evento en su hora exacta, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso; con el evento iniciado se muestra "Evento iniciado — acceso cerrado" y con el cancelado, el motivo.
 - La sala nunca aparece antes de la activación ni para quien no participa o no quedó confirmado.
-- Nueva sección de resultados: eventos finalizados con ganador, premio, juego, tipo, fecha y hora.
+- Sección de resultados: eventos finalizados con ganador, foto, personaje, premio, juego, tipo, fecha y hora, más el apartado público "Ganadores de la semana".
 
-## 8. Dinero, avisos, auditoría y tiempo real
+## 10. Dinero, avisos, mensajes de texto, auditoría y tiempo real
 
 - Los cobros de inscripción, las devoluciones y los premios usan tipos de operación propios, separados de recargas, fondos, retiros y comercio de cuentas.
-- Avisos, todos con clave única: meta alcanzada (administrador e inscritos), recordatorio de 30 minutos, alerta administrativa de 15 minutos, sala configurada correctamente, evento activo con sala disponible, cancelación por falta de meta, cancelación por sala no configurada a tiempo, cancelación por confirmados insuficientes con su devolución, 5 minutos antes del cierre de entrada y cierre de la entrada. Cada uno queda registrado con evento, usuario, tipo, fecha/hora y estado.
-- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada y su aviso, recordatorio de 30 minutos, alerta de 15 minutos, cada apertura y guardado de los datos de sala por el administrador (con administrador, fecha/hora, valor anterior y nuevo del identificador y de la contraseña, siempre protegidos y nunca visibles para clientes), evaluación final, activación, cancelaciones con su motivo, cobros, confirmaciones, apertura y cierre de entrada, acceso, finalización, ganador, premio, publicación del resultado y devoluciones, con administrador o usuario, estado anterior y nuevo, fecha/hora y operación relacionada.
-- Eventos e inscripciones se sincronizan en vivo en cliente y administración, sin recargar.
+- Avisos en la aplicación, todos con clave única: meta alcanzada (administrador e inscritos), recordatorio de 30 minutos, alerta administrativa de 15 minutos, sala configurada correctamente, evento activo con sala disponible, evento iniciado, evento finalizado con resultado disponible, cancelación por falta de meta, cancelación por sala no configurada a tiempo, cancelación por confirmados insuficientes con su devolución, 5 minutos antes del cierre de entrada y cierre de la entrada. Cada uno queda registrado con evento, usuario, tipo, fecha/hora y estado.
+- Mensaje de texto al pasar a evento iniciado: se envía a los inscritos que cumplen las condiciones de participación, con el texto "El evento [NOMBRE] ya comenzó. Entra a MonStore para consultar tu evento." Se usa exactamente la vía actual de MonStore (Lovable Cloud → relay propio → proveedor de SMS), sin tocar el relay ni sus credenciales y sin enviar nunca desde el navegador. Cada envío se registra con evento, usuario, teléfono, tipo, fecha/hora, estado, identificador de envío y clave anti-duplicado, de modo que repetir el cambio de estado no reenvía nada.
+- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada y su aviso, recordatorio de 30 minutos, alerta de 15 minutos, cada apertura y guardado de los datos de sala por el administrador (con administrador, fecha/hora, valor anterior y nuevo del identificador y de la contraseña, siempre protegidos y nunca visibles para clientes), evaluación final, activación, cada cambio manual de estado con administrador y estados anterior y nuevo, cancelaciones con su motivo, cobros, confirmaciones, apertura y cierre de entrada, acceso, mensajes de texto enviados, finalización, ganador, recompensa, publicación del resultado y devoluciones.
+- Eventos, inscripciones y resultados se sincronizan en vivo en cliente y administración, sin recargar.
 
-## 9. Pruebas de extremo a extremo
+## 11. Pruebas de extremo a extremo
 
 Se ejecutan las pruebas del pedido con un evento gratuito y uno de pago creados temporalmente:
 - meta alcanzada temprano: sin cobro, sin sala visible y sin activación;
@@ -139,6 +140,9 @@ Se ejecutan las pruebas del pedido con un evento gratuito y uno de pago creados 
 - hora exacta sin identificador, sin contraseña o sin meta: cancelación sin cobros;
 - participantes sin saldo: cobros válidos, los demás sin acceso, y si los confirmados quedan por debajo de la meta, cancelación con devolución exacta;
 - intentar modificar la sala con el evento ya activo: bloqueado;
+- pasar a evento iniciado: se envía el mensaje de texto, se cierran inscripciones, compras y accesos, y el servidor rechaza los intentos manuales;
+- repetir el cambio a iniciado: sin reenviar mensajes ni duplicar avisos;
+- finalizar: identificador de ganador válido devuelve nombre, foto y personaje; uno inválido se rechaza; con recompensa escrita el evento finaliza, se avisa, sale de "Eventos actuales", aparece el resultado público y el ganador entra en el ranking semanal sin datos privados, y el historial lo conserva;
 - repetir la tarea programada: sin duplicar cobros, avisos, activaciones, cancelaciones ni devoluciones.
 
 Al terminar se eliminan los datos de prueba y se revierten los saldos usados.
