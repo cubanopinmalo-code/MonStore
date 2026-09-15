@@ -208,6 +208,28 @@ export function useAdminPanel() {
   return useQuery({ queryKey: ["admin-panel"], queryFn: loadPanel });
 }
 
+export const ACTIVITY_QUERY_KEY = "admin-activity";
+
+async function loadActivity(): Promise<AdminActivityItem[]> {
+  const { data, error } = await supabase
+    .from("audit_log")
+    .select("id, action, entity_type, note, amount, created_at")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: String(row.action ?? "").replace(/_/g, " ") || "Movimiento",
+    detail: row.note || String(row.entity_type ?? ""),
+    created_at: row.created_at,
+  }));
+}
+
+/** Actividad reciente: se refresca sola, sin recalcular el resto del panel. */
+export function useAdminActivity() {
+  return useQuery({ queryKey: [ACTIVITY_QUERY_KEY], queryFn: loadActivity });
+}
+
 /**
  * Tablas de datos operativos: un cambio aquí sí obliga a recalcular los
  * indicadores del panel y de la pantalla que las está mirando.
