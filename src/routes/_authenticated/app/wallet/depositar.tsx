@@ -27,6 +27,7 @@ import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
+import { PaymentQr } from "@/components/payments/PaymentQr";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listPaymentDestinations,
@@ -38,6 +39,14 @@ import {
 } from "@/lib/payments.functions";
 
 type DepositSearch = { necesario?: number; metodo?: string };
+
+/** Identificador corto y único por solicitud, usado dentro del QR y guardado con el depósito. */
+function newQrRef(): string {
+  return `MS-${Date.now().toString(36).toUpperCase()}-${Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase()}`;
+}
 
 /** Atajos históricos del enlace «me falta saldo» y nombres completos del método. */
 const METHOD_ALIASES: Record<string, string> = {
@@ -317,7 +326,16 @@ function DepositPage() {
           ? "confirmar"
           : "datos";
 
+  // Referencia única de esta solicitud: se usa para el QR y queda guardada con el depósito.
+  const [qrRef, setQrRef] = useState(newQrRef);
+  const qrIssuedAt = useRef(new Date().toISOString());
+  const showQr = Boolean(
+    destination?.destination_value && destination.confirm_phone && !destination.requires_proof,
+  );
+
   function resetFlow() {
+    setQrRef(newQrRef());
+    qrIssuedAt.current = new Date().toISOString();
     setChannel(null);
     setDestinationId(null);
     setProof(null);
@@ -436,7 +454,9 @@ function DepositPage() {
         data: {
           amount: parsed,
           method: current.payment_method,
-          reference: transactionId.trim() || fromNumber.replace(/\D/g, ""),
+          reference: [transactionId.trim() || fromNumber.replace(/\D/g, ""), showQr ? `QR ${qrRef}` : ""]
+            .filter(Boolean)
+            .join(" | "),
           hasProof: Boolean(proofPath),
           destinationId: destination?.id ?? null,
           transactionId: transactionId.trim() || null,
@@ -867,6 +887,26 @@ function DepositPage() {
               {destination.instructions ? (
                 <p className="text-sm text-muted-foreground">{destination.instructions}</p>
               ) : null}
+              {showQr ? (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border/60 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Importe de esta transferencia</p>
+                    <p className="font-display text-lg font-bold">{formatCUP(parsed)}</p>
+                  </div>
+                  <PaymentQr
+                    data={{
+                      reference: qrRef,
+                      method: current?.label ?? current?.payment_method ?? "",
+                      destinationLabel: bankTitle ?? destination.label,
+                      destinationValue: destination.destination_value,
+                      confirmPhone: destination.confirm_phone,
+                      amount: parsed,
+                      issuedAt: qrIssuedAt.current,
+                    }}
+                  />
+                </div>
+              ) : null}
+
             </div>
           ) : transferFields.length > 0 ? (
             <div className="space-y-3">
