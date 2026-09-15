@@ -731,6 +731,7 @@ function PaymentDestinationsCard() {
       bank: item.bank ?? "",
       holder_name: item.holder_name,
       destination_value: item.destination_value,
+      confirm_phone: item.confirm_phone,
       instructions: item.instructions,
       requires_transaction_id: item.requires_transaction_id,
       requires_proof: item.requires_proof,
