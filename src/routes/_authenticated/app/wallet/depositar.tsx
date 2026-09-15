@@ -809,6 +809,26 @@ function DepositPage() {
                   transferir.
                 </p>
               )}
+              {destination.confirm_phone ? (
+                <div className="rounded-lg border border-border/60 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Móvil a confirmar (escríbelo en la app al hacer el pago)
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="min-w-0 flex-1 font-display text-base font-bold">
+                      {destination.confirm_phone}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copy(destination.confirm_phone)}
+                      aria-label="Copiar móvil a confirmar"
+                    >
+                      <Copy className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               {destination.bank || destination.holder_name ? (
                 <div className="space-y-1 rounded-lg border border-border/60 p-3 text-sm">
                   {destination.bank ? (
