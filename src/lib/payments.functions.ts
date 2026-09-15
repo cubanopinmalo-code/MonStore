@@ -120,12 +120,23 @@ export const savePaymentMethod = createServerFn({ method: "POST" })
   .inputValidator((data: PaymentMethodDraft) => normaliseDraft(data))
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    // Las transferencias en CUP se activan desde sus destinos (única fuente de
+    // verdad): aquí no se toca su estado para no dejar admin y cliente distintos.
+    let active = data.active;
+    if (data.payment_method === "tarjeta_cup") {
+      const { data: destinations } = await context.supabase
+        .from("payment_destinations")
+        .select("id")
+        .eq("active", true)
+        .limit(1);
+      active = (destinations ?? []).length > 0;
+    }
     const { error } = await context.supabase
       .from("payment_settings")
       .update({
         label: data.label,
         instructions: data.instructions,
-        active: data.active,
+        active,
         deposit_bonus_pct: data.deposit_bonus_pct,
         withdrawal_fee_pct: data.withdrawal_fee_pct,
         withdrawal_conversion_pct: data.withdrawal_conversion_pct,
