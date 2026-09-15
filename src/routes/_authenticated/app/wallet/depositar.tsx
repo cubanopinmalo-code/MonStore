@@ -661,7 +661,7 @@ function DepositPage() {
         <Header
           onBack={() => {
             if (usesDestinations) {
-              if (channel === "transfermovil") setDestinationId(null);
+              if (banks.length > 1) setDestinationId(null);
               else setChannel(null);
             } else {
               setSelected(null);
