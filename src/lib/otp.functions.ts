@@ -158,6 +158,7 @@ export const requestOtp = createServerFn({ method: "POST" })
 
     // El desafío SOLO se guarda si el proveedor aceptó el mensaje: un envío
     // fallido no deja ningún código válido ni consume la cuota del teléfono.
+    let blockedUntil: string | null = null;
     if (sms.ok) {
       const { data: inserted } = await db
         .from(OTP_TABLE)
@@ -182,6 +183,15 @@ export const requestOtp = createServerFn({ method: "POST" })
           .is("consumed_at", null)
           .neq("id", newId);
       }
+
+      // Consumo persistente de la cuota de SOLICITUDES (no de intentos).
+      const consumed = await consumePhoneQuota(
+        phone,
+        limits.maxPerPhonePerDay,
+        limits.blockSeconds,
+        isAdmin,
+      );
+      blockedUntil = consumed.blockedUntil;
     }
 
 
