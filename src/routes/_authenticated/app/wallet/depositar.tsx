@@ -58,15 +58,20 @@ const METHOD_ICONS: Record<string, typeof Smartphone> = {
 };
 
 const CHANNEL_ICONS: Record<string, typeof Smartphone> = {
+  tarjeta_cup: CreditCard,
   transfermovil: Smartphone,
   enzona: Wallet,
   iphone: Apple,
 };
 
 const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
+  tarjeta_cup: {
+    title: "Tarjeta CUP",
+    hint: "Transferencia directa a la tarjeta en CUP de MONSTORE.",
+  },
   transfermovil: {
     title: "Transfermóvil",
-    hint: "Paga desde la app Transfermóvil con tu tarjeta BANDEC, BPA o Metropolitano.",
+    hint: "Paga desde la app Transfermóvil con BANDEC, BPA o Metropolitana.",
   },
   enzona: {
     title: "EnZona",
@@ -83,6 +88,12 @@ const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
 };
 
 const BANK_LABELS: Record<string, { title: string; hint: string }> = {
+  Bandec: { title: "BANDEC", hint: "Transferencia a tarjeta BANDEC." },
+  BPA: { title: "BPA", hint: "Transferencia a tarjeta BPA." },
+  Metropolitana: {
+    title: "METROPOLITANA",
+    hint: "El pago se hace por el Monedero Mi Transfer.",
+  },
   bandec: { title: "BANDEC", hint: "Transferencia a tarjeta BANDEC." },
   bpa: { title: "BPA", hint: "Transferencia a tarjeta BPA." },
   metropolitano: {
