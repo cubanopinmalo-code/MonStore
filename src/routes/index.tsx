@@ -60,24 +60,43 @@ function AuthPage() {
   const [checking, setChecking] = useState(true);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const goToApp = () => {
+  /**
+   * Destino después del acceso. El rol se consulta SIEMPRE por UUID en
+   * public.user_roles (RLS: cada usuario solo ve su propio rol). Nunca se usa
+   * el teléfono ni ninguna bandera del navegador para decidir el panel.
+   */
+  const goToApp = async () => {
     if (evento) {
       void navigate({ to: "/app/eventos/$id", params: { id: evento }, replace: true });
-    } else {
-      void navigate({ to: "/app", replace: true });
+      return;
     }
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (userId) {
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (role) {
+        void navigate({ to: "/admin", replace: true });
+        return;
+      }
+    }
+    void navigate({ to: "/app", replace: true });
   };
 
   useEffect(() => {
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (data.session) goToApp();
+      if (data.session) void goToApp();
       else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
-      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) goToApp();
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) void goToApp();
     });
     return () => {
       active = false;
@@ -145,7 +164,7 @@ function AuthPage() {
         return;
       }
       toast.success(result.created ? "¡Bienvenido a MONSTORE!" : "¡Bienvenido de vuelta!");
-      goToApp();
+      await goToApp();
     } catch {
       toast.error("No pudimos completar el acceso. Inténtalo nuevamente.");
     } finally {

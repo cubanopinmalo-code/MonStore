@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Gamepad2, Home, LogOut, Store, User, Wallet } from "lucide-react";
+import { Bell, Gamepad2, Home, LogOut, ShieldCheck, Store, User, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
-import { useNotifications, useWallet } from "@/hooks/useAccount";
+import { useIsAdmin, useNotifications, useWallet } from "@/hooks/useAccount";
 import { formatCUP } from "@/lib/format";
 
 
@@ -25,6 +25,7 @@ const DESKTOP_EXTRA = [
 export function UserShell({ children }: { children: ReactNode }) {
   const { data: wallet } = useWallet();
   const { data: notifications } = useNotifications();
+  const { data: isAdmin } = useIsAdmin();
   const balance = Number(wallet?.balance ?? 0);
   const unread = (notifications ?? []).filter((item) => !item.read).length;
 
@@ -73,6 +74,13 @@ export function UserShell({ children }: { children: ReactNode }) {
                 ) : null}
               </Link>
             </Button>
+            {isAdmin ? (
+              <Button asChild variant="ghost" size="icon">
+                <Link to="/admin" aria-label="Panel administrativo">
+                  <ShieldCheck className="size-5" aria-hidden="true" />
+                </Link>
+              </Button>
+            ) : null}
             <SignOutDialog>
               <Button variant="ghost" size="icon" aria-label="Cerrar sesión">
                 <LogOut className="size-5" aria-hidden="true" />
