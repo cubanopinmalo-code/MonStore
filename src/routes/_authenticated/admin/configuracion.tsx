@@ -492,6 +492,7 @@ function AdminSettingsPage() {
         <PaymentLinesCard />
         <PaymentDestinationsCard />
         <SupportWhatsappCard />
+        <ListingFeesCard />
 
 
         {methods.map((method) => (
