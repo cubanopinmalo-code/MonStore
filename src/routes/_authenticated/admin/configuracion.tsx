@@ -328,14 +328,22 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold">{method.label}</h2>
           <p className="text-xs text-muted-foreground">
-            {active ? "Visible para los clientes" : "Oculto para los clientes"}
+            {derived
+              ? active
+                ? "Visible para los clientes (hay destinos activos abajo)"
+                : "Oculto: activa un destino en «Métodos de pago del cliente»"
+              : active
+                ? "Visible para los clientes"
+                : "Oculto para los clientes"}
           </p>
         </div>
-        <Switch
-          checked={active}
-          onCheckedChange={setActive}
-          aria-label={`Activar ${method.label}`}
-        />
+        {derived ? null : (
+          <Switch
+            checked={active}
+            onCheckedChange={setActive}
+            aria-label={`Activar ${method.label}`}
+          />
+        )}
       </div>
 
       <div className="space-y-1.5">
