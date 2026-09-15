@@ -27,6 +27,7 @@ import { getSaldoRate } from "@/lib/catalog.functions";
 import { formatCUP } from "@/lib/format";
 import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
+import { PaymentQr } from "@/components/payments/PaymentQr";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listPaymentDestinations,
@@ -453,7 +454,9 @@ function DepositPage() {
         data: {
           amount: parsed,
           method: current.payment_method,
-          reference: transactionId.trim() || fromNumber.replace(/\D/g, ""),
+          reference: [transactionId.trim() || fromNumber.replace(/\D/g, ""), showQr ? `QR ${qrRef}` : ""]
+            .filter(Boolean)
+            .join(" | "),
           hasProof: Boolean(proofPath),
           destinationId: destination?.id ?? null,
           transactionId: transactionId.trim() || null,
@@ -884,6 +887,26 @@ function DepositPage() {
               {destination.instructions ? (
                 <p className="text-sm text-muted-foreground">{destination.instructions}</p>
               ) : null}
+              {showQr ? (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border/60 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Importe de esta transferencia</p>
+                    <p className="font-display text-lg font-bold">{formatCUP(parsed)}</p>
+                  </div>
+                  <PaymentQr
+                    data={{
+                      reference: qrRef,
+                      method: current?.label ?? current?.payment_method ?? "",
+                      destinationLabel: bankTitle ?? destination.label,
+                      destinationValue: destination.destination_value,
+                      confirmPhone: destination.confirm_phone,
+                      amount: parsed,
+                      issuedAt: qrIssuedAt.current,
+                    }}
+                  />
+                </div>
+              ) : null}
+
             </div>
           ) : transferFields.length > 0 ? (
             <div className="space-y-3">
