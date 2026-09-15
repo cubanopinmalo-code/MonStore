@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
+import { getListingFees, setListingFees } from "@/lib/marketplace.functions";
 import { formatCUP } from "@/lib/format";
 import {
   getLinePolicy,
@@ -40,16 +41,18 @@ export const Route = createFileRoute("/_authenticated/admin/configuracion")({
     ],
   }),
   loader: async () => {
-    const [pricing, saldo, methods, lines, linePolicy, destinations, support] = await Promise.all([
-      getUsdRate(),
-      getSaldoRate(),
-      listPaymentMethods(),
-      listPaymentLines(),
-      getLinePolicy(),
-      listAllPaymentDestinations(),
-      getSupportWhatsapp(),
-    ]);
-    return { pricing, saldo, methods, lines, linePolicy, destinations, support };
+    const [pricing, saldo, methods, lines, linePolicy, destinations, support, listingFees] =
+      await Promise.all([
+        getUsdRate(),
+        getSaldoRate(),
+        listPaymentMethods(),
+        listPaymentLines(),
+        getLinePolicy(),
+        listAllPaymentDestinations(),
+        getSupportWhatsapp(),
+        getListingFees(),
+      ]);
+    return { pricing, saldo, methods, lines, linePolicy, destinations, support, listingFees };
   },
 
   errorComponent: () => (
@@ -489,6 +492,7 @@ function AdminSettingsPage() {
         <PaymentLinesCard />
         <PaymentDestinationsCard />
         <SupportWhatsappCard />
+        <ListingFeesCard />
 
 
         {methods.map((method) => (
@@ -742,6 +746,91 @@ function SupportWhatsappCard() {
         }}
       >
         {saving ? "Guardando…" : "Guardar número"}
+      </Button>
+    </section>
+  );
+}
+
+/** Comisión que paga el vendedor según los días que quiera tener publicada su cuenta. */
+function ListingFeesCard() {
+  const { listingFees } = Route.useLoaderData();
+  const router = useRouter();
+  const save = useServerFn(setListingFees);
+  const [perDay, setPerDay] = useState(String(listingFees.perDay));
+  const [byDays, setByDays] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const day of [1, 2, 3, 4, 5]) {
+      const value = listingFees.byDays[String(day)];
+      initial[String(day)] = value === undefined ? "" : String(value);
+    }
+    return initial;
+  });
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <section className="surface-card space-y-4 p-5 lg:col-span-2">
+      <div>
+        <h2 className="text-base font-semibold">Comisión por publicar una cuenta</h2>
+        <p className="text-xs text-muted-foreground">
+          Se cobra del saldo del vendedor al enviar la cuenta. Si dejas un precio fijo vacío, se
+          usa el precio por día multiplicado por los días.
+        </p>
+      </div>
+      <div className="space-y-1.5 sm:max-w-xs">
+        <Label htmlFor="fee-per-day">Precio por día (CUP)</Label>
+        <Input
+          id="fee-per-day"
+          inputMode="numeric"
+          value={perDay}
+          onChange={(event) => setPerDay(event.target.value)}
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-5">
+        {[1, 2, 3, 4, 5].map((day) => {
+          const fallback = (Number(perDay) || 0) * day;
+          return (
+            <div key={day} className="space-y-1.5">
+              <Label htmlFor={`fee-day-${day}`}>{day} día(s)</Label>
+              <Input
+                id={`fee-day-${day}`}
+                inputMode="numeric"
+                placeholder={String(fallback)}
+                value={byDays[String(day)] ?? ""}
+                onChange={(event) =>
+                  setByDays((prev) => ({ ...prev, [String(day)]: event.target.value }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Cobra {formatCUP(Number(byDays[String(day)]) || fallback)}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <Button
+        type="button"
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            const payload: Record<string, number> = {};
+            for (const day of [1, 2, 3, 4, 5]) {
+              const raw = byDays[String(day)];
+              if (raw !== undefined && raw !== "" && Number.isFinite(Number(raw))) {
+                payload[String(day)] = Number(raw);
+              }
+            }
+            await save({ data: { perDay: Number(perDay), byDays: payload } });
+            toast.success("Comisiones de publicación guardadas.");
+            await router.invalidate();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        {saving ? "Guardando…" : "Guardar comisiones"}
       </Button>
     </section>
   );

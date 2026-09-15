@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminActividadRouteImport } from './routes/_authenticated/admin/actividad'
 import { Route as AuthenticatedAdminComercioRouteImport } from './routes/_authenticated/admin/comercio'
 import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_authenticated/admin/configuracion'
+import { Route as AuthenticatedAdminCuentasVendidasRouteImport } from './routes/_authenticated/admin/cuentas-vendidas'
 import { Route as AuthenticatedAdminDepositosRouteImport } from './routes/_authenticated/admin/depositos'
 import { Route as AuthenticatedAdminEventosRouteImport } from './routes/_authenticated/admin/eventos'
 import { Route as AuthenticatedAdminFinanzasRouteImport } from './routes/_authenticated/admin/finanzas'
@@ -42,6 +43,7 @@ import { Route as AuthenticatedAppPerfilRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppReferidosRouteImport } from './routes/_authenticated/app/referidos'
 import { Route as AuthenticatedAppComercioIndexRouteImport } from './routes/_authenticated/app/comercio/index'
 import { Route as AuthenticatedAppComercioIdRouteImport } from './routes/_authenticated/app/comercio/$id'
+import { Route as AuthenticatedAppComercioMisComprasRouteImport } from './routes/_authenticated/app/comercio/mis-compras'
 import { Route as AuthenticatedAppComercioMisPublicacionesRouteImport } from './routes/_authenticated/app/comercio/mis-publicaciones'
 import { Route as AuthenticatedAppComercioPublicarRouteImport } from './routes/_authenticated/app/comercio/publicar'
 import { Route as AuthenticatedAppEventosIndexRouteImport } from './routes/_authenticated/app/eventos/index'
@@ -120,6 +122,12 @@ const AuthenticatedAdminConfiguracionRoute =
   AuthenticatedAdminConfiguracionRouteImport.update({
     id: '/configuracion',
     path: '/configuracion',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminCuentasVendidasRoute =
+  AuthenticatedAdminCuentasVendidasRouteImport.update({
+    id: '/cuentas-vendidas',
+    path: '/cuentas-vendidas',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminDepositosRoute =
@@ -239,6 +247,12 @@ const AuthenticatedAppComercioIdRoute =
     path: '/app/comercio/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppComercioMisComprasRoute =
+  AuthenticatedAppComercioMisComprasRouteImport.update({
+    id: '/app/comercio/mis-compras',
+    path: '/app/comercio/mis-compras',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppComercioMisPublicacionesRoute =
   AuthenticatedAppComercioMisPublicacionesRouteImport.update({
     id: '/app/comercio/mis-publicaciones',
@@ -324,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/cuentas-vendidas': typeof AuthenticatedAdminCuentasVendidasRoute
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
@@ -344,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/app/comercio/mis-compras': typeof AuthenticatedAppComercioMisComprasRoute
   '/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
   '/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
@@ -369,6 +385,7 @@ export interface FileRoutesByTo {
   '/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/admin/cuentas-vendidas': typeof AuthenticatedAdminCuentasVendidasRoute
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
@@ -389,6 +406,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/app/comercio/mis-compras': typeof AuthenticatedAppComercioMisComprasRoute
   '/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
   '/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
   '/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
@@ -417,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/actividad': typeof AuthenticatedAdminActividadRoute
   '/_authenticated/admin/comercio': typeof AuthenticatedAdminComercioRoute
   '/_authenticated/admin/configuracion': typeof AuthenticatedAdminConfiguracionRoute
+  '/_authenticated/admin/cuentas-vendidas': typeof AuthenticatedAdminCuentasVendidasRoute
   '/_authenticated/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/_authenticated/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/_authenticated/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
@@ -437,6 +456,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/comercio/$id': typeof AuthenticatedAppComercioIdRoute
+  '/_authenticated/app/comercio/mis-compras': typeof AuthenticatedAppComercioMisComprasRoute
   '/_authenticated/app/comercio/mis-publicaciones': typeof AuthenticatedAppComercioMisPublicacionesRoute
   '/_authenticated/app/comercio/publicar': typeof AuthenticatedAppComercioPublicarRoute
   '/_authenticated/app/eventos/$id': typeof AuthenticatedAppEventosIdRoute
@@ -465,6 +485,7 @@ export interface FileRouteTypes {
     | '/admin/actividad'
     | '/admin/comercio'
     | '/admin/configuracion'
+    | '/admin/cuentas-vendidas'
     | '/admin/depositos'
     | '/admin/eventos'
     | '/admin/finanzas'
@@ -485,6 +506,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/app/comercio/$id'
+    | '/app/comercio/mis-compras'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
     | '/app/eventos/$id'
@@ -510,6 +532,7 @@ export interface FileRouteTypes {
     | '/admin/actividad'
     | '/admin/comercio'
     | '/admin/configuracion'
+    | '/admin/cuentas-vendidas'
     | '/admin/depositos'
     | '/admin/eventos'
     | '/admin/finanzas'
@@ -530,6 +553,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/app/comercio/$id'
+    | '/app/comercio/mis-compras'
     | '/app/comercio/mis-publicaciones'
     | '/app/comercio/publicar'
     | '/app/eventos/$id'
@@ -557,6 +581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/actividad'
     | '/_authenticated/admin/comercio'
     | '/_authenticated/admin/configuracion'
+    | '/_authenticated/admin/cuentas-vendidas'
     | '/_authenticated/admin/depositos'
     | '/_authenticated/admin/eventos'
     | '/_authenticated/admin/finanzas'
@@ -577,6 +602,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/app/comercio/$id'
+    | '/_authenticated/app/comercio/mis-compras'
     | '/_authenticated/app/comercio/mis-publicaciones'
     | '/_authenticated/app/comercio/publicar'
     | '/_authenticated/app/eventos/$id'
@@ -694,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracion'
       fullPath: '/admin/configuracion'
       preLoaderRoute: typeof AuthenticatedAdminConfiguracionRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/cuentas-vendidas': {
+      id: '/_authenticated/admin/cuentas-vendidas'
+      path: '/cuentas-vendidas'
+      fullPath: '/admin/cuentas-vendidas'
+      preLoaderRoute: typeof AuthenticatedAdminCuentasVendidasRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/depositos': {
@@ -836,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppComercioIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/comercio/mis-compras': {
+      id: '/_authenticated/app/comercio/mis-compras'
+      path: '/app/comercio/mis-compras'
+      fullPath: '/app/comercio/mis-compras'
+      preLoaderRoute: typeof AuthenticatedAppComercioMisComprasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/comercio/mis-publicaciones': {
       id: '/_authenticated/app/comercio/mis-publicaciones'
       path: '/app/comercio/mis-publicaciones'
@@ -927,6 +967,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminActividadRoute: typeof AuthenticatedAdminActividadRoute
   AuthenticatedAdminComercioRoute: typeof AuthenticatedAdminComercioRoute
   AuthenticatedAdminConfiguracionRoute: typeof AuthenticatedAdminConfiguracionRoute
+  AuthenticatedAdminCuentasVendidasRoute: typeof AuthenticatedAdminCuentasVendidasRoute
   AuthenticatedAdminDepositosRoute: typeof AuthenticatedAdminDepositosRoute
   AuthenticatedAdminEventosRoute: typeof AuthenticatedAdminEventosRoute
   AuthenticatedAdminFinanzasRoute: typeof AuthenticatedAdminFinanzasRoute
@@ -948,6 +989,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminActividadRoute: AuthenticatedAdminActividadRoute,
     AuthenticatedAdminComercioRoute: AuthenticatedAdminComercioRoute,
     AuthenticatedAdminConfiguracionRoute: AuthenticatedAdminConfiguracionRoute,
+    AuthenticatedAdminCuentasVendidasRoute:
+      AuthenticatedAdminCuentasVendidasRoute,
     AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,
     AuthenticatedAdminEventosRoute: AuthenticatedAdminEventosRoute,
     AuthenticatedAdminFinanzasRoute: AuthenticatedAdminFinanzasRoute,
@@ -977,6 +1020,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppReferidosRoute: typeof AuthenticatedAppReferidosRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppComercioIdRoute: typeof AuthenticatedAppComercioIdRoute
+  AuthenticatedAppComercioMisComprasRoute: typeof AuthenticatedAppComercioMisComprasRoute
   AuthenticatedAppComercioMisPublicacionesRoute: typeof AuthenticatedAppComercioMisPublicacionesRoute
   AuthenticatedAppComercioPublicarRoute: typeof AuthenticatedAppComercioPublicarRoute
   AuthenticatedAppEventosIdRoute: typeof AuthenticatedAppEventosIdRoute
@@ -1000,6 +1044,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppReferidosRoute: AuthenticatedAppReferidosRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppComercioIdRoute: AuthenticatedAppComercioIdRoute,
+  AuthenticatedAppComercioMisComprasRoute:
+    AuthenticatedAppComercioMisComprasRoute,
   AuthenticatedAppComercioMisPublicacionesRoute:
     AuthenticatedAppComercioMisPublicacionesRoute,
   AuthenticatedAppComercioPublicarRoute: AuthenticatedAppComercioPublicarRoute,

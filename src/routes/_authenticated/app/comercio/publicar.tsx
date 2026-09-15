@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useWallet } from "@/hooks/useAccount";
 import {
   DEFAULT_LISTING_FEE_PER_DAY,
+  feeForDays,
   useActiveGames,
   useListingFee,
 } from "@/hooks/useMarketplace";
@@ -68,8 +69,8 @@ function PublishListingPage() {
 
   const selectedGame = availableGames.find((game) => game.id === gameId);
   const platforms = getAccessMethods(selectedGame?.name);
-  const dailyFee = feePerDay ?? DEFAULT_LISTING_FEE_PER_DAY;
-  const total = dailyFee * days;
+  const dailyFee = feePerDay?.perDay ?? DEFAULT_LISTING_FEE_PER_DAY;
+  const total = feeForDays(feePerDay, days);
   const balance = Number(wallet?.balance ?? 0);
   const canPay = balance >= total;
 

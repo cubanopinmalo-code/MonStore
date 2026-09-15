@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Clock, Images, MapPin, Monitor, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -25,10 +27,34 @@ export const Route = createFileRoute("/_authenticated/app/comercio/$id")({
 
 function ListingDetailPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: listing, isLoading } = usePublicListing(id);
   const { data: wallet } = useWallet();
   const images = useSignedImages((listing?.images as string[] | undefined) ?? []);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [buying, setBuying] = useState(false);
+
+  async function buy() {
+    setBuying(true);
+    try {
+      const { error } = await supabase.rpc("buy_game_account", {
+        p_listing: id,
+        p_idempotency: "",
+      });
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries();
+      toast.success("Compra completada", {
+        description: "Ya tienes los datos de la cuenta. Asegúrala en las próximas 24 horas.",
+      });
+      await navigate({ to: "/app/comercio/mis-compras" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No pudimos completar la compra.");
+    } finally {
+      setBuying(false);
+    }
+  }
+
 
   if (!listing) {
     return (
@@ -98,7 +124,13 @@ function ListingDetailPage() {
                 <p className="text-xs text-muted-foreground">Precio</p>
                 <p className="font-display text-3xl font-bold text-primary">{formatCUP(listing.price)}</p>
               </div>
-              <Button className="w-full" disabled={!canAfford} onClick={() => toast.success("Compra iniciada (simulación)", { description: "No se descontó saldo ni se realizó una compra real." })}>Comprar</Button>
+              <Button
+                className="w-full"
+                disabled={!canAfford || buying}
+                onClick={() => void buy()}
+              >
+                {buying ? "Procesando compra…" : "Comprar"}
+              </Button>
               <ShareListingButton listingId={listing.id} title={listing.title} className="w-full" size="default" />
               {!canAfford ? <p className="text-center text-xs text-destructive">Saldo insuficiente. Agrega fondos para continuar.</p> : null}
             </div>

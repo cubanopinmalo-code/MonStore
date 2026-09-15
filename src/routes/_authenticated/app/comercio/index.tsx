@@ -180,6 +180,12 @@ function UserMarketplacePage() {
                   Mis publicaciones
                 </Link>
               </Button>
+              <Button asChild variant="outline" size="touch" className="bg-surface/60">
+                <Link to="/app/comercio/mis-compras">
+                  <FileStack aria-hidden="true" />
+                  Mis compras
+                </Link>
+              </Button>
               <Button asChild variant="gradient" size="touch" className="sm:ml-2">
                 <Link to="/app/comercio/publicar">
                   <Plus aria-hidden="true" />
