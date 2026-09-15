@@ -74,8 +74,8 @@ async function logTransaction(
   await db.from("api_transactions").insert({
     order_id: input.orderId,
     provider: "g2bulk",
-    request_data: input.request,
-    response_data: input.response,
+    request_data: input.request as never,
+    response_data: input.response as never,
     provider_transaction_id: input.reference,
     status: input.status,
     error_message: input.error ?? null,
