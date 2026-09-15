@@ -20,9 +20,6 @@ export function findPaymentSetting(
   return mockPaymentSettings.find((setting) => setting.payment_method === method);
 }
 
-/** Comisión de retiro por defecto (se usa cuando el método no tiene una propia). */
-export const WITHDRAWAL_FEE_PCT = 5;
-
 export interface DepositBreakdown {
   amount: number;
   bonusPct: number;
@@ -40,32 +37,7 @@ export function calculateDeposit(
   return { amount, bonusPct, bonus, credited: amount + bonus };
 }
 
-export interface WithdrawalBreakdown {
-  amount: number;
-  conversionPct: number;
-  conversion: number;
-  feePct: number;
-  fee: number;
-  net: number;
-}
-
-/** Retiro: conversión especial (si aplica) y luego comisión sobre el importe convertido. */
-export function calculateWithdrawal(
-  amount: number,
-  method: Exclude<PaymentMethod, "wallet"> | string,
-): WithdrawalBreakdown {
-  const setting = findPaymentSetting(method);
-  const conversionPct = setting?.withdrawal_conversion_pct ?? 0;
-  const feePct = setting?.withdrawal_fee_pct ?? WITHDRAWAL_FEE_PCT;
-  const conversion = Math.round((amount * conversionPct) / 100);
-  const converted = Math.max(amount - conversion, 0);
-  const fee = Math.round((converted * feePct) / 100);
-  return {
-    amount,
-    conversionPct,
-    conversion,
-    feePct,
-    fee,
-    net: Math.max(converted - fee, 0),
-  };
-}
+/**
+ * El cálculo de retiros vive solo en el backend: la comisión sale de la
+ * configuración global (una única fuente de verdad) y se guarda en cada retiro.
+ */
