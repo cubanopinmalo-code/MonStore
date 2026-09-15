@@ -1,12 +1,25 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PrivateAccountPanel } from "@/components/marketplace/PrivateAccountPanel";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCUP, formatDate } from "@/lib/format";
-import { useMyListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
+import {
+  feeForDays,
+  useListingFee,
+  useMyListings,
+  useSignedImages,
+  remainingLabel,
+} from "@/hooks/useMarketplace";
 
 export const Route = createFileRoute("/_authenticated/app/comercio/mis-publicaciones")({
   head: () => ({
