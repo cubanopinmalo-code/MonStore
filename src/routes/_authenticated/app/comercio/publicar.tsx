@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useWallet } from "@/hooks/useAccount";
 import {
   DEFAULT_LISTING_FEE_PER_DAY,
+  feeForDays,
   useActiveGames,
   useListingFee,
 } from "@/hooks/useMarketplace";
