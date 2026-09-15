@@ -98,3 +98,5 @@
 - [x] Fondos: centro de operaciones completo (detalle, aprobar/rechazar con motivo, retiro completado, retenciones, líneas 1/2/3, historial con filtros, auditoría, realtime)
 - [ ] Siguiente: Solicitudes de cuentas (fotos/WhatsApp), Eventos (sala, ganador, premio) y Configuración de valores dinámicos
 
+
+- [ ] Eventos: activacion/cobro solo 15 min antes de la hora; cancelacion automatica si falta meta o sala; recordatorios 30/5 min idempotentes.
