@@ -467,6 +467,8 @@ export interface PaymentDestination {
   description: string;
   holder_name: string;
   destination_value: string;
+  /** Móvil que el cliente debe dar para confirmar la transferencia. */
+  confirm_phone: string;
   instructions: string;
   guide_image_path: string;
   /** Enlace temporal de la imagen educativa, listo para mostrar. */
@@ -480,7 +482,7 @@ export interface PaymentDestination {
 }
 
 const DESTINATION_COLUMNS =
-  "id, channel, bank, kind, label, description, holder_name, destination_value, instructions, guide_image_path, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
+  "id, channel, bank, kind, label, description, holder_name, destination_value, confirm_phone, instructions, guide_image_path, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
 
 export const GUIDE_BUCKET = "payment-guides";
 
