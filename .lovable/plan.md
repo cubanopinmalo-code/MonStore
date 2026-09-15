@@ -83,7 +83,27 @@ Todo con claves anti-duplicado para que no haya doble activación, doble cancela
 
 El proceso está protegido: la dirección que ejecuta activaciones, cobros, cancelaciones, devoluciones y avisos exige la credencial propia del proceso programado (la misma protección que ya usa el comercio de cuentas) y las operaciones internas de dinero solo son ejecutables por el propio proceso. Ningún cliente ni usuario autenticado puede lanzarla a mano: sin la credencial la llamada se rechaza sin procesar nada.
 
-## 6. Panel de administración
+## 6. Estados operativos (fuente de verdad en el servidor)
+
+Cinco estados visibles, cada uno con su propio color y etiqueta, iguales en tarjetas, listas, fichas, avisos, cliente y administración. El servidor decide siempre qué se permite; la pantalla solo refleja el estado.
+
+1. Inscripciones activas — se puede inscribir con identificador de personaje y cancelar la inscripción; se ven precio o "Gratis", meta mínima, máximo y progreso; no se cobra nada y la sala no existe para el cliente.
+2. Evento activo — solo al llegar la hora exacta y superar la evaluación final: se cobra, se confirma a quien pagó, se abre el acceso y la sala se muestra únicamente a participantes confirmados. Desde aquí los datos de sala quedan bloqueados y se usa la última versión guardada.
+3. Evento iniciado — el administrador lo marca cuando la partida ya empezó, y solo es posible desde evento activo. Al pasar: se cierran inscripciones, compras y nuevos accesos; quienes ya estaban confirmados y dentro siguen participando; se guardan fecha, hora y administrador responsable. El servidor rechaza cualquier intento posterior de inscribirse, pagar o entrar con el mensaje "El evento ya comenzó y el acceso está cerrado.", aunque se llame la operación a mano.
+4. Evento finalizado — solo desde evento iniciado y solo con ganador y recompensa registrados.
+5. Evento cancelado — muestra siempre el motivo.
+
+Cambios manuales permitidos: inscripciones activas → evento activo (únicamente si se cumplen las condiciones reales de activación), evento activo → evento iniciado, evento iniciado → evento finalizado, y cancelar desde inscripciones activas o evento activo. El servidor rechaza finalizar sin haber iniciado, iniciar sin haber estado activo, activar sin condiciones y editar la sala una vez bloqueada. Toda acción manual queda auditada con administrador, fecha/hora, estado anterior y nuevo.
+
+## 7. Ganador, recompensa y resultados públicos
+
+Al finalizar, el administrador escribe el identificador del personaje ganador y el sistema lo busca entre los participantes del evento. Antes de confirmar muestra nombre del usuario, foto de perfil, identificador interno, identificador y nombre del personaje, juego, evento y recompensa; si el identificador no pertenece a un participante válido, no se puede continuar. La recompensa se escribe explícitamente (tipo, descripción, valor cuando aplique) y queda asociada al evento y al ganador con fecha/hora y administrador responsable. Si la entrega usa una operación real de dinero, se ejecuta una sola vez, con su movimiento y estado; escribir el texto nunca marca por sí solo el premio como entregado.
+
+Publicación del resultado: nombre del ganador, foto, nombre del personaje, juego, tipo de evento, recompensa, fecha y hora. Nunca se publican teléfono, identificadores internos, credenciales ni datos financieros. El nombre del personaje se guarda junto al identificador de la inscripción para no depender solo del número.
+
+"Ganadores de la semana" es una vista filtrada del mismo historial (nunca una segunda copia), ordenada de más reciente a más antiguo y actualizada en vivo al publicarse un resultado. El historial permanente conserva ganador, juego, evento, premio, fecha, participante y estado de entrega para consulta administrativa. Un evento finalizado desaparece de "Eventos actuales" pero nunca se borra: sigue en historial, resultados, estadísticas, auditoría y panel.
+
+## 8. Panel de administración
 
 Lista con filtros por estado y buscador, y ficha de evento con:
 - información: juego, región, tipo, fecha, hora, precio, premio, descripción, estado;
@@ -91,8 +111,8 @@ Lista con filtros por estado y buscador, y ficha de evento con:
 - alertas visibles: "Meta alcanzada", "El evento comienza en 15 minutos. Configura la sala.", "Faltan datos de la sala" y "Faltan 14:59…" hasta 00:00;
 - participantes en tiempo real ordenados por fecha de inscripción: nombre, identificador, teléfono, personaje, fecha/hora, estado, estado del cobro, hora de entrada y participación;
 - sala: identificador y contraseña, editables cuantas veces se quiera hasta la hora exacta de inicio y bloqueados a partir de la activación;
-- resultado: registrar ganador por identificador de personaje con pantalla de confirmación, entregar premio, ver estado de entrega y reintentar si falló;
-- acciones: crear, editar, cerrar entrada, finalizar y cancelar (con confirmación y motivo).
+- resultado: buscar y confirmar ganador por identificador de personaje, escribir la recompensa, finalizar, ver estado de entrega y reintentar si falló;
+- acciones: crear, editar, marcar evento iniciado, finalizar y cancelar (con confirmación y motivo).
 
 ## 7. Aplicación del cliente
 
