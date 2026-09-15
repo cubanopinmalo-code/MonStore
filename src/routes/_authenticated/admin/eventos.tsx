@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
@@ -33,11 +33,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { useEvents, useEventSubscriptions } from "@/hooks/useEvents";
-import { EVENT_STATUS_LABEL, formatEventDate } from "@/lib/events";
+import {
+  useEvents,
+  useEventSmsLog,
+  useEventSubscriptions,
+  useEventsRealtime,
+} from "@/hooks/useEvents";
+import { startEvent } from "@/lib/events.functions";
+import {
+  SUBSCRIPTION_PAYMENT_LABEL,
+  SUBSCRIPTION_STATUS_LABEL,
+  eventStage,
+  eventStageLabel,
+  formatEventDate,
+} from "@/lib/events";
 import { formatCUP } from "@/lib/format";
-import type { EventStatus } from "@/types";
-import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/eventos")({
   head: () => ({
@@ -45,18 +55,30 @@ export const Route = createFileRoute("/_authenticated/admin/eventos")({
       { title: "Eventos — Panel MONSTORE" },
       {
         name: "description",
-        content: "Crea eventos, controla la meta de participantes y activa las salas.",
+        content:
+          "Crea eventos, guarda los datos de sala, controla inscritos y registra al ganador.",
       },
     ],
   }),
   component: AdminEventsPage,
 });
 
+const STAGE_FILTERS = [
+  { key: "todos", label: "Todos" },
+  { key: "inscripciones", label: "Inscripciones activas" },
+  { key: "activo", label: "Evento activo" },
+  { key: "iniciado", label: "Evento iniciado" },
+  { key: "finalizado", label: "Evento finalizado" },
+  { key: "cancelado", label: "Evento cancelado" },
+] as const;
+
 function AdminEventsPage() {
   const queryClient = useQueryClient();
+  useEventsRealtime();
   const { data: events } = useEvents(true, true);
   const [selectedId, setSelectedId] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [filter, setFilter] = useState<(typeof STAGE_FILTERS)[number]["key"]>("todos");
 
   useEffect(() => {
     if (!selectedId && events && events[0]) setSelectedId(events[0].id);
@@ -64,13 +86,22 @@ function AdminEventsPage() {
 
   const selected = (events ?? []).find((event) => event.id === selectedId) ?? null;
   const { data: subscriptions } = useEventSubscriptions(selectedId || null);
+  const { data: smsLog } = useEventSmsLog(selectedId || null);
 
   const [roomId, setRoomId] = useState("");
   const [roomPassword, setRoomPassword] = useState("");
+  const [winnerId, setWinnerId] = useState("");
+  const [rewardNote, setRewardNote] = useState("");
+  const [rewardAmount, setRewardAmount] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     setRoomId(selected?.room_id ?? "");
     setRoomPassword(selected?.room_password ?? "");
+    setWinnerId("");
+    setRewardNote("");
+    setRewardAmount("");
+    setCancelReason("");
   }, [selected?.id, selected?.room_id, selected?.room_password]);
 
   const { data: games } = useQuery({
@@ -91,35 +122,112 @@ function AdminEventsPage() {
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["events"] });
     void queryClient.invalidateQueries({ queryKey: ["event-subscriptions-admin"] });
+    void queryClient.invalidateQueries({ queryKey: ["event-sms-log"] });
+    void queryClient.invalidateQueries({ queryKey: ["event-results"] });
   };
 
-  const updateEvent = useMutation({
-    mutationFn: async (patch: Partial<Database["public"]["Tables"]["events"]["Update"]>) => {
-      const { error } = await supabase.from("events").update(patch).eq("id", selectedId);
+  const saveRoom = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_set_event_room", {
+        p_event: selectedId,
+        p_room_id: roomId.trim(),
+        p_room_password: roomPassword.trim(),
+      });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
-      toast.success("Evento actualizado");
+      toast.success("Datos de sala guardados");
+      refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const start = useMutation({
+    mutationFn: async () => startEvent({ data: { eventId: selectedId } }),
+    onSuccess: (result) => {
+      if (result.already) toast.success("El evento ya estaba iniciado; no se reenvió nada.");
+      else
+        toast.success(
+          `Evento iniciado. Mensajes enviados: ${result.sms_sent}` +
+            (result.sms_failed ? ` · fallidos: ${result.sms_failed}` : ""),
+        );
+      refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const finish = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("finish_event", {
+        p_event: selectedId,
+        p_game_account_id: winnerId.trim(),
+        p_character_name: "",
+        p_reward_note: rewardNote.trim(),
+        p_reward_amount: rewardAmount ? Number(rewardAmount) : 0,
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Evento finalizado y resultado publicado");
+      refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deliverPrize = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("deliver_event_prize", { p_event: selectedId });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Premio registrado como entregado");
+      refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const cancel = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("cancel_event", {
+        p_event: selectedId,
+        p_reason: cancelReason.trim(),
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Evento cancelado y devoluciones aplicadas");
       refresh();
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const rows = events ?? [];
-  const active = rows.filter((event) => event.status !== "finalizado").length;
-  const goalReached = rows.filter((event) => event.participants >= event.min_participants).length;
+  const visible = useMemo(
+    () => (filter === "todos" ? rows : rows.filter((event) => eventStage(event.status) === filter)),
+    [rows, filter],
+  );
   const subs = subscriptions ?? [];
+  const confirmed = subs.filter((item) => item.payment_status === "pagado").length;
+  const stage = selected ? eventStage(selected.status) : null;
 
   return (
     <AdminShell
       title="Eventos"
-      description="Salas personalizadas: meta de participantes, inscripciones y activación de sala."
+      description="Los eventos se activan y cobran solos a la hora exacta. Aquí preparas la sala, sigues a los inscritos y registras al ganador."
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Eventos" value={String(rows.length)} />
-        <StatCard label="Eventos activos" value={String(active)} />
-        <StatCard label="Meta alcanzada" value={String(goalReached)} />
-        <StatCard label="Inscripciones del evento" value={String(subs.length)} />
+        <StatCard
+          label="Con inscripciones activas"
+          value={String(rows.filter((event) => eventStage(event.status) === "inscripciones").length)}
+        />
+        <StatCard
+          label="En curso"
+          value={String(
+            rows.filter((event) => ["activo", "iniciado"].includes(eventStage(event.status))).length,
+          )}
+        />
+        <StatCard label="Confirmados del evento" value={`${confirmed}/${subs.length}`} />
       </div>
 
       <section className="surface-card space-y-3 p-5">
@@ -129,6 +237,18 @@ function AdminEventsPage() {
             <Plus className="size-4" aria-hidden="true" />
             Crear evento
           </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {STAGE_FILTERS.map((item) => (
+            <Button
+              key={item.key}
+              size="sm"
+              variant={filter === item.key ? "default" : "outline"}
+              onClick={() => setFilter(item.key)}
+            >
+              {item.label}
+            </Button>
+          ))}
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -144,34 +264,40 @@ function AdminEventsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>{event.games?.name ?? "—"}</TableCell>
-                  <TableCell>
-                    {event.event_date ? formatEventDate(event.event_date) : "Por confirmar"} ·{" "}
-                    {event.event_time}
-                  </TableCell>
-                  <TableCell>
-                    {event.participants}/{event.min_participants}
-                    <span className="text-xs text-muted-foreground">
-                      {" "}
-                      (máx {event.max_participants})
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatCUP(event.entry_price)}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={EVENT_STATUS_LABEL[event.status as EventStatus] ?? event.status}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedId(event.id)}>
-                      Gestionar
-                    </Button>
+              {visible.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-sm text-muted-foreground">
+                    No hay eventos en esta categoría.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                visible.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell className="font-medium">{event.name}</TableCell>
+                    <TableCell>{event.games?.name ?? "—"}</TableCell>
+                    <TableCell>
+                      {event.event_date ? formatEventDate(event.event_date) : "Por confirmar"} ·{" "}
+                      {event.event_time}
+                    </TableCell>
+                    <TableCell>
+                      {event.participants}/{event.min_participants}
+                      <span className="text-xs text-muted-foreground">
+                        {" "}
+                        (máx {event.max_participants})
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatCUP(event.entry_price)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={eventStageLabel(event.status)} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" onClick={() => setSelectedId(event.id)}>
+                        Gestionar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -180,13 +306,23 @@ function AdminEventsPage() {
       {selected ? (
         <section className="surface-card space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">Sala de «{selected.name}»</h2>
-            <StatusBadge
-              status={EVENT_STATUS_LABEL[selected.status as EventStatus] ?? selected.status}
-            />
+            <h2 className="text-base font-semibold">«{selected.name}»</h2>
+            <StatusBadge status={eventStageLabel(selected.status)} />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <p className="text-sm text-muted-foreground">
+            {stage === "inscripciones"
+              ? "El evento se activará y cobrará automáticamente a la hora exacta, si se cumple la meta y la sala está lista."
+              : stage === "activo"
+                ? "Ya se cobró a los confirmados y la sala está abierta. Puedes marcar el evento como iniciado."
+                : stage === "iniciado"
+                  ? "El evento está en marcha. Cuando termine, registra al ganador."
+                  : stage === "finalizado"
+                    ? "Evento finalizado. El resultado ya es visible para todos."
+                    : "Evento cancelado; las devoluciones se aplicaron automáticamente."}
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="room-id">ID de la sala</Label>
               <Input
@@ -194,6 +330,7 @@ function AdminEventsPage() {
                 value={roomId}
                 onChange={(event) => setRoomId(event.target.value)}
                 placeholder="FF-12345"
+                disabled={Boolean(selected.room_locked_at)}
               />
             </div>
             <div className="space-y-1.5">
@@ -203,100 +340,155 @@ function AdminEventsPage() {
                 value={roomPassword}
                 onChange={(event) => setRoomPassword(event.target.value)}
                 placeholder="monstore25"
+                disabled={Boolean(selected.room_locked_at)}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="estado">Estado</Label>
-              <Select
-                value={selected.status}
-                onValueChange={(value) =>
-                  updateEvent.mutate({ status: value as EventStatus })
-                }
-              >
-                <SelectTrigger id="estado">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(EVENT_STATUS_LABEL).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-
-          <div className="flex flex-wrap gap-2">
+          {selected.room_locked_at ? (
+            <p className="text-xs text-muted-foreground">
+              Los datos de sala quedaron bloqueados al activarse el evento.
+            </p>
+          ) : (
             <Button
-              disabled={updateEvent.isPending}
+              disabled={saveRoom.isPending}
               onClick={() => {
                 if (!roomId.trim() || !roomPassword.trim()) {
                   toast.error("Escribe el ID y la contraseña de la sala.");
                   return;
                 }
-                updateEvent.mutate({
-                  room_id: roomId.trim(),
-                  room_password: roomPassword.trim(),
-                  room_activated_at: new Date().toISOString(),
-                  status: "sala_activa",
-                });
+                saveRoom.mutate();
               }}
             >
-              Activar sala
+              Guardar datos de sala
+            </Button>
+          )}
+
+          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+            <Button disabled={stage !== "activo" || start.isPending} onClick={() => start.mutate()}>
+              Marcar evento iniciado
             </Button>
             <Button
               variant="outline"
-              disabled={updateEvent.isPending}
-              onClick={() =>
-                updateEvent.mutate({
-                  status: "finalizado",
-                  finished_at: new Date().toISOString(),
-                })
-              }
+              disabled={stage !== "finalizado" || deliverPrize.isPending}
+              onClick={() => deliverPrize.mutate()}
             >
-              Finalizar evento
-            </Button>
-            <Button
-              variant="outline"
-              disabled={updateEvent.isPending}
-              onClick={() => updateEvent.mutate({ status: "cancelado" })}
-            >
-              Cancelar evento
+              Registrar premio entregado
             </Button>
           </div>
+
+          {stage === "iniciado" ? (
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <h3 className="text-sm font-semibold">Finalizar y registrar ganador</h3>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="winner">ID del personaje ganador</Label>
+                  <Input
+                    id="winner"
+                    value={winnerId}
+                    onChange={(event) => setWinnerId(event.target.value)}
+                    placeholder="123456789"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="reward-note">Detalle del premio</Label>
+                  <Input
+                    id="reward-note"
+                    value={rewardNote}
+                    onChange={(event) => setRewardNote(event.target.value)}
+                    placeholder="Diamantes entregados"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="reward-amount">Premio en saldo (opcional)</Label>
+                  <Input
+                    id="reward-amount"
+                    inputMode="numeric"
+                    value={rewardAmount}
+                    onChange={(event) =>
+                      setRewardAmount(event.target.value.replace(/[^\d.]/g, ""))
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <Button
+                disabled={finish.isPending}
+                onClick={() => {
+                  if (!winnerId.trim()) {
+                    toast.error("Escribe el ID del personaje ganador.");
+                    return;
+                  }
+                  finish.mutate();
+                }}
+              >
+                Finalizar evento
+              </Button>
+            </div>
+          ) : null}
+
+          {stage === "inscripciones" || stage === "activo" ? (
+            <div className="space-y-2 rounded-lg border border-destructive/40 p-4">
+              <Label htmlFor="cancel-reason">Motivo de la cancelación</Label>
+              <Textarea
+                id="cancel-reason"
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+                placeholder="Explica por qué se cancela el evento"
+              />
+              <Button
+                variant="outline"
+                disabled={cancel.isPending}
+                onClick={() => {
+                  if (!cancelReason.trim()) {
+                    toast.error("Escribe el motivo de la cancelación.");
+                    return;
+                  }
+                  cancel.mutate();
+                }}
+              >
+                Cancelar evento y devolver el dinero
+              </Button>
+            </div>
+          ) : null}
 
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID de juego</TableHead>
-                  <TableHead>Cuenta verificada</TableHead>
+                  <TableHead>Participante</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>ID de personaje</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Pago</TableHead>
-                  <TableHead>Entrada</TableHead>
+                  <TableHead>Entró</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {subs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="text-sm text-muted-foreground">
                       Todavía no hay inscripciones en este evento.
                     </TableCell>
                   </TableRow>
                 ) : (
                   subs.map((item) => (
                     <TableRow key={item.id}>
+                      <TableCell>{item.profiles?.name ?? "—"}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {item.profiles?.phone ?? "—"}
+                      </TableCell>
                       <TableCell className="font-mono text-xs">{item.game_account_id}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {(item as { g2bulk_account_name?: string | null }).g2bulk_account_name ??
-                          "Sin verificar"}
+                      <TableCell>
+                        <StatusBadge
+                          status={SUBSCRIPTION_STATUS_LABEL[item.status] ?? item.status}
+                        />
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={item.status} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={item.payment_status} />
+                        <StatusBadge
+                          status={
+                            SUBSCRIPTION_PAYMENT_LABEL[item.payment_status] ?? item.payment_status
+                          }
+                        />
                       </TableCell>
                       <TableCell>{item.entered_at ? "Sí" : "No"}</TableCell>
                     </TableRow>
@@ -305,6 +497,18 @@ function AdminEventsPage() {
               </TableBody>
             </Table>
           </div>
+
+          {smsLog && smsLog.length > 0 ? (
+            <div className="space-y-1 rounded-lg border border-border p-4 text-xs text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">Mensajes de inicio</p>
+              {smsLog.map((item) => (
+                <p key={item.id}>
+                  {item.phone} · {item.status}
+                  {item.error_message ? ` · ${item.error_message}` : ""}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -344,20 +548,19 @@ function CreateEventDialog({
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("events").insert({
-        name: form.name.trim(),
-        game_id: form.game_id || null,
-        event_type: "sala_personalizada",
-        prize: form.prize.trim(),
-        region: form.region.trim(),
-        min_participants: Number(form.min_participants) || 1,
-        max_participants: Number(form.max_participants) || 1,
-        event_date: form.event_date || null,
-        event_time: form.event_time,
-        entry_price: Number(form.entry_price) || 0,
-        currency: "CUP",
-        status: "inscripciones_abiertas",
-        description: form.description.trim(),
+      const { error } = await supabase.rpc("admin_create_event", {
+        p_payload: {
+          name: form.name.trim(),
+          game_id: form.game_id || null,
+          prize: form.prize.trim(),
+          region: form.region.trim(),
+          min_participants: Number(form.min_participants) || 1,
+          max_participants: Number(form.max_participants) || 1,
+          event_date: form.event_date || null,
+          event_time: form.event_time,
+          entry_price: Number(form.entry_price) || 0,
+          description: form.description.trim(),
+        },
       });
       if (error) throw new Error(error.message);
     },
@@ -479,6 +682,10 @@ function CreateEventDialog({
             onClick={() => {
               if (!form.name.trim() || !form.prize.trim()) {
                 toast.error("Completa el nombre y el premio del evento.");
+                return;
+              }
+              if (!form.event_date) {
+                toast.error("Elige la fecha del evento.");
                 return;
               }
               create.mutate();

@@ -304,6 +304,7 @@ export type EventStatus =
   | "inscripciones_abiertas"
   | "meta_alcanzada"
   | "sala_activa"
+  | "evento_iniciado"
   | "finalizado"
   | "cancelado"
   | "meta_no_alcanzada";
