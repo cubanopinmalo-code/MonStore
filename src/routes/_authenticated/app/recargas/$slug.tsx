@@ -25,7 +25,9 @@ import {
   getCatalogGame,
   type CatalogProduct,
 } from "@/lib/catalog.functions";
+import { placeOrder } from "@/lib/orders.functions";
 import { formatCUP } from "@/lib/format";
+
 import { deliveryLongLabel } from "@/lib/delivery";
 import type { OrderStatus, ProductField } from "@/types";
 import { cn } from "@/lib/utils";
@@ -64,7 +66,10 @@ function PurchaseFlowPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [payment, setPayment] = useState("wallet");
   const [status, setStatus] = useState<OrderStatus>("procesando");
+  const [resultMessage, setResultMessage] = useState("");
+  const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
   const [submitting, setSubmitting] = useState(false);
+
   const navigate = useNavigate();
   const { data: wallet } = useWallet();
   const balance = Number(wallet?.balance ?? 0);
