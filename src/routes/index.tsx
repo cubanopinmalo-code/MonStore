@@ -176,6 +176,9 @@ function AuthPage() {
       toast.error("Ese número no parece un móvil cubano válido.");
       return;
     }
+    // Sin reintentos inútiles: si el servidor ya dijo que está bloqueado,
+    // no se vuelve a pedir hasta que el temporizador llegue a cero.
+    if (blockLeft > 0) return;
     setLoading(true);
     try {
       const result = await askCode({ data: { phone } });
@@ -184,8 +187,12 @@ function AuthPage() {
         if (result.reason === "espera" && "retryInSeconds" in result) {
           startCooldown(Number(result.retryInSeconds ?? 60));
         }
+        if (result.reason === "limite_telefono" && "blockedUntil" in result) {
+          applyBlock(result.blockedUntil as string | null);
+        }
         return;
       }
+      if ("blockedUntil" in result) applyBlock(result.blockedUntil);
       setStep("codigo");
       setCode("");
       startCooldown(60);
@@ -196,6 +203,15 @@ function AuthPage() {
       setLoading(false);
     }
   };
+
+  /** Tiempo restante del bloqueo en formato HH:MM:SS. */
+  const blockClock = [
+    Math.floor(blockLeft / 3600),
+    Math.floor((blockLeft % 3600) / 60),
+    blockLeft % 60,
+  ]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
 
   const handleVerify = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
