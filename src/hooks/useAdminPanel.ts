@@ -76,7 +76,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     profilesRes,
     walletsRes,
     settingsRes,
-    auditRes,
   ] = await Promise.all([
     supabase
       .from("orders")
