@@ -98,7 +98,13 @@ function ListingDetailPage() {
                 <p className="text-xs text-muted-foreground">Precio</p>
                 <p className="font-display text-3xl font-bold text-primary">{formatCUP(listing.price)}</p>
               </div>
-              <Button className="w-full" disabled={!canAfford} onClick={() => toast.success("Compra iniciada (simulación)", { description: "No se descontó saldo ni se realizó una compra real." })}>Comprar</Button>
+              <Button
+                className="w-full"
+                disabled={!canAfford || buying}
+                onClick={() => void buy()}
+              >
+                {buying ? "Procesando compra…" : "Comprar"}
+              </Button>
               <ShareListingButton listingId={listing.id} title={listing.title} className="w-full" size="default" />
               {!canAfford ? <p className="text-center text-xs text-destructive">Saldo insuficiente. Agrega fondos para continuar.</p> : null}
             </div>
