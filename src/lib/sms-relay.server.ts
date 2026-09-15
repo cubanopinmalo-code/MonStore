@@ -110,7 +110,9 @@ export async function sendOtpSms(
   }
 
   const recipient = relayRecipient(phone);
-  const timestamp = String(Math.floor(Date.now() / 1000));
+  // El relay exige el sello temporal en MILISEGUNDOS (verificado: en segundos
+  // responde EXPIRED_REQUEST y en ISO-8601 INVALID_TIMESTAMP).
+  const timestamp = String(Date.now());
   const nonce = crypto.randomUUID();
   const signature = await signCanonical(
     config.secret,
