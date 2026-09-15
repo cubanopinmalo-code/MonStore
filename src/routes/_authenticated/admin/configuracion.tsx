@@ -727,8 +727,12 @@ function PaymentDestinationsCard() {
       id: item.id,
       label: item.label,
       description: item.description,
+      bank: item.bank ?? "",
+      holder_name: item.holder_name,
       destination_value: item.destination_value,
       instructions: item.instructions,
+      requires_transaction_id: item.requires_transaction_id,
+      requires_proof: item.requires_proof,
       active: item.active,
     })),
   );
