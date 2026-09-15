@@ -27,7 +27,7 @@ Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
 - Compra: verifica publicación activa, no vencida, no vendida, precio vigente y saldo; bloquea la fila para que dos compradores simultáneos no puedan comprar la misma cuenta; cobra al comprador, abona al vendedor, marca vendida, inicia las 24 horas, notifica a ambos y audita.
 - Entrega al comprador: forma parte de la misma operación de compra, sin paso manual. Al completarse el pago se marca vendida, se registra comprador y operación, se entregan credenciales finales y doble factor, arrancan las 24 horas, se audita y se notifica a ambas partes. La consulta posterior de esos datos solo la puede hacer el comprador de esa publicación.
 - Vencimiento sin comprador: al pasar la fecha y solo si nadie compró, la publicación sale del comercio, cambia a "publicación expirada", el vendedor original recibe los datos actuales (los administrados por MonStore, no los originales) más la configuración y el código de doble factor, y se le notifica que puede asegurar la cuenta y volver a publicar pagando nueva comisión.
-- Si la cuenta se vendió, pertenece al comprador: no existe devolución ni reversión automática hacia el vendedor, y el vendedor pierde el acceso a credenciales y doble factor.
+- Si la cuenta se vendió, el comprador pasa a ser el propietario y el vendedor pierde el acceso a credenciales y doble factor. Las 24 horas son solo el período inicial de aseguramiento: al terminar no devuelven la cuenta al vendedor. La cuenta vuelve a estar disponible para el vendedor únicamente cuando la publicación vence sin haber sido comprada.
 
 Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad de la publicación; el navegador nunca decide.
 
