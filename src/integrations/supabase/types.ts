@@ -1584,6 +1584,7 @@ export type Database = {
         Row: {
           allow_line_reuse: boolean
           created_at: string
+          g2bulk_purchases_enabled: boolean
           id: boolean
           listing_fee_days: Json
           listing_fee_per_day: number
@@ -1604,6 +1605,7 @@ export type Database = {
         Insert: {
           allow_line_reuse?: boolean
           created_at?: string
+          g2bulk_purchases_enabled?: boolean
           id?: boolean
           listing_fee_days?: Json
           listing_fee_per_day?: number
@@ -1624,6 +1626,7 @@ export type Database = {
         Update: {
           allow_line_reuse?: boolean
           created_at?: string
+          g2bulk_purchases_enabled?: boolean
           id?: boolean
           listing_fee_days?: Json
           listing_fee_per_day?: number

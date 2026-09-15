@@ -101,6 +101,15 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { fulfillOrder, realPurchasesEnabled } = await import("./g2bulk-orders.server");
+
+    // Interruptor del panel: con las compras reales apagadas no se cobra nada
+    // ni se crea ningún pedido, aunque el catálogo siga visible.
+    if (!(await realPurchasesEnabled())) {
+      throw new Error(
+        "Las recargas están pausadas ahora mismo. Vuelve a intentarlo en unos minutos.",
+      );
+    }
 
     // El pedido se registra con la sesión del propio cliente: la función valida auth.uid().
     const placed = await supabase.rpc("place_wallet_order", {
@@ -123,117 +132,40 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const { data: order } = await supabaseAdmin
       .from("orders")
-      .select("id, code, status, total_amount, g2bulk_transaction_id, product_id")
+      .select("id, code, status, total_amount")
       .eq("id", result.order_id)
       .maybeSingle();
     if (!order) throw new Error("No se pudo registrar tu pedido.");
 
-    if (order.g2bulk_transaction_id || order.status === "completado") {
-      return {
-        order_id: order.id,
-        code: order.code,
-        status: order.status,
-        total: Number(order.total_amount),
-        balance: result.balance ?? null,
-        message: "Este pedido ya estaba registrado.",
-      };
-    }
+    // Todo lo demás (costo vigente, disponibilidad, compra real, idempotencia,
+    // reembolso y registro) lo decide el servidor en un solo camino.
+    const outcome = await fulfillOrder(order.id);
 
-    let gameCode: string | null = null;
-    if (product.game_id) {
-      const { data: game } = await supabaseAdmin
-        .from("games")
-        .select("g2bulk_id")
-        .eq("id", product.game_id)
-        .maybeSingle();
-      const ref = game?.g2bulk_id ?? "";
-      if (ref.startsWith("game:")) gameCode = ref.slice(5);
-    }
+    return {
+      order_id: order.id,
+      code: order.code,
+      status: outcome.status,
+      total: Number(order.total_amount),
+      balance: outcome.status === "error" ? null : result.balance ?? null,
+      message: outcome.message,
+    };
+  });
 
-    const { providerHasKey, purchaseProduct, placeTopUpOrder, ProviderError } = await import(
-      "./g2bulk.server"
-    );
-
-    if (!providerHasKey()) {
-      return {
-        order_id: order.id,
-        code: order.code,
-        status: order.status,
-        total: Number(order.total_amount),
-        balance: result.balance ?? null,
-        message:
-          "Tu pedido quedó registrado y el saldo ya fue descontado. El administrador lo completará manualmente.",
-      };
-    }
-
-    try {
-      let provider: { order_id?: number; transaction_id?: number; status?: string };
-      if (gameCode) {
-        const body: {
-          catalogue_name: string;
-          player_id: string;
-          server_id?: string;
-          charname?: string;
-        } = { catalogue_name: product.name, player_id: data.player_id };
-        const serverId = data.player_data["server_id"];
-        if (serverId) body.server_id = serverId;
-        const charname = data.player_data["charname"];
-        if (charname) body.charname = charname;
-        provider = await placeTopUpOrder(gameCode, body, data.idempotency_key);
-      } else {
-        const ref = product.g2bulk_product_id ?? "";
-        if (!ref.startsWith("p:")) {
-          throw new ProviderError("Esta oferta no se puede entregar automáticamente todavía.");
-        }
-        provider = await purchaseProduct(ref.slice(2), 1, data.idempotency_key);
-      }
-
-      const reference = String(provider.order_id ?? provider.transaction_id ?? "");
-      const done = String(provider.status ?? "").toUpperCase() === "COMPLETED";
-
-      await supabaseAdmin
-        .from("orders")
-        .update({
-          status: done ? "completado" : "procesando",
-          g2bulk_transaction_id: reference || null,
-          completed_at: done ? new Date().toISOString() : null,
-        })
-        .eq("id", order.id);
-
-      return {
-        order_id: order.id,
-        code: order.code,
-        status: done ? "completado" : "procesando",
-        total: Number(order.total_amount),
-        balance: result.balance ?? null,
-        message: done
-          ? "Recarga entregada."
-          : "El proveedor está procesando la recarga. Te avisaremos cuando termine.",
-      };
-    } catch (failure) {
-      const reason =
-        failure instanceof ProviderError
-          ? failure.message
-          : "El proveedor no pudo completar la recarga.";
-
-      await supabaseAdmin.rpc("refund_wallet_order", {
-        p_order: order.id,
-        p_reason: reason,
-      });
-      await supabaseAdmin
-        .from("orders")
-        .update({ status: "error", error_message: reason })
-        .eq("id", order.id);
-
-      return {
-        order_id: order.id,
-        code: order.code,
-        status: "error",
-        total: Number(order.total_amount),
-        balance: null,
-        message: `${reason} Devolvimos el importe a tu wallet.`,
-      };
-    }
+/**
+ * Reconciliación manual del administrador para un pedido que quedó procesando.
+ * Consulta el estado real en el proveedor; nunca vuelve a comprar.
+ */
+export const reconcileProviderOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => {
+    if (!data?.id) throw new Error("Falta el pedido.");
+    return { id: String(data.id) };
+  })
+  .handler(async ({ data, context }): Promise<{ status: string; message: string }> => {
+    await requireAdmin(context);
+    const { reconcileOrder } = await import("./g2bulk-orders.server");
+    const result = await reconcileOrder(data.id);
+    return { status: result.status, message: result.message };
   });
 
 /* ------------------------------------------------------------------ *

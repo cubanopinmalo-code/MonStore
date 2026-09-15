@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Database, Loader2, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
+import { Database, Loader2, Power, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { StatCard } from "@/components/common/PageHeader";
@@ -15,6 +15,7 @@ import {
   syncMissingGameOffers,
   syncProviderCatalog,
 } from "@/lib/catalog.functions";
+import { savePlatformSettings } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/g2bulk")({
   head: () => ({
@@ -41,9 +42,26 @@ function AdminProviderPage() {
   const runSync = useServerFn(syncProviderCatalog);
   const runOffers = useServerFn(syncMissingGameOffers);
   const fetchGames = useServerFn(listGamesAdmin);
+  const savePlatform = useServerFn(savePlatformSettings);
   const [syncing, setSyncing] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
+
+  async function handleToggle(next: boolean) {
+    setSwitching(true);
+    try {
+      await savePlatform({ data: { g2bulk_purchases_enabled: next } });
+      toast.success(next ? "Compras reales activadas." : "Compras reales pausadas.");
+      await queryClient.invalidateQueries({ queryKey: ["provider-status"] });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "No se pudo cambiar el estado de las compras.",
+      );
+    } finally {
+      setSwitching(false);
+    }
+  }
 
   async function handleOffers() {
     setLoadingOffers(true);
@@ -143,6 +161,45 @@ function AdminProviderPage() {
           </Button>
         </div>
       </div>
+
+      <section className="surface-card flex flex-wrap items-center justify-between gap-4 p-5">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold">Compras reales</h2>
+            <StatusBadge
+              status={data?.purchasesEnabled ? "activo" : data ? "pendiente" : "procesando"}
+            />
+          </div>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            {data?.purchasesEnabled
+              ? "Las recargas se compran de verdad al proveedor y se cobran del saldo del cliente."
+              : "Las recargas están pausadas: el catálogo se ve, pero nadie puede comprar ni se cobra nada."}
+          </p>
+        </div>
+        <Button
+          variant={data?.purchasesEnabled ? "destructive" : "default"}
+          disabled={!data || switching}
+          onClick={() => {
+            const next = !data?.purchasesEnabled;
+            if (
+              next &&
+              !window.confirm(
+                "Vas a activar las compras reales. Cada recarga descontará saldo real del proveedor. ¿Continuar?",
+              )
+            ) {
+              return;
+            }
+            void handleToggle(next);
+          }}
+        >
+          {switching ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Power className="size-4" aria-hidden="true" />
+          )}
+          {data?.purchasesEnabled ? "Pausar compras reales" : "Activar compras reales"}
+        </Button>
+      </section>
 
       {lastRun ? (
         <p className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">

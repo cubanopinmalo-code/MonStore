@@ -25,8 +25,24 @@ type CallOptions = {
   body?: unknown;
   requiresKey?: boolean;
   idempotencyKey?: string;
+  /** Reintentos ante 429 / 5xx / caída de red. Nunca ilimitados. */
+  attempts?: number;
 };
 
+const TIMEOUT_MS = 20_000;
+const DEFAULT_ATTEMPTS = 3;
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Llamada única al proveedor.
+ *
+ * - La clave se lee de los secretos del servidor y nunca se registra ni se
+ *   devuelve al navegador.
+ * - Reintentos con espera creciente solo para 429, 5xx y fallos de red.
+ * - Un error de autenticación (401/403) o de datos (4xx) corta de inmediato:
+ *   nunca se entra en un bucle de llamadas.
+ */
 async function call<T>(path: string, options: CallOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -43,40 +59,72 @@ async function call<T>(path: string, options: CallOptions = {}): Promise<T> {
   }
   if (options.idempotencyKey) headers["X-Idempotency-Key"] = options.idempotencyKey;
 
-  let response: Response;
-  try {
-    const init: RequestInit = { method: options.method ?? "GET", headers };
-    if (options.body !== undefined) init.body = JSON.stringify(options.body);
-    response = await fetch(`${PROVIDER_BASE}${path}`, init);
-  } catch {
-    throw new ProviderError(
-      "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
-      0,
-    );
-  }
+  const total = Math.max(1, Math.min(options.attempts ?? DEFAULT_ATTEMPTS, 4));
+  let lastError: ProviderError = new ProviderError(
+    "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
+    0,
+  );
 
-  const text = await response.text();
-  let payload: Record<string, unknown> | null = null;
-  if (text) {
+  for (let attempt = 1; attempt <= total; attempt += 1) {
+    let response: Response;
     try {
-      payload = JSON.parse(text) as Record<string, unknown>;
+      const init: RequestInit = {
+        method: options.method ?? "GET",
+        headers,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      };
+      if (options.body !== undefined) init.body = JSON.stringify(options.body);
+      response = await fetch(`${PROVIDER_BASE}${path}`, init);
     } catch {
-      payload = null;
+      lastError = new ProviderError(
+        "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
+        0,
+      );
+      if (attempt < total) {
+        await wait(500 * attempt);
+        continue;
+      }
+      throw lastError;
     }
-  }
 
-  if (!response.ok || payload?.["success"] === false) {
+    const text = await response.text();
+    let payload: Record<string, unknown> | null = null;
+    if (text) {
+      try {
+        payload = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        payload = null;
+      }
+    }
+
+    if (response.ok && payload?.["success"] !== false) return (payload ?? {}) as T;
+
     const detail =
       (typeof payload?.["message"] === "string" && payload["message"]) ||
       (typeof payload?.["error"] === "string" && payload["error"]) ||
       null;
-    throw new ProviderError(
+
+    if (response.status === 401 || response.status === 403) {
+      throw new ProviderError(
+        "El proveedor rechazó la clave guardada en el backend.",
+        response.status,
+      );
+    }
+
+    lastError = new ProviderError(
       detail ?? `El proveedor respondió con un error (${response.status}).`,
       response.status,
     );
+
+    const transient = response.status === 429 || response.status >= 500;
+    if (transient && attempt < total) {
+      await wait(700 * attempt * attempt);
+      continue;
+    }
+    throw lastError;
   }
 
-  return (payload ?? {}) as T;
+  throw lastError;
 }
 
 export type ProviderCategory = {
@@ -120,6 +168,31 @@ export async function listCategories(): Promise<ProviderCategory[]> {
 export async function listProviderProducts(): Promise<ProviderProduct[]> {
   const data = await call<{ products?: ProviderProduct[] }>("/products");
   return data.products ?? [];
+}
+
+/** Costo y disponibilidad vigentes de un producto concreto del proveedor. */
+export async function providerProduct(
+  productId: string,
+): Promise<{ found: boolean; unit_price: number; stock?: number }> {
+  try {
+    const data = await call<{ product?: ProviderProduct; unit_price?: number; stock?: number }>(
+      `/products/${encodeURIComponent(productId)}`,
+    );
+    const product = data.product ?? (data as unknown as ProviderProduct);
+    const price = Number(product?.unit_price ?? data.unit_price ?? 0);
+    const stock = product?.stock ?? data.stock;
+    const result: { found: boolean; unit_price: number; stock?: number } = {
+      found: price > 0,
+      unit_price: price,
+    };
+    if (stock !== undefined) result.stock = Number(stock);
+    return result;
+  } catch (error) {
+    if (error instanceof ProviderError && error.status === 404) {
+      return { found: false, unit_price: 0 };
+    }
+    throw error;
+  }
 }
 
 export async function listTopUpGames(): Promise<ProviderGame[]> {
@@ -173,11 +246,19 @@ export async function checkPlayerId(body: {
   }));
 }
 
-export async function providerBalance(): Promise<{ balance: number; username: string | null }> {
-  const data = await call<{ balance?: number; username?: string }>("/getMe", {
+export async function providerBalance(): Promise<{
+  balance: number;
+  currency: string;
+  username: string | null;
+}> {
+  const data = await call<{ balance?: number; username?: string; currency?: string }>("/getMe", {
     requiresKey: true,
   });
-  return { balance: Number(data.balance ?? 0), username: data.username ?? null };
+  return {
+    balance: Number(data.balance ?? 0),
+    currency: String(data.currency ?? "USD"),
+    username: data.username ?? null,
+  };
 }
 
 export type ProviderPurchase = {
@@ -188,6 +269,11 @@ export type ProviderPurchase = {
   poll_url?: string | null;
 };
 
+/**
+ * Compra real. Sin reintentos automáticos: una escritura repetida podría
+ * duplicar el pedido en el proveedor. La reconciliación se hace consultando
+ * el estado, no repitiendo la compra.
+ */
 export async function purchaseProduct(
   productId: string,
   quantity: number,
@@ -198,6 +284,7 @@ export async function purchaseProduct(
     body: { quantity },
     requiresKey: true,
     idempotencyKey,
+    attempts: 1,
   });
 }
 
@@ -205,6 +292,37 @@ export async function orderDelivery(orderId: string): Promise<ProviderPurchase> 
   return call<ProviderPurchase>(`/orders/${encodeURIComponent(orderId)}/delivery`, {
     requiresKey: true,
   });
+}
+
+export type ProviderOrderStatus = {
+  status: string;
+  transactionId: string | null;
+  items: string[];
+  found: boolean;
+};
+
+/** Consulta del estado de un pedido ya creado en el proveedor. */
+export async function providerOrderStatus(orderId: string): Promise<ProviderOrderStatus> {
+  try {
+    const data = await call<{
+      status?: string;
+      order?: { status?: string; transaction_id?: number | string };
+      transaction_id?: number | string;
+      delivery_items?: string[] | null;
+    }>(`/orders/${encodeURIComponent(orderId)}`, { requiresKey: true });
+    const reference = data.transaction_id ?? data.order?.transaction_id ?? null;
+    return {
+      status: String(data.status ?? data.order?.status ?? "unknown").toUpperCase(),
+      transactionId: reference === null ? null : String(reference),
+      items: Array.isArray(data.delivery_items) ? data.delivery_items.map(String) : [],
+      found: true,
+    };
+  } catch (error) {
+    if (error instanceof ProviderError && error.status === 404) {
+      return { status: "NOT_FOUND", transactionId: null, items: [], found: false };
+    }
+    throw error;
+  }
 }
 
 export type ProviderTopUpOrder = {
@@ -229,5 +347,6 @@ export async function placeTopUpOrder(
     body,
     requiresKey: true,
     idempotencyKey,
+    attempts: 1,
   });
 }
