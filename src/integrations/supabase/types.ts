@@ -2357,6 +2357,15 @@ export type Database = {
       }
       admin_create_event: { Args: { p_payload: Json }; Returns: Json }
       admin_find_user_by_phone: { Args: { p_phone: string }; Returns: Json }
+      admin_save_payment_line: {
+        Args: {
+          p_active: boolean
+          p_label: string
+          p_line: string
+          p_phone: string
+        }
+        Returns: Json
+      }
       admin_send_campaign: {
         Args: {
           p_audience: string
@@ -2475,6 +2484,7 @@ export type Database = {
         }
         Returns: Json
       }
+      normalize_cuban_mobile: { Args: { p_phone: string }; Returns: string }
       notify_event_admins: {
         Args: { p_key: string; p_message: string; p_title: string }
         Returns: undefined

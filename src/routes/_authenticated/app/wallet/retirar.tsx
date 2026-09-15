@@ -70,7 +70,8 @@ function WithdrawPage() {
   const parsed = Number(amount) || 0;
 
   const conversionPct = selected?.withdrawal_conversion_pct ?? 0;
-  const feePct = settings?.withdrawal_fee_pct ?? selected?.withdrawal_fee_pct ?? 5;
+  /** Única fuente de verdad: la comisión global de la configuración. */
+  const feePct = Number(settings?.withdrawal_fee_pct ?? 0);
   const minimum = Number(settings?.min_withdrawal_cup ?? 0);
   const conversion = Math.round((parsed * conversionPct) / 100);
   const fee = Math.round(((parsed - conversion) * feePct) / 100);

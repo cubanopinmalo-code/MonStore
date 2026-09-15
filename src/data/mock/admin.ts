@@ -126,7 +126,7 @@ export const mockPaymentSettings: PaymentSetting[] = [
       "Envía el saldo al número indicado y pulsa 'He pagado'. Verificamos en menos de 30 minutos.",
     active: true,
     deposit_bonus_pct: 25,
-    withdrawal_fee_pct: 5,
+    withdrawal_fee_pct: 0,
     withdrawal_conversion_pct: 30,
     transfer_fields: [
       { label: "Número de destino", value: "+53 5 555 1234" },
@@ -146,7 +146,7 @@ export const mockPaymentSettings: PaymentSetting[] = [
       "Transfiere a la tarjeta, sube el comprobante y espera la confirmación del equipo.",
     active: true,
     deposit_bonus_pct: 0,
-    withdrawal_fee_pct: 5,
+    withdrawal_fee_pct: 0,
     withdrawal_conversion_pct: 0,
     transfer_fields: [
       { label: "Número de tarjeta", value: "9227 1234 5678 9012" },

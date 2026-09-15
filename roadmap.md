@@ -110,5 +110,11 @@
 - [x] Eventos: activacion solo automatica en la hora exacta; admin solo activo->iniciado->finalizado y cancelar.
 
 ## Auditorias de validacion (fase actual)
-- [ ] Auditoria de validacion de Configuracion (comision unica, nuevos parametros, integracion cliente, seguridad, historico) — solo informe
-- [ ] Diagnostico de Metodo de pago -> Saldo movil: 3 lineas, almacenamiento, asignacion, numeros editables, hardcodes — solo informe
+- [x] Auditoria de validacion de Configuracion (comision unica, nuevos parametros, integracion cliente, seguridad, historico) — solo informe
+- [x] Diagnostico de Metodo de pago -> Saldo movil: 3 lineas, almacenamiento, asignacion, numeros editables, hardcodes — solo informe
+- [x] Lineas de saldo movil: ciclo de vida ocupada/libre; liberacion automatica y atomica al pasar la solicitud a estado terminal (aprobado, rechazado, cancelado, expirado)
+- [x] Comision de retiro: unica fuente global (15%), eliminado todo respaldo del 5%
+- [x] Lineas 1/2/3 de saldo movil creadas, editables, validacion cubana, sin duplicados, con auditoria
+- [x] Remitente obligatorio en saldo movil (cliente y servidor)
+- [ ] REQUIERE DECISION: donde deben actuar mantenimiento, registro abierto y comercio de cuentas
+- [ ] PENDIENTE: introducir metodos de pago y destinos reales desde Configuracion (datos del usuario)

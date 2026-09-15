@@ -209,7 +209,7 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
       : [{ label: "", value: "" }],
   );
   const [bonus, setBonus] = useState(String(method.deposit_bonus_pct));
-  const [fee, setFee] = useState(String(method.withdrawal_fee_pct));
+  
   const [conversion, setConversion] = useState(String(method.withdrawal_conversion_pct));
   const [saving, setSaving] = useState(false);
 
@@ -231,7 +231,8 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
           instructions,
           active,
           deposit_bonus_pct: Number(bonus) || 0,
-          withdrawal_fee_pct: Number(fee) || 0,
+          // La comisión de retiro es global (Comisiones y límites), no por método.
+          withdrawal_fee_pct: 0,
           withdrawal_conversion_pct: Number(conversion) || 0,
           transfer_fields: fields,
         },
@@ -333,15 +334,6 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`fee-${method.payment_method}`}>Comisión al retirar (%)</Label>
-          <Input
-            id={`fee-${method.payment_method}`}
-            inputMode="numeric"
-            value={fee}
-            onChange={(event) => setFee(event.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
           <Label htmlFor={`conv-${method.payment_method}`}>Conversión al retirar (%)</Label>
           <Input
             id={`conv-${method.payment_method}`}
@@ -417,10 +409,16 @@ function PaymentLinesCard() {
                   id={`line-phone-${line.id}`}
                   inputMode="tel"
                   value={draft.phone_number}
+                  placeholder="5XXXXXXX"
                   onChange={(event) =>
                     update(line.id, { phone_number: event.target.value.replace(/\D/g, "") })
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  {draft.phone_number.length === 0
+                    ? "Sin número todavía: escribe el móvil que recibirá el saldo."
+                    : "Móvil cubano de 8 dígitos que empieza por 5. No puede repetirse en otra línea."}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <Switch

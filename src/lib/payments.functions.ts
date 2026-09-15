@@ -337,18 +337,14 @@ export const savePaymentLine = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
-    if (data.phone_number.length < 8) {
-      throw new Error("Escribe un número de línea válido (al menos 8 dígitos).");
-    }
-    const { error } = await context.supabase
-      .from("payment_lines")
-      .update({
-        label: data.label,
-        phone_number: data.phone_number,
-        active: data.active,
-      })
-      .eq("id", data.id);
-    if (error) throw new Error("No se pudo guardar la línea.");
+    // El servidor valida el móvil cubano, impide duplicados y deja auditoría.
+    const { error } = await context.supabase.rpc("admin_save_payment_line", {
+      p_line: data.id,
+      p_label: data.label,
+      p_phone: data.phone_number,
+      p_active: data.active,
+    });
+    if (error) throw new Error(error.message);
     return { saved: true };
   });
 
