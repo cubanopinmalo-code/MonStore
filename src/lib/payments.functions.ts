@@ -573,6 +573,7 @@ export interface PaymentDestinationDraft {
   bank: string;
   holder_name: string;
   destination_value: string;
+  confirm_phone: string;
   instructions: string;
   requires_transaction_id: boolean;
   requires_proof: boolean;
