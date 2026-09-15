@@ -83,18 +83,18 @@ Lista con filtros por estado y buscador, y ficha de evento con:
 - resultado: registrar ganador por identificador de personaje con pantalla de confirmación, entregar premio, ver estado de entrega y reintentar si falló;
 - acciones: crear, editar, cerrar entrada, finalizar y cancelar (con confirmación y motivo).
 
-## 6. Aplicación del cliente
+## 7. Aplicación del cliente
 
-- Lista de eventos con precio o etiqueta de gratuito, participantes actuales/mínimo/máximo, barra de progreso y estado, actualizada en vivo.
-- Ficha del evento: datos, premio, cuenta atrás, inscripción con identificador del personaje, aviso claro de que no se cobra al inscribirse, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso.
-- La sala nunca aparece antes de la activación ni para quien no participa.
+- Lista de eventos con precio o etiqueta de gratuito, participantes actuales/mínimo/máximo, barra de progreso y estado (incluida la marca de meta alcanzada), actualizada en vivo.
+- Ficha del evento: datos, premio, cuenta atrás hasta la hora crítica, inscripción con identificador del personaje, aviso claro de que no se cobra al inscribirse ni al alcanzar la meta, cancelar inscripción antes de la activación, "Cupos agotados" al llegar al máximo y botón "Entrar al evento" solo durante la ventana de acceso.
+- La sala nunca aparece antes de la activación ni para quien no participa o no quedó confirmado.
 - Nueva sección de resultados: eventos finalizados con ganador, premio, juego, tipo, fecha y hora.
 
-## 7. Dinero, avisos, auditoría y tiempo real
+## 8. Dinero, avisos, auditoría y tiempo real
 
 - Los cobros de inscripción, las devoluciones y los premios usan tipos de operación propios, separados de recargas, fondos, retiros y comercio de cuentas.
-- Cada aviso queda registrado con evento, usuario, tipo, fecha/hora, estado y clave única.
-- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada, activación, cobro, acceso, cierre, finalización, ganador, premio, publicación del resultado, cancelación y devoluciones, con administrador o usuario, estado anterior y nuevo, fecha/hora y operación relacionada.
+- Avisos, todos con clave única: meta alcanzada (administrador e inscritos), recordatorio de 30 minutos, evento activo con sala disponible, cancelación por falta de meta, cancelación por falta de sala, 5 minutos antes del cierre de entrada y cierre de la entrada. Cada uno queda registrado con evento, usuario, tipo, fecha/hora y estado.
+- Se audita creación, modificación, inscripción, cancelación de inscripción, meta alcanzada y su aviso, recordatorio de 30 minutos, evaluación de los 15 minutos, validación de sala, activación, cancelación por falta de meta, cancelación por falta de sala, cobros, confirmaciones, apertura y cierre de entrada, acceso, finalización, ganador, premio, publicación del resultado y devoluciones, con administrador o usuario, estado anterior y nuevo, fecha/hora y operación relacionada.
 - Eventos e inscripciones se sincronizan en vivo en cliente y administración, sin recargar.
 
 ## 8. Pruebas de extremo a extremo
