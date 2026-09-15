@@ -8,6 +8,8 @@ import { AdminShell } from "@/components/layout/AdminShell";
 import { StatCard } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CardListSkeleton } from "@/components/common/states";
 import {
   getProviderStatus,
@@ -15,7 +17,13 @@ import {
   syncMissingGameOffers,
   syncProviderCatalog,
 } from "@/lib/catalog.functions";
+import {
+  previewControlledPurchase,
+  runControlledPurchase,
+  type ControlledPreview,
+} from "@/lib/orders.functions";
 import { savePlatformSettings } from "@/lib/settings.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/g2bulk")({
   head: () => ({
