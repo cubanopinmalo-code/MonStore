@@ -72,6 +72,10 @@ const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
     title: "EnZona",
     hint: "Paga desde EnZona y escribe el ID de la transacción que te muestra la app.",
   },
+  metropolitana: {
+    title: "Metropolitana",
+    hint: "Envía a la tarjeta del Banco Metropolitano o al Monedero Mi Transfer.",
+  },
   iphone: {
     title: "Utilizo iPhone",
     hint: "En iPhone la verificación es manual: hace falta la captura del pago.",
