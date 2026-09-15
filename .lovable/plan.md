@@ -11,9 +11,9 @@
 ## Cambios en la base de datos
 
 1. Configuración: comisiones por duración (1–5 días) editables por el administrador; si una duración no está configurada se calcula con el precio por día actual.
-2. Publicaciones: nuevos campos para inicio y vencimiento real de la publicación, comprador, fecha de venta, importe de venta, inicio y fin de las 24 horas de aseguramiento, entrega de datos al vendedor y motivo de reversión. Nuevos estados: publicación expirada y devuelta.
+2. Publicaciones: nuevos campos para inicio y vencimiento real de la publicación, comprador, fecha de venta, importe de venta, inicio y fin de las 24 horas de aseguramiento y entrega de datos al vendedor. Nuevos estados: publicación expirada y lista para republicar.
 3. Datos privados: se separan **credenciales originales del vendedor** y **credenciales finales del administrador** (correo, contraseña, notas), más clave de doble factor y su estado (activo/inactivo). Todo cifrado igual que hoy.
-4. Historial: tabla de eventos de la publicación (creada, pagada, corregida, contraseña cambiada, doble factor configurado, aprobada, publicada, vendida, entregada, expirada, devuelta) con actor, estado anterior y nuevo.
+4. Historial: tabla de eventos de la publicación (creada, pagada, corregida, contraseña cambiada, doble factor configurado, aprobada, publicada, vendida, entregada, expirada sin venta, republicada) con actor, estado anterior y nuevo. Vendida y expirada sin venta son estados distintos; nunca se usa "devolución" para una publicación que solo venció.
 5. Cobros de publicación: registro por publicación con duración, comisión, importe, método, estado y clave de idempotencia para evitar cobros dobles.
 
 Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
@@ -26,8 +26,8 @@ Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
 - Código actual: se calcula en el servidor a partir de la clave y la hora; nunca se guarda ningún código.
 - Compra: verifica publicación activa, no vencida, no vendida, precio vigente y saldo; bloquea la fila para que dos compradores simultáneos no puedan comprar la misma cuenta; cobra al comprador, abona al vendedor, marca vendida, inicia las 24 horas, notifica a ambos y audita.
 - Entrega al comprador: devuelve credenciales finales y datos de doble factor solo al comprador de esa publicación.
-- Vencimiento: al pasar la fecha, la publicación sale del comercio, cambia a "publicación expirada", el vendedor recibe los datos actuales (los administrados por MonStore, no los originales) y se le notifica que puede asegurar y volver a publicar pagando nueva comisión.
-- Devolución/reversión: quita el acceso del comprador, restituye el acceso del vendedor a los datos actuales y al doble factor, y queda todo auditado.
+- Vencimiento sin comprador: al pasar la fecha y solo si nadie compró, la publicación sale del comercio, cambia a "publicación expirada", el vendedor original recibe los datos actuales (los administrados por MonStore, no los originales) más la configuración y el código de doble factor, y se le notifica que puede asegurar la cuenta y volver a publicar pagando nueva comisión.
+- Si la cuenta se vendió, pertenece al comprador: no existe devolución ni reversión automática hacia el vendedor, y el vendedor pierde el acceso a credenciales y doble factor.
 
 Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad de la publicación; el navegador nunca decide.
 
@@ -39,7 +39,7 @@ Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad 
 
 **Administrador**
 - Solicitudes de cuentas: lista con pendientes, publicadas, vendidas, expiradas y devueltas, en tiempo real.
-- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar, retirar, marcar entregada y revertir.
+- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar, retirar y marcar entregada.
 
 **Comprador**
 - Comercio y detalle: solo información pública.
@@ -51,7 +51,7 @@ Nueva sección en Configuración para las comisiones de 1 a 5 días, reutilizand
 
 ## Pruebas que se realizarán
 
-Comisión correcta por duración, cobro único, contraseña final distinta de la original, doble factor válido y código que cambia cada 30 segundos, publicación visible tras aprobar, ausencia total de datos privados en las vistas públicas, compra completa con entrega y temporizador, expiración con devolución de datos actuales, republicación con nueva comisión, dos compradores simultáneos con una sola compra, acceso denegado a no autorizados y reversión auditada.
+Comisión correcta por duración, cobro único, contraseña final distinta de la original, doble factor válido y código que cambia cada 30 segundos, publicación visible tras aprobar, ausencia total de datos privados en las vistas públicas, compra completa con entrega y temporizador, expiración sin venta que entrega al vendedor los datos actuales y el doble factor, republicación con nueva comisión, dos compradores simultáneos con una sola compra, y acceso denegado a cualquier cliente que no sea el propietario o el comprador.
 
 ## Fuera de alcance
 
