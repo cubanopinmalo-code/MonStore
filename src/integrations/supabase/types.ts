@@ -397,6 +397,112 @@ export type Database = {
           },
         ]
       }
+      game_account_events: {
+        Row: {
+          account_id: string
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          note: string
+          status_after: string
+          status_before: string
+        }
+        Insert: {
+          account_id: string
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          note?: string
+          status_after?: string
+          status_before?: string
+        }
+        Update: {
+          account_id?: string
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          note?: string
+          status_after?: string
+          status_before?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_account_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "game_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_account_sales: {
+        Row: {
+          amount: number
+          buyer_id: string
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string | null
+          listing_id: string
+          purchased_at: string
+          release_at: string
+          release_attempts: number
+          release_error: string
+          released_at: string | null
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          buyer_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          listing_id: string
+          purchased_at?: string
+          release_at: string
+          release_attempts?: number
+          release_error?: string
+          released_at?: string | null
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          buyer_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          listing_id?: string
+          purchased_at?: string
+          release_at?: string
+          release_attempts?: number
+          release_error?: string
+          released_at?: string | null
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_account_sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "game_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_account_secrets: {
         Row: {
           account_email: string
@@ -407,6 +513,16 @@ export type Database = {
           admin_access_notes: string
           admin_access_notes_enc: string | null
           created_at: string
+          final_email: string
+          final_email_enc: string | null
+          final_notes: string
+          final_notes_enc: string | null
+          final_password: string
+          final_password_enc: string | null
+          totp_active: boolean
+          totp_secret: string
+          totp_secret_enc: string | null
+          totp_updated_at: string | null
         }
         Insert: {
           account_email?: string
@@ -417,6 +533,16 @@ export type Database = {
           admin_access_notes?: string
           admin_access_notes_enc?: string | null
           created_at?: string
+          final_email?: string
+          final_email_enc?: string | null
+          final_notes?: string
+          final_notes_enc?: string | null
+          final_password?: string
+          final_password_enc?: string | null
+          totp_active?: boolean
+          totp_secret?: string
+          totp_secret_enc?: string | null
+          totp_updated_at?: string | null
         }
         Update: {
           account_email?: string
@@ -427,6 +553,16 @@ export type Database = {
           admin_access_notes?: string
           admin_access_notes_enc?: string | null
           created_at?: string
+          final_email?: string
+          final_email_enc?: string | null
+          final_notes?: string
+          final_notes_enc?: string | null
+          final_password?: string
+          final_password_enc?: string | null
+          totp_active?: boolean
+          totp_secret?: string
+          totp_secret_enc?: string | null
+          totp_updated_at?: string | null
         }
         Relationships: [
           {
@@ -440,11 +576,15 @@ export type Database = {
       }
       game_accounts: {
         Row: {
+          buyer_id: string | null
           created_at: string
+          credentials_delivered_at: string | null
           currency: string
           description: string
           duration_days: number
+          expired_at: string | null
           expires_at: string | null
+          funds_status: string
           game_id: string | null
           id: string
           images: string[]
@@ -454,18 +594,31 @@ export type Database = {
           published_at: string | null
           region: string
           rejection_reason: string | null
+          republished_from: string | null
+          sale_amount: number | null
+          secure_deadline: string | null
+          secure_started_at: string | null
+          seller_data_released_at: string | null
           seller_id: string
           seller_name: string
+          sold_at: string | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
+          withdrawn_at: string | null
+          withdrawn_by: string | null
+          withdrawn_reason: string
         }
         Insert: {
+          buyer_id?: string | null
           created_at?: string
+          credentials_delivered_at?: string | null
           currency?: string
           description?: string
           duration_days?: number
+          expired_at?: string | null
           expires_at?: string | null
+          funds_status?: string
           game_id?: string | null
           id?: string
           images?: string[]
@@ -475,18 +628,31 @@ export type Database = {
           published_at?: string | null
           region?: string
           rejection_reason?: string | null
+          republished_from?: string | null
+          sale_amount?: number | null
+          secure_deadline?: string | null
+          secure_started_at?: string | null
+          seller_data_released_at?: string | null
           seller_id: string
           seller_name?: string
+          sold_at?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+          withdrawn_reason?: string
         }
         Update: {
+          buyer_id?: string | null
           created_at?: string
+          credentials_delivered_at?: string | null
           currency?: string
           description?: string
           duration_days?: number
+          expired_at?: string | null
           expires_at?: string | null
+          funds_status?: string
           game_id?: string | null
           id?: string
           images?: string[]
@@ -496,11 +662,20 @@ export type Database = {
           published_at?: string | null
           region?: string
           rejection_reason?: string | null
+          republished_from?: string | null
+          sale_amount?: number | null
+          secure_deadline?: string | null
+          secure_started_at?: string | null
+          seller_data_released_at?: string | null
           seller_id?: string
           seller_name?: string
+          sold_at?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+          withdrawn_reason?: string
         }
         Relationships: [
           {
@@ -508,6 +683,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_accounts_republished_from_fkey"
+            columns: ["republished_from"]
+            isOneToOne: false
+            referencedRelation: "game_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1153,6 +1335,7 @@ export type Database = {
           allow_line_reuse: boolean
           created_at: string
           id: boolean
+          listing_fee_days: Json
           listing_fee_per_day: number
           saldo_conversion_rate: number
           support_whatsapp: string
@@ -1165,6 +1348,7 @@ export type Database = {
           allow_line_reuse?: boolean
           created_at?: string
           id?: boolean
+          listing_fee_days?: Json
           listing_fee_per_day?: number
           saldo_conversion_rate?: number
           support_whatsapp?: string
@@ -1177,6 +1361,7 @@ export type Database = {
           allow_line_reuse?: boolean
           created_at?: string
           id?: boolean
+          listing_fee_days?: Json
           listing_fee_per_day?: number
           saldo_conversion_rate?: number
           support_whatsapp?: string
@@ -1841,6 +2026,36 @@ export type Database = {
       }
     }
     Functions: {
+      admin_set_listing_secrets: {
+        Args: {
+          p_final_email: string
+          p_final_notes: string
+          p_final_password: string
+          p_listing: string
+        }
+        Returns: Json
+      }
+      admin_set_listing_totp: {
+        Args: { p_active: boolean; p_listing: string; p_secret: string }
+        Returns: Json
+      }
+      admin_update_listing: {
+        Args: {
+          p_description: string
+          p_game: string
+          p_images: string[]
+          p_listing: string
+          p_platform: string
+          p_price: number
+          p_region: string
+          p_title: string
+        }
+        Returns: Json
+      }
+      buy_game_account: {
+        Args: { p_idempotency: string; p_listing: string }
+        Returns: Json
+      }
       claim_referral_reward: { Args: { p_user: string }; Returns: Json }
       complete_withdrawal: {
         Args: {
@@ -1858,6 +2073,7 @@ export type Database = {
           participants: number
         }[]
       }
+      expire_due_listings: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1866,6 +2082,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      listing_fee_for_days: { Args: { p_days: number }; Returns: number }
       place_wallet_order: {
         Args: {
           p_idempotency_key: string
@@ -1876,6 +2093,7 @@ export type Database = {
         }
         Returns: Json
       }
+      process_due_account_sales: { Args: never; Returns: Json }
       provision_user_account: {
         Args: { _phone: string; _referral_code?: string; _user_id: string }
         Returns: Json
@@ -1896,12 +2114,25 @@ export type Database = {
         Returns: Json
       }
       read_account_credentials: { Args: { p_account: string }; Returns: Json }
+      read_listing_secrets: { Args: { p_account: string }; Returns: Json }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }
         Returns: Json
       }
+      release_account_sale: { Args: { p_sale: string }; Returns: Json }
       release_payment_line: {
         Args: { p_deposit: string; p_reason: string }
+        Returns: Json
+      }
+      republish_game_account: {
+        Args: {
+          p_days: number
+          p_description: string
+          p_images: string[]
+          p_listing: string
+          p_price: number
+          p_title: string
+        }
         Returns: Json
       }
       request_deposit: {
@@ -1965,6 +2196,10 @@ export type Database = {
           orders_count: number
         }[]
       }
+      withdraw_listing: {
+        Args: { p_listing: string; p_reason: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
@@ -1983,6 +2218,8 @@ export type Database = {
         | "rechazada"
         | "vendida"
         | "desactivada"
+        | "expirada"
+        | "retirada"
       order_status:
         | "pendiente"
         | "procesando"
@@ -2141,6 +2378,8 @@ export const Constants = {
         "rechazada",
         "vendida",
         "desactivada",
+        "expirada",
+        "retirada",
       ],
       order_status: [
         "pendiente",
