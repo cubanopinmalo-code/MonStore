@@ -370,6 +370,37 @@ export async function providerOrderStatus(orderId: string): Promise<ProviderOrde
   }
 }
 
+/** Estado oficial de un pedido de recarga (POST /games/order/status). */
+export async function topUpOrderStatus(
+  code: string,
+  orderId: string,
+): Promise<ProviderOrderStatus> {
+  try {
+    const data = await call<{
+      status?: string;
+      order?: { status?: string; order_id?: number | string };
+      order_status?: string;
+      message?: string;
+    }>("/games/order/status", {
+      method: "POST",
+      body: { game: code, order_id: Number(orderId) || orderId },
+      requiresKey: true,
+    });
+    const raw = data.status ?? data.order_status ?? data.order?.status ?? "unknown";
+    return {
+      status: String(raw).toUpperCase(),
+      transactionId: orderId,
+      items: [],
+      found: true,
+    };
+  } catch (error) {
+    if (error instanceof ProviderError && (error.status === 404 || error.status === 400)) {
+      return { status: "NOT_FOUND", transactionId: null, items: [], found: false };
+    }
+    throw error;
+  }
+}
+
 export type ProviderTopUpOrder = {
   order_id?: number;
   status?: string;
@@ -384,6 +415,7 @@ export async function placeTopUpOrder(
     server_id?: string;
     charname?: string;
     remark?: string;
+    callback_url?: string;
   },
   idempotencyKey: string,
 ): Promise<ProviderTopUpOrder> {
@@ -395,3 +427,4 @@ export async function placeTopUpOrder(
     attempts: 1,
   });
 }
+
