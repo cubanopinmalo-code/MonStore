@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { requestOtp, verifyOtp } from "@/lib/otp.functions";
+import { otpRequestStatus, requestOtp, verifyOtp } from "@/lib/otp.functions";
 import { otpMessage } from "@/lib/otp-messages";
 import { isValidCubanMobile } from "@/lib/phone";
 
