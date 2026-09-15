@@ -31,6 +31,19 @@ Se mantiene el cifrado actual, RLS en todas las tablas y permisos por rol.
 
 Cada acceso a datos privados se autoriza en el servidor por rol y por propiedad de la publicación; el navegador nunca decide.
 
+## Dinero de la venta: retención de 8 horas
+
+- Al comprar, el precio sale del saldo disponible del comprador y queda retenido para esa venta concreta. Ejemplo: con 15.000 y una cuenta de 10.000, el comprador queda con 5.000 disponibles y 10.000 retenidos, y el vendedor recibe 0.
+- La retención se registra vinculada a publicación, comprador, vendedor, operación, importe, moneda, hora de compra, hora de liberación, estado y clave de idempotencia. Se reutiliza el mecanismo de saldo retenido y de movimientos que ya usa la wallet, distinguiendo por tipo para no mezclarla con la retención de retiros.
+- La entrega de la cuenta no espera las 8 horas: ocurre en cuanto el pago queda retenido.
+- Ocho horas después de la compra, el servidor comprueba que la venta sigue válida y que los fondos no se liberaron antes; entonces libera la retención, acredita al vendedor, crea el movimiento, cierra la retención, audita y notifica.
+- Dos temporizadores independientes: 8 horas para el dinero del vendedor y 24 horas para que el comprador asegure la cuenta.
+- Notificaciones: al vender, "tu cuenta fue vendida, el pago está retenido y se acreditará en 8 horas"; al liberar, "el pago de tu venta ya fue acreditado", con importe, fecha y operación.
+- Liberación idempotente: si el estado ya es "fondos liberados" no se vuelve a acreditar, ni al reintentar, ni por dos administradores, ni por un proceso duplicado.
+- Si la liberación falla, el dinero permanece retenido, nunca se acredita a medias, el estado queda como "liberación pendiente" y se puede reintentar con verificación previa.
+- Panel: el dashboard muestra fondos retenidos por comercio de cuentas (número de ventas, importe total, próximas liberaciones, liberaciones pendientes e incidencias), separado de la retención por retiros. En Fondos e historial se distinguen depósito, retiro, compra de cuenta y liberación de venta.
+- Auditoría financiera completa de compra y liberación, con actor, estado anterior y nuevo, para poder reconstruir cada CUP.
+
 ## Pantallas
 
 **Vendedor**
@@ -51,7 +64,7 @@ Nueva sección en Configuración para las comisiones de 1 a 5 días, reutilizand
 
 ## Pruebas que se realizarán
 
-Comisión correcta por duración, cobro único, contraseña final distinta de la original, doble factor válido y código que cambia cada 30 segundos, publicación visible tras aprobar, ausencia total de datos privados en las vistas públicas, compra completa con entrega y temporizador, expiración sin venta que entrega al vendedor los datos actuales y el doble factor, republicación con nueva comisión, dos compradores simultáneos con una sola compra, y acceso denegado a cualquier cliente que no sea el propietario o el comprador.
+Comisión correcta por duración, cobro único, contraseña final distinta de la original, doble factor válido y código que cambia cada 30 segundos, publicación visible tras aprobar, ausencia total de datos privados en las vistas públicas, compra que deja al comprador con el saldo correcto y el importe retenido con el vendedor en cero, entrega inmediata con temporizador de 24 horas, liberación a las 8 horas que acredita al vendedor una sola vez incluso ejecutándola dos veces, expiración sin venta que entrega al vendedor los datos actuales y el doble factor, republicación con nueva comisión, dos compradores simultáneos con una sola compra, y acceso denegado a cualquier cliente que no sea el propietario o el comprador.
 
 ## Fuera de alcance
 
