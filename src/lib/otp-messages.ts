@@ -30,6 +30,10 @@ export const OTP_MESSAGES: Record<string, string> = {
     "No pudimos enviar el código en este momento. Inténtalo nuevamente más tarde.",
   numero_rechazado: "No pudimos enviar el mensaje a ese número.",
 
+  // Cuenta
+  cuenta_bloqueada:
+    "Tu cuenta está bloqueada. Escribe a atención al cliente para revisar tu caso.",
+
   // Sesión
   alta_fallida: "No pudimos completar el acceso. Inténtalo nuevamente.",
   sesion_no_emitida: "No pudimos completar el acceso. Inténtalo nuevamente.",
