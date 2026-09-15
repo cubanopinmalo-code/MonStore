@@ -26,6 +26,10 @@ export type CatalogProduct = ProductRow & { image: string };
 export type ProviderStatus = {
   hasKey: boolean;
   balance: number | null;
+  currency: string;
+  /** Interruptor del panel: compras reales activadas o pausadas. */
+  purchasesEnabled: boolean;
+  checkedAt: string;
   error: string | null;
 };
 
@@ -870,16 +874,30 @@ export const getProviderStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ProviderStatus> => {
     await requireAdmin(context);
+    const { realPurchasesEnabled } = await import("./g2bulk-orders.server");
+    const purchasesEnabled = await realPurchasesEnabled();
+    const checkedAt = new Date().toISOString();
+
     if (!providerHasKey()) {
-      return { hasKey: false, balance: null, error: null };
+      return {
+        hasKey: false,
+        balance: null,
+        currency: "USD",
+        purchasesEnabled,
+        checkedAt,
+        error: null,
+      };
     }
     try {
-      const { balance } = await providerBalance();
-      return { hasKey: true, balance, error: null };
+      const { balance, currency } = await providerBalance();
+      return { hasKey: true, balance, currency, purchasesEnabled, checkedAt, error: null };
     } catch (error) {
       return {
         hasKey: true,
         balance: null,
+        currency: "USD",
+        purchasesEnabled,
+        checkedAt,
         error: messageFrom(error, "No se pudo leer el saldo del proveedor."),
       };
     }
