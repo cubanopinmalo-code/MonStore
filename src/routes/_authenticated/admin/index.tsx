@@ -176,7 +176,7 @@ function AdminDashboard() {
           </Button>
         </div>
         <div className="mt-4 grid gap-2">
-          {(data?.activity ?? []).length === 0 ? (
+          {(activity ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Todavía no hay movimientos registrados en la auditoría.
             </p>
