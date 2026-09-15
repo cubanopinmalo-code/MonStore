@@ -201,11 +201,14 @@ function AdminProviderPage() {
         </Button>
       </section>
 
+      <ControlledPurchaseCard />
+
       {lastRun ? (
         <p className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
           Última sincronización de esta sesión: {lastRun}
         </p>
       ) : null}
+
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Juegos guardados" value={String(totalGames)} />
