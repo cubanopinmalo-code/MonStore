@@ -621,6 +621,7 @@ export const savePaymentDestination = createServerFn({ method: "POST" })
         p_bank: data.bank,
         p_holder: data.holder_name,
         p_value: data.destination_value,
+        p_confirm_phone: data.confirm_phone,
         p_instructions: data.instructions,
         p_requires_transaction_id: data.requires_transaction_id,
         p_requires_proof: data.requires_proof,
