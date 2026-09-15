@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
 import { useAdminWithdrawals } from "@/hooks/useAdmin";
+import { completeWithdrawal, rejectWithdrawal } from "@/lib/funds.functions";
 import { formatCUP, formatDateTime } from "@/lib/format";
+
 
 export const Route = createFileRoute("/_authenticated/admin/retiros")({
   head: () => ({
@@ -30,27 +32,30 @@ export const Route = createFileRoute("/_authenticated/admin/retiros")({
 function AdminWithdrawalsPage() {
   const queryClient = useQueryClient();
   const { data: withdrawals, isLoading } = useAdminWithdrawals();
+  const completeFn = useServerFn(completeWithdrawal);
+  const rejectFn = useServerFn(rejectWithdrawal);
 
   const review = useMutation({
     mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
-      const reason = approve
-        ? ""
-        : (window.prompt("Motivo del rechazo (se devuelve el dinero al cliente):") ?? "");
-      const { error } = await supabase.rpc("review_withdrawal", {
-        p_withdrawal: id,
-        p_approve: approve,
-        p_reason: reason,
-      });
-      if (error) throw new Error(error.message);
-      return approve;
+      if (approve) {
+        await completeFn({ data: { withdrawalId: id } });
+        return true;
+      }
+      const reason = (window.prompt("Motivo del rechazo (se devuelve el dinero al cliente):") ?? "").trim();
+      if (reason.length < 3) throw new Error("Escribe el motivo del rechazo.");
+      await rejectFn({ data: { withdrawalId: id, reason } });
+      return false;
     },
     onSuccess: (approve) => {
-      toast.success(approve ? "Retiro aprobado" : "Retiro rechazado y devuelto");
+      toast.success(approve ? "Retiro completado" : "Retiro rechazado y devuelto");
       void queryClient.invalidateQueries({ queryKey: ["admin-withdrawals"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-funds"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-panel"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
 
   return (
     <AdminShell title="Retiros" description="Solicitudes de retiro de saldo.">
@@ -100,7 +105,7 @@ function AdminWithdrawalsPage() {
                           disabled={review.isPending}
                           onClick={() => review.mutate({ id: withdrawal.id, approve: true })}
                         >
-                          Aprobar
+                          Retiro completado
                         </Button>
                         <Button
                           size="sm"
