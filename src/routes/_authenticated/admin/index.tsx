@@ -181,7 +181,7 @@ function AdminDashboard() {
               Todavía no hay movimientos registrados en la auditoría.
             </p>
           ) : (
-            (data?.activity ?? []).map((item) => (
+            (activity ?? []).map((item) => (
               <div
                 key={item.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 p-3"
