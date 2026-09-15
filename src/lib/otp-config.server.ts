@@ -48,6 +48,7 @@ export async function getOtpLimits(): Promise<OtpLimits> {
       maxPerPhonePerDay: data.max_per_phone_per_day ?? DEFAULT_OTP_LIMITS.maxPerPhonePerDay,
       maxPerIpPerHour: data.max_per_ip_per_hour ?? DEFAULT_OTP_LIMITS.maxPerIpPerHour,
       dailySmsCap: data.daily_sms_cap ?? null,
+      blockSeconds: data.block_seconds ?? DEFAULT_OTP_LIMITS.blockSeconds,
     };
   } catch {
     return DEFAULT_OTP_LIMITS;
