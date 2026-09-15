@@ -51,6 +51,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const askCode = useServerFn(requestOtp);
   const checkCode = useServerFn(verifyOtp);
+  const askStatus = useServerFn(otpRequestStatus);
 
   const [step, setStep] = useState<"telefono" | "codigo">("telefono");
   const [phone, setPhone] = useState("");
@@ -58,7 +59,59 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [checking, setChecking] = useState(true);
+  /** Fin del bloqueo, en tiempo local ya corregido con la hora del servidor. */
+  const [blockUntil, setBlockUntil] = useState<number | null>(null);
+  const [blockLeft, setBlockLeft] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /**
+   * El servidor manda la marca de tiempo y su hora actual: el temporizador se
+   * calcula sobre esa diferencia, así que recargar la página, reabrir el
+   * navegador o cambiar el reloj del dispositivo no reinicia el bloqueo.
+   */
+  const applyBlock = (blockedUntil: string | null | undefined, serverNow?: string) => {
+    if (!blockedUntil) {
+      setBlockUntil(null);
+      setBlockLeft(0);
+      return;
+    }
+    const end = new Date(blockedUntil).getTime();
+    const reference = serverNow ? new Date(serverNow).getTime() : Date.now();
+    setBlockUntil(Date.now() + Math.max(0, end - reference));
+  };
+
+  useEffect(() => {
+    if (!blockUntil) return;
+    const tick = () => setBlockLeft(Math.max(0, Math.ceil((blockUntil - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [blockUntil]);
+
+  useEffect(() => {
+    if (blockUntil && blockLeft === 0) setBlockUntil(null);
+  }, [blockLeft, blockUntil]);
+
+  // Al escribir un número válido se consulta al servidor si sigue bloqueado.
+  useEffect(() => {
+    if (!isValidCubanMobile(phone)) {
+      setBlockUntil(null);
+      return;
+    }
+    let active = true;
+    const id = setTimeout(() => {
+      void askStatus({ data: { phone } })
+        .then((result) => {
+          if (active) applyBlock(result.blockedUntil, result.serverNow);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone]);
 
   /**
    * Destino después del acceso. El rol se consulta SIEMPRE por UUID en
