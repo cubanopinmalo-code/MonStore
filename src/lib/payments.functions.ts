@@ -604,6 +604,7 @@ export const savePaymentDestination = createServerFn({ method: "POST" })
       bank: String(data?.bank ?? "").trim().slice(0, 60),
       holder_name: String(data?.holder_name ?? "").trim().slice(0, 80),
       destination_value: String(data?.destination_value ?? "").trim().slice(0, 120),
+      confirm_phone: String(data?.confirm_phone ?? "").replace(/\D/g, "").slice(0, 8),
       instructions: String(data?.instructions ?? "").trim().slice(0, 800),
       requires_transaction_id: Boolean(data?.requires_transaction_id),
       requires_proof: Boolean(data?.requires_proof),
