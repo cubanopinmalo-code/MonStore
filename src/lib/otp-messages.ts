@@ -12,7 +12,7 @@ export const OTP_MESSAGES: Record<string, string> = {
 
   // Límites
   espera: "Espera unos segundos antes de pedir otro código.",
-  limite_telefono: "Has pedido demasiados códigos hoy. Inténtalo mañana.",
+  limite_telefono: "Has alcanzado el límite de códigos SMS. Espera el tiempo indicado en pantalla.",
   limite_origen: "Demasiadas solicitudes desde esta conexión. Inténtalo más tarde.",
   tope_diario: "El servicio de mensajes alcanzó su límite de hoy. Inténtalo mañana.",
 
