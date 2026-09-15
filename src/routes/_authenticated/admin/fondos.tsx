@@ -836,7 +836,11 @@ function HistoryPanel() {
         <Select
           value={filters.kind}
           onValueChange={(value) =>
-            setFilters((current) => ({ ...current, kind: value as FundsHistoryFilters["kind"] }))
+            setFilters((current) => ({
+              ...current,
+              kind: value as "todos" | "deposito" | "retiro",
+            }))
+
           }
         >
           <SelectTrigger aria-label="Tipo de operación">
