@@ -73,11 +73,27 @@ export const requestOtp = createServerFn({ method: "POST" })
     const ip = clientIp();
     const { getOtpLimits } = await import("./otp-config.server");
     const { logSmsUsage, smsSentLast24h, logAuthEvent } = await import("./otp-usage.server");
+    const { checkPhoneQuota, consumePhoneQuota, isAdminPhone } = await import("./otp-rate.server");
     const limits = await getOtpLimits();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as ChallengeClient;
     const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
     const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+
+    // Rol real en la base de datos: los administradores no tienen límite de
+    // solicitudes diarias (el teléfono solo localiza la cuenta, no autoriza).
+    const isAdmin = await isAdminPhone(phone);
+
+    const quota = await checkPhoneQuota(phone, limits.maxPerPhonePerDay, isAdmin);
+    if (!quota.allowed) {
+      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_telefono" });
+      await logAuthEvent({ action: "otp_bloqueado", phoneE164: phone, reason: "limite_telefono" });
+      return {
+        ok: false as const,
+        reason: "limite_telefono",
+        blockedUntil: quota.blockedUntil ?? null,
+      };
+    }
 
     const { data: recent } = await db
       .from(OTP_TABLE)
@@ -87,11 +103,6 @@ export const requestOtp = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false });
 
     const list = (recent ?? []) as Array<{ created_at: string }>;
-    if (list.length >= limits.maxPerPhonePerDay) {
-      await logSmsUsage({ phoneE164: phone, ip, outcome: "bloqueado", errorCode: "limite_telefono" });
-      await logAuthEvent({ action: "otp_bloqueado", phoneE164: phone, reason: "limite_telefono" });
-      return { ok: false as const, reason: "limite_telefono" };
-    }
     const last = list[0];
     if (last) {
       const elapsed = (Date.now() - new Date(last.created_at).getTime()) / 1000;
