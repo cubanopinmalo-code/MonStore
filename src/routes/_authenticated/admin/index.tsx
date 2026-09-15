@@ -14,7 +14,7 @@ import { AdminShell } from "@/components/layout/AdminShell";
 import { StatCard } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAdminPanel, useAdminRealtime } from "@/hooks/useAdminPanel";
+import { useAdminActivity, useAdminPanel, useAdminRealtime } from "@/hooks/useAdminPanel";
 import { formatCUP, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
