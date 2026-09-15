@@ -209,7 +209,7 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
       : [{ label: "", value: "" }],
   );
   const [bonus, setBonus] = useState(String(method.deposit_bonus_pct));
-  const [fee, setFee] = useState(String(method.withdrawal_fee_pct));
+  
   const [conversion, setConversion] = useState(String(method.withdrawal_conversion_pct));
   const [saving, setSaving] = useState(false);
 
@@ -231,7 +231,8 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
           instructions,
           active,
           deposit_bonus_pct: Number(bonus) || 0,
-          withdrawal_fee_pct: Number(fee) || 0,
+          // La comisión de retiro es global (Comisiones y límites), no por método.
+          withdrawal_fee_pct: 0,
           withdrawal_conversion_pct: Number(conversion) || 0,
           transfer_fields: fields,
         },
@@ -330,15 +331,6 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
             inputMode="numeric"
             value={bonus}
             onChange={(event) => setBonus(event.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor={`fee-${method.payment_method}`}>Comisión al retirar (%)</Label>
-          <Input
-            id={`fee-${method.payment_method}`}
-            inputMode="numeric"
-            value={fee}
-            onChange={(event) => setFee(event.target.value)}
           />
         </div>
         <div className="space-y-1.5">
