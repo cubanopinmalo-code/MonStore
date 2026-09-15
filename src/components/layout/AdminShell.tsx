@@ -9,14 +9,16 @@ import {
   LayoutDashboard,
   Menu,
   Package,
+  PiggyBank,
   RefreshCcw,
   Settings,
   ShoppingBag,
   Store,
+  TrendingUp,
   Trophy,
+  UserPlus,
   Users,
   Wallet,
-  UserPlus,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -31,40 +33,80 @@ import {
 } from "@/components/ui/breadcrumb";
 
 const ADMIN_NAV = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/actividad", label: "Actividad global", icon: Activity, exact: false },
-  { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, exact: false },
-  { to: "/admin/usuarios", label: "Usuarios", icon: Users, exact: false },
-  { to: "/admin/juegos", label: "Juegos", icon: Gamepad2, exact: false },
-  { to: "/admin/productos", label: "Productos", icon: Package, exact: false },
-  { to: "/admin/g2bulk", label: "G2Bulk", icon: RefreshCcw, exact: false },
-  { to: "/admin/pagos", label: "Pagos", icon: CreditCard, exact: false },
-  { to: "/admin/wallets", label: "Wallets", icon: Wallet, exact: false },
-  { to: "/admin/depositos", label: "Depósitos", icon: ArrowDownToLine, exact: false },
-  { to: "/admin/retiros", label: "Retiros", icon: ArrowUpFromLine, exact: false },
-  { to: "/admin/comercio", label: "Comercio", icon: Store, exact: false },
-  { to: "/admin/eventos", label: "Eventos", icon: Trophy, exact: false },
-  { to: "/admin/referidos", label: "Referidos", icon: UserPlus, exact: false },
-  { to: "/admin/configuracion", label: "Configuración", icon: Settings, exact: false },
+  {
+    group: "",
+    items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }],
+  },
+  {
+    group: "Finanzas",
+    items: [
+      { to: "/admin/finanzas", label: "Resumen financiero", icon: TrendingUp, exact: false },
+      { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, exact: false },
+      { to: "/admin/pagos", label: "Cobros", icon: CreditCard, exact: false },
+    ],
+  },
+  {
+    group: "Fondos",
+    items: [
+      { to: "/admin/fondos", label: "Panel de fondos", icon: PiggyBank, exact: false },
+      { to: "/admin/depositos", label: "Agregar fondos", icon: ArrowDownToLine, exact: false },
+      { to: "/admin/retiros", label: "Retiros", icon: ArrowUpFromLine, exact: false },
+      { to: "/admin/wallets", label: "Saldos", icon: Wallet, exact: false },
+    ],
+  },
+  {
+    group: "Solicitudes de cuentas",
+    items: [{ to: "/admin/comercio", label: "Revisión de cuentas", icon: Store, exact: false }],
+  },
+  {
+    group: "Eventos",
+    items: [{ to: "/admin/eventos", label: "Gestión de eventos", icon: Trophy, exact: false }],
+  },
+  {
+    group: "Configuración",
+    items: [
+      { to: "/admin/configuracion", label: "Ajustes globales", icon: Settings, exact: false },
+      { to: "/admin/juegos", label: "Juegos", icon: Gamepad2, exact: false },
+      { to: "/admin/productos", label: "Ofertas", icon: Package, exact: false },
+      { to: "/admin/g2bulk", label: "Proveedor", icon: RefreshCcw, exact: false },
+    ],
+  },
+  {
+    group: "Operación",
+    items: [
+      { to: "/admin/usuarios", label: "Usuarios", icon: Users, exact: false },
+      { to: "/admin/actividad", label: "Actividad", icon: Activity, exact: false },
+      { to: "/admin/referidos", label: "Referidos", icon: UserPlus, exact: false },
+    ],
+  },
 ] as const;
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className="grid gap-0.5">
-      {ADMIN_NAV.map((item) => (
-        <Link
-          key={item.to}
-          to={item.to}
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          activeProps={{
-            className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
-          }}
-          activeOptions={{ exact: item.exact }}
-        >
-          <item.icon className="size-4" aria-hidden="true" />
-          {item.label}
-        </Link>
+    <nav className="grid gap-4">
+      {ADMIN_NAV.map((section) => (
+        <div key={section.group || "inicio"} className="grid gap-0.5">
+          {section.group ? (
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {section.group}
+            </p>
+          ) : null}
+          {section.items.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              activeProps={{
+                className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+              }}
+              activeOptions={{ exact: item.exact }}
+            >
+              <item.icon className="size-4" aria-hidden="true" />
+              {item.label}
+            </Link>
+          ))}
+        </div>
       ))}
     </nav>
   );
@@ -132,10 +174,10 @@ export function AdminShell({
         <main className="min-w-0 flex-1 space-y-6 p-4 md:p-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">{title}</h1>
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
-          {actions ? <div className="flex flex-wrap items-center gap-2 pt-2">{actions}</div> : null}
+            {description ? (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            ) : null}
+            {actions ? <div className="flex flex-wrap items-center gap-2 pt-2">{actions}</div> : null}
           </div>
           {children}
         </main>

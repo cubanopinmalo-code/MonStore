@@ -89,3 +89,11 @@
 - [x] Límites OTP aprobados definitivamente: 5/teléfono/24h, 60s, 6 dígitos, 5 min, 5 intentos, único, 10/IP/hora
 - [ ] Pendiente: usuario configura credenciales del canónico + zdSMS + OTP_PEPPER
 - [ ] Pendiente: tope diario de SMS del proyecto (daily_sms_cap)
+
+## Panel administrativo (fase actual)
+- [x] Navegación agrupada: Dashboard, Finanzas, Fondos, Solicitudes de cuentas, Eventos, Configuración, Operación
+- [x] Dashboard con indicadores reales, centro de alertas accionables y actividad reciente
+- [x] Actualización en tiempo real (fondos, retiros, cuentas, eventos, pedidos, saldos, auditoría)
+- [x] Finanzas: ganancias por período, USD vendidos, cobros por método, líneas 1/2/3 separadas
+- [x] Fondos: cola de trabajo, retenciones y estado de las tres líneas
+- [ ] Siguiente: acciones avanzadas en Fondos, Solicitudes de cuentas (fotos/WhatsApp), Eventos (sala, ganador, premio) y Configuración de valores dinámicos
