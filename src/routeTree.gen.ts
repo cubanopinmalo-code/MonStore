@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminConfiguracionRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminDepositosRouteImport } from './routes/_authenticated/admin/depositos'
 import { Route as AuthenticatedAdminEventosRouteImport } from './routes/_authenticated/admin/eventos'
 import { Route as AuthenticatedAdminFinanzasRouteImport } from './routes/_authenticated/admin/finanzas'
+import { Route as AuthenticatedAdminFondosRouteImport } from './routes/_authenticated/admin/fondos'
 import { Route as AuthenticatedAdminG2bulkRouteImport } from './routes/_authenticated/admin/g2bulk'
 import { Route as AuthenticatedAdminJuegosRouteImport } from './routes/_authenticated/admin/juegos'
 import { Route as AuthenticatedAdminPagosRouteImport } from './routes/_authenticated/admin/pagos'
@@ -137,6 +138,12 @@ const AuthenticatedAdminFinanzasRoute =
   AuthenticatedAdminFinanzasRouteImport.update({
     id: '/finanzas',
     path: '/finanzas',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminFondosRoute =
+  AuthenticatedAdminFondosRouteImport.update({
+    id: '/fondos',
+    path: '/fondos',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminG2bulkRoute =
@@ -320,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
+  '/admin/fondos': typeof AuthenticatedAdminFondosRoute
   '/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
   '/admin/juegos': typeof AuthenticatedAdminJuegosRoute
   '/admin/pagos': typeof AuthenticatedAdminPagosRoute
@@ -364,6 +372,7 @@ export interface FileRoutesByTo {
   '/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
+  '/admin/fondos': typeof AuthenticatedAdminFondosRoute
   '/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
   '/admin/juegos': typeof AuthenticatedAdminJuegosRoute
   '/admin/pagos': typeof AuthenticatedAdminPagosRoute
@@ -411,6 +420,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/depositos': typeof AuthenticatedAdminDepositosRoute
   '/_authenticated/admin/eventos': typeof AuthenticatedAdminEventosRoute
   '/_authenticated/admin/finanzas': typeof AuthenticatedAdminFinanzasRoute
+  '/_authenticated/admin/fondos': typeof AuthenticatedAdminFondosRoute
   '/_authenticated/admin/g2bulk': typeof AuthenticatedAdminG2bulkRoute
   '/_authenticated/admin/juegos': typeof AuthenticatedAdminJuegosRoute
   '/_authenticated/admin/pagos': typeof AuthenticatedAdminPagosRoute
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/admin/depositos'
     | '/admin/eventos'
     | '/admin/finanzas'
+    | '/admin/fondos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
@@ -502,6 +513,7 @@ export interface FileRouteTypes {
     | '/admin/depositos'
     | '/admin/eventos'
     | '/admin/finanzas'
+    | '/admin/fondos'
     | '/admin/g2bulk'
     | '/admin/juegos'
     | '/admin/pagos'
@@ -548,6 +560,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/depositos'
     | '/_authenticated/admin/eventos'
     | '/_authenticated/admin/finanzas'
+    | '/_authenticated/admin/fondos'
     | '/_authenticated/admin/g2bulk'
     | '/_authenticated/admin/juegos'
     | '/_authenticated/admin/pagos'
@@ -702,6 +715,13 @@ declare module '@tanstack/react-router' {
       path: '/finanzas'
       fullPath: '/admin/finanzas'
       preLoaderRoute: typeof AuthenticatedAdminFinanzasRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/fondos': {
+      id: '/_authenticated/admin/fondos'
+      path: '/fondos'
+      fullPath: '/admin/fondos'
+      preLoaderRoute: typeof AuthenticatedAdminFondosRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/g2bulk': {
@@ -910,6 +930,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminDepositosRoute: typeof AuthenticatedAdminDepositosRoute
   AuthenticatedAdminEventosRoute: typeof AuthenticatedAdminEventosRoute
   AuthenticatedAdminFinanzasRoute: typeof AuthenticatedAdminFinanzasRoute
+  AuthenticatedAdminFondosRoute: typeof AuthenticatedAdminFondosRoute
   AuthenticatedAdminG2bulkRoute: typeof AuthenticatedAdminG2bulkRoute
   AuthenticatedAdminJuegosRoute: typeof AuthenticatedAdminJuegosRoute
   AuthenticatedAdminPagosRoute: typeof AuthenticatedAdminPagosRoute
@@ -930,6 +951,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminDepositosRoute: AuthenticatedAdminDepositosRoute,
     AuthenticatedAdminEventosRoute: AuthenticatedAdminEventosRoute,
     AuthenticatedAdminFinanzasRoute: AuthenticatedAdminFinanzasRoute,
+    AuthenticatedAdminFondosRoute: AuthenticatedAdminFondosRoute,
     AuthenticatedAdminG2bulkRoute: AuthenticatedAdminG2bulkRoute,
     AuthenticatedAdminJuegosRoute: AuthenticatedAdminJuegosRoute,
     AuthenticatedAdminPagosRoute: AuthenticatedAdminPagosRoute,
