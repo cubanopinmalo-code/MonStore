@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Clock, Images, MapPin, Monitor, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { UserShell } from "@/components/layout/UserShell";
@@ -25,10 +27,34 @@ export const Route = createFileRoute("/_authenticated/app/comercio/$id")({
 
 function ListingDetailPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: listing, isLoading } = usePublicListing(id);
   const { data: wallet } = useWallet();
   const images = useSignedImages((listing?.images as string[] | undefined) ?? []);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [buying, setBuying] = useState(false);
+
+  async function buy() {
+    setBuying(true);
+    try {
+      const { error } = await supabase.rpc("buy_game_account", {
+        p_listing: id,
+        p_idempotency_key: "",
+      });
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries();
+      toast.success("Compra completada", {
+        description: "Ya tienes los datos de la cuenta. Asegúrala en las próximas 24 horas.",
+      });
+      await navigate({ to: "/app/comercio/mis-compras" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No pudimos completar la compra.");
+    } finally {
+      setBuying(false);
+    }
+  }
+
 
   if (!listing) {
     return (
