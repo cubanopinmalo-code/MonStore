@@ -91,12 +91,12 @@ function AuthPage() {
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (data.session) goToApp();
+      if (data.session) void goToApp();
       else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
-      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) goToApp();
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) void goToApp();
     });
     return () => {
       active = false;
@@ -164,7 +164,7 @@ function AuthPage() {
         return;
       }
       toast.success(result.created ? "¡Bienvenido a MONSTORE!" : "¡Bienvenido de vuelta!");
-      goToApp();
+      await goToApp();
     } catch {
       toast.error("No pudimos completar el acceso. Inténtalo nuevamente.");
     } finally {
