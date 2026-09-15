@@ -30,11 +30,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useEvent, useMySubscription, type EventRow } from "@/hooks/useEvents";
+import {
+  useEvent,
+  useEventsRealtime,
+  useMySubscription,
+  type EventRow,
+} from "@/hooks/useEvents";
 import { useProfile, useWallet } from "@/hooks/useAccount";
-import { EVENT_STATUS_LABEL, formatCountdown, formatEventDate, buildEventShareUrl } from "@/lib/events";
+import {
+  buildEventShareUrl,
+  eventStage,
+  eventStageLabel,
+  formatCountdown,
+  formatEventDate,
+  formatLongCountdown,
+  secondsUntil,
+} from "@/lib/events";
 import { formatCUP } from "@/lib/format";
-import type { EventStatus } from "@/types";
 
 export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
   head: () => ({
@@ -43,7 +55,7 @@ export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
       {
         name: "description",
         content:
-          "Consulta premio, participantes y horario del evento, y suscríbete con el ID de tu cuenta de juego.",
+          "Consulta premio, participantes y horario del evento, e inscríbete con el ID de tu personaje.",
       },
       { property: "og:title", content: "Detalle del evento — MONSTORE" },
       {
@@ -60,6 +72,7 @@ export const Route = createFileRoute("/_authenticated/app/eventos/$id")({
 function EventDetailPage() {
   const { id } = Route.useParams();
   const { data: event, isLoading } = useEvent(id);
+  useEventsRealtime();
 
   if (isLoading) {
     return (
@@ -96,45 +109,59 @@ function EventDetail({ event }: { event: EventRow }) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [accountId, setAccountId] = useState("");
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [room, setRoom] = useState<{ id: string | null; password: string | null } | null>(null);
 
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const stage = eventStage(event.status);
   const balance = Number(wallet?.balance ?? 0);
-  const paid = subscription?.payment_status === "pagado";
+  const confirmed = subscription?.payment_status === "pagado";
+  const refunded = subscription?.payment_status === "reembolsado";
   const enoughBalance = balance >= event.entry_price;
   const full = event.participants >= event.max_participants;
-  const open =
-    (event.status === "inscripciones_abiertas" || event.status === "meta_alcanzada") && !full;
+  const open = stage === "inscripciones" && !full;
 
-  useEffect(() => {
-    if (event.status !== "sala_activa" || !event.room_activated_at) {
-      setSecondsLeft(null);
-      return;
-    }
-    const end =
-      new Date(event.room_activated_at).getTime() + event.entry_window_minutes * 60 * 1000;
-    const tick = () => setSecondsLeft(Math.max(0, Math.floor((end - Date.now()) / 1000)));
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, [event.status, event.room_activated_at, event.entry_window_minutes]);
+  const secondsToStart = secondsUntil(event.starts_at, now);
+  const entrySecondsLeft = event.entry_closes_at ? secondsUntil(event.entry_closes_at, now) : 0;
+  const windowOpen = stage === "activo" && entrySecondsLeft > 0;
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["event", event.id] });
+    void queryClient.invalidateQueries({ queryKey: ["event-subscription"] });
+    void queryClient.invalidateQueries({ queryKey: ["wallet"] });
+    void queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+    void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  };
 
   const subscribe = useMutation({
     mutationFn: async (value: string) => {
-      const { data, error } = await supabase.rpc("subscribe_event", {
+      const { error } = await supabase.rpc("subscribe_event", {
         p_event: event.id,
         p_game_account_id: value,
       });
       if (error) throw new Error(error.message);
-      return data;
     },
     onSuccess: () => {
       setDialogOpen(false);
       setAccountId("");
-      toast.success("Te inscribiste en el evento.");
-      void queryClient.invalidateQueries({ queryKey: ["event", event.id] });
-      void queryClient.invalidateQueries({ queryKey: ["event-subscription", event.id] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Te inscribiste. El dinero se cobra solo al comenzar el evento.");
+      invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const cancelSubscription = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("cancel_event_subscription", { p_event: event.id });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Cancelaste tu inscripción.");
+      invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -143,24 +170,16 @@ function EventDetail({ event }: { event: EventRow }) {
     mutationFn: async () => {
       const { data, error } = await supabase.rpc("enter_event_room", { p_event: event.id });
       if (error) throw new Error(error.message);
-      return data as { room_id: string | null; room_password: string | null; charged: boolean };
+      return data as unknown as { room_id: string | null; room_password: string | null };
     },
     onSuccess: (data) => {
       setRoom({ id: data.room_id, password: data.room_password });
-      toast.success(
-        data.charged
-          ? `Entrada confirmada. Se descontaron ${formatCUP(event.entry_price)}.`
-          : "Ya tenías la entrada pagada.",
-      );
-      void queryClient.invalidateQueries({ queryKey: ["wallet"] });
-      void queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
-      void queryClient.invalidateQueries({ queryKey: ["event-subscription", event.id] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Ya tienes los datos de la sala.");
+      invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const windowOpen = secondsLeft === null || secondsLeft > 0;
   const progress = Math.min(
     100,
     Math.round((event.participants / Math.max(event.min_participants, 1)) * 100),
@@ -188,13 +207,12 @@ function EventDetail({ event }: { event: EventRow }) {
   function handleSubscribe() {
     const value = accountId.trim();
     if (!/^\d{6,}$/.test(value)) {
-      toast.error("Introduce un ID de cuenta de juego válido (solo números).");
+      toast.error("Introduce un ID de personaje válido (solo números).");
       return;
     }
     subscribe.mutate(value);
   }
 
-  // Las credenciales de sala solo llegan desde enter_event_room().
   const roomId = room?.id ?? null;
   const roomPassword = room?.password ?? null;
 
@@ -210,11 +228,14 @@ function EventDetail({ event }: { event: EventRow }) {
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-bold">{event.name}</h1>
-            <StatusBadge
-              status={EVENT_STATUS_LABEL[event.status as EventStatus] ?? event.status}
-            />
+            <StatusBadge status={eventStageLabel(event.status)} />
           </div>
           <p className="text-sm text-muted-foreground">{event.description}</p>
+          {stage === "inscripciones" && secondsToStart > 0 ? (
+            <p className="text-sm font-semibold text-primary">
+              Comienza en {formatLongCountdown(secondsToStart)}
+            </p>
+          ) : null}
           <Button variant="outline" className="w-full sm:w-auto" onClick={handleShare}>
             <Share2 className="size-4" aria-hidden="true" />
             Compartir evento
@@ -247,66 +268,76 @@ function EventDetail({ event }: { event: EventRow }) {
           <div className="sm:col-span-2">
             <Progress value={progress} />
             <p className="mt-1 text-xs text-muted-foreground">
-              Meta mínima: {event.min_participants} participantes.
+              Meta mínima: {event.min_participants} participantes. Si no se alcanza a la hora del
+              evento, se cancela y nadie paga.
             </p>
           </div>
         </section>
 
-        {event.status === "sala_activa" ? (
+        {stage === "activo" ? (
           <section className="surface-card space-y-3 p-5 glow-ring">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-semibold">Sala activa</h2>
+              <h2 className="text-base font-semibold">Evento activo</h2>
               <span className="text-sm font-semibold text-primary">
-                ⏱️{" "}
-                {secondsLeft === null
-                  ? "--:--"
-                  : windowOpen
-                    ? formatCountdown(secondsLeft)
-                    : "Tiempo agotado"}
+                ⏱️ {windowOpen ? formatCountdown(entrySecondsLeft) : "Tiempo agotado"}
               </span>
             </div>
 
-            {!subscription ? (
+            {!confirmed ? (
               <p className="text-sm text-muted-foreground">
-                Solo las personas inscritas pueden entrar a esta sala.
+                Solo pueden entrar las personas confirmadas al comenzar el evento.
+                {refunded ? " Tu inscripción no se confirmó y te devolvimos el dinero." : ""}
               </p>
             ) : roomId || roomPassword ? (
               <div className="space-y-2">
                 <RoomField label="ID de sala" value={roomId ?? "—"} />
                 <RoomField label="Contraseña" value={roomPassword ?? "—"} />
                 <p className="text-xs text-muted-foreground">
-                  Entrada pagada ({formatCUP(event.entry_price)}).
+                  Entrada pagada ({formatCUP(Number(subscription?.charge_amount ?? event.entry_price))}).
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  El precio se descuenta solo al confirmar tu entrada. Saldo actual:{" "}
-                  {formatCUP(balance)}.
+                  Tu entrada ya está pagada. Pide los datos de la sala para entrar.
                 </p>
                 <Button
                   className="w-full"
-                  disabled={!windowOpen || enterRoom.isPending || !enoughBalance}
+                  disabled={!windowOpen || enterRoom.isPending}
                   onClick={() => enterRoom.mutate()}
                 >
                   <Lock className="size-4" aria-hidden="true" />
-                  Entrar a la sala — {formatCUP(event.entry_price)}
+                  Ver datos de la sala
                 </Button>
-                {!enoughBalance ? (
-                  <p className="text-xs text-destructive">
-                    Saldo insuficiente.{" "}
-                    <Link to="/app/wallet/depositar" className="underline">
-                      Agregar fondos
-                    </Link>
-                  </p>
-                ) : null}
               </div>
             )}
           </section>
         ) : null}
 
+        {stage === "finalizado" ? (
+          <section className="surface-card space-y-2 p-5">
+            <h2 className="text-base font-semibold">Resultado</h2>
+            <p className="text-sm text-muted-foreground">
+              Ganador: {event.winner_character_name ?? "Por publicar"}
+            </p>
+            {event.reward_note ? (
+              <p className="text-sm text-muted-foreground">{event.reward_note}</p>
+            ) : null}
+          </section>
+        ) : null}
+
+        {stage === "cancelado" ? (
+          <section className="surface-card space-y-2 p-5">
+            <h2 className="text-base font-semibold">Evento cancelado</h2>
+            <p className="text-sm text-muted-foreground">
+              {event.cancel_reason || "El evento fue cancelado."} Si te habíamos cobrado, el dinero
+              volvió a tu saldo.
+            </p>
+          </section>
+        ) : null}
+
         <section className="surface-card space-y-3 p-5">
-          {subscription ? (
+          {subscription && subscription.status !== "cancelado" ? (
             <>
               <p className="text-sm font-semibold text-success">✅ Ya estás inscrito</p>
               <p className="text-sm text-muted-foreground">
@@ -314,24 +345,42 @@ function EventDetail({ event }: { event: EventRow }) {
                 <span className="font-mono">{subscription.game_account_id}</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                Solo esta cuenta tendrá derecho al premio. Para cambiarla necesitas autorización
-                del administrador.
+                Solo este ID tendrá derecho al premio. El pago de {formatCUP(event.entry_price)} se
+                descuenta automáticamente cuando el evento comience.
               </p>
+              {stage === "inscripciones" ? (
+                <Button
+                  variant="outline"
+                  disabled={cancelSubscription.isPending}
+                  onClick={() => cancelSubscription.mutate()}
+                >
+                  Cancelar mi inscripción
+                </Button>
+              ) : null}
             </>
-          ) : full ? (
+          ) : full && stage === "inscripciones" ? (
             <p className="text-sm font-semibold text-destructive">🔴 Evento completo</p>
           ) : open ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Inscribirte no descuenta dinero. El pago ocurre solo al entrar a la sala.
+                Inscribirte no descuenta dinero ahora. Ten {formatCUP(event.entry_price)} en tu
+                saldo cuando comience el evento. Saldo actual: {formatCUP(balance)}.
               </p>
+              {!enoughBalance ? (
+                <p className="text-xs text-destructive">
+                  Saldo insuficiente.{" "}
+                  <Link to="/app/wallet/depositar" className="underline">
+                    Agregar fondos
+                  </Link>
+                </p>
+              ) : null}
               <Button className="w-full" onClick={() => setDialogOpen(true)}>
-                Suscribirme al evento
+                Inscribirme al evento
               </Button>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Las inscripciones para este evento no están disponibles.
+              Las inscripciones para este evento ya están cerradas.
             </p>
           )}
         </section>
@@ -339,10 +388,9 @@ function EventDetail({ event }: { event: EventRow }) {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>ID de la cuenta de juego</DialogTitle>
+              <DialogTitle>ID del personaje</DialogTitle>
               <DialogDescription>
-                Introduce el ID con el que entrarás a la sala. Solo ese ID tendrá derecho al
-                premio.
+                Introduce el ID con el que entrarás a la sala. Solo ese ID tendrá derecho al premio.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
