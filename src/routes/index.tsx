@@ -361,14 +361,18 @@ function AuthPage() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={loading || cooldown > 0}
+                disabled={loading || cooldown > 0 || blockLeft > 0}
                 onClick={() => {
                   void handleRequest({
                     preventDefault: () => {},
                   } as unknown as React.FormEvent<HTMLFormElement>);
                 }}
               >
-                {cooldown > 0 ? `Reenviar en ${cooldown}s` : "Reenviar código"}
+                {blockLeft > 0
+                  ? `Disponible en ${blockClock}`
+                  : cooldown > 0
+                    ? `Reenviar en ${cooldown}s`
+                    : "Reenviar código"}
               </Button>
             </div>
           </form>
