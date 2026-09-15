@@ -296,7 +296,7 @@ function DepositPage() {
     ? "metodo"
     : usesDestinations && !channel
       ? "canal"
-      : usesDestinations && channel === "transfermovil" && !destination
+      : usesDestinations && banks.length > 1 && !destination
         ? "banco"
         : confirming
           ? "confirmar"
@@ -330,7 +330,7 @@ function DepositPage() {
   function chooseChannel(value: string) {
     setChannel(value);
     const single = destinations.filter((item) => item.channel === value);
-    setDestinationId(value === "transfermovil" ? null : (single[0]?.id ?? null));
+    setDestinationId(single.length === 1 ? (single[0]?.id ?? null) : null);
     setProof(null);
     setProofPreview(null);
     setTransactionId("");
