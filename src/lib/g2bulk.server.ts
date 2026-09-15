@@ -405,8 +405,14 @@ export type ProviderTopUpOrder = {
   order_id?: number;
   status?: string;
   message?: string;
+  /** Respuesta original del proveedor, útil para el registro técnico. */
+  raw?: Record<string, unknown>;
 };
 
+/**
+ * El proveedor puede devolver los datos de la orden en la raíz o dentro de
+ * "order"/"data". Se leen ambos para no perder nunca la referencia real.
+ */
 export async function placeTopUpOrder(
   code: string,
   body: {
@@ -419,12 +425,26 @@ export async function placeTopUpOrder(
   },
   idempotencyKey: string,
 ): Promise<ProviderTopUpOrder> {
-  return call<ProviderTopUpOrder>(`/games/${encodeURIComponent(code)}/order`, {
-    method: "POST",
-    body,
-    requiresKey: true,
-    idempotencyKey,
-    attempts: 1,
-  });
+  const response = await call<Record<string, unknown>>(
+    `/games/${encodeURIComponent(code)}/order`,
+    {
+      method: "POST",
+      body,
+      requiresKey: true,
+      idempotencyKey,
+      attempts: 1,
+    },
+  );
+  const nested =
+    (response["order"] as Record<string, unknown> | undefined) ??
+    (response["data"] as Record<string, unknown> | undefined) ??
+    {};
+  const rawId = response["order_id"] ?? nested["order_id"] ?? nested["id"];
+  const rawStatus = response["status"] ?? nested["status"];
+  const result: ProviderTopUpOrder = { raw: response };
+  if (rawId !== undefined && rawId !== null) result.order_id = Number(rawId);
+  if (typeof rawStatus === "string") result.status = rawStatus;
+  if (typeof response["message"] === "string") result.message = response["message"];
+  return result;
 }
 
