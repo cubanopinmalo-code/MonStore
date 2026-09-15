@@ -221,11 +221,19 @@ export async function checkPlayerId(body: {
   }));
 }
 
-export async function providerBalance(): Promise<{ balance: number; username: string | null }> {
-  const data = await call<{ balance?: number; username?: string }>("/getMe", {
+export async function providerBalance(): Promise<{
+  balance: number;
+  currency: string;
+  username: string | null;
+}> {
+  const data = await call<{ balance?: number; username?: string; currency?: string }>("/getMe", {
     requiresKey: true,
   });
-  return { balance: Number(data.balance ?? 0), username: data.username ?? null };
+  return {
+    balance: Number(data.balance ?? 0),
+    currency: String(data.currency ?? "USD"),
+    username: data.username ?? null,
+  };
 }
 
 export type ProviderPurchase = {
@@ -236,6 +244,11 @@ export type ProviderPurchase = {
   poll_url?: string | null;
 };
 
+/**
+ * Compra real. Sin reintentos automáticos: una escritura repetida podría
+ * duplicar el pedido en el proveedor. La reconciliación se hace consultando
+ * el estado, no repitiendo la compra.
+ */
 export async function purchaseProduct(
   productId: string,
   quantity: number,
@@ -246,6 +259,7 @@ export async function purchaseProduct(
     body: { quantity },
     requiresKey: true,
     idempotencyKey,
+    attempts: 1,
   });
 }
 
@@ -253,6 +267,37 @@ export async function orderDelivery(orderId: string): Promise<ProviderPurchase> 
   return call<ProviderPurchase>(`/orders/${encodeURIComponent(orderId)}/delivery`, {
     requiresKey: true,
   });
+}
+
+export type ProviderOrderStatus = {
+  status: string;
+  transactionId: string | null;
+  items: string[];
+  found: boolean;
+};
+
+/** Consulta del estado de un pedido ya creado en el proveedor. */
+export async function providerOrderStatus(orderId: string): Promise<ProviderOrderStatus> {
+  try {
+    const data = await call<{
+      status?: string;
+      order?: { status?: string; transaction_id?: number | string };
+      transaction_id?: number | string;
+      delivery_items?: string[] | null;
+    }>(`/orders/${encodeURIComponent(orderId)}`, { requiresKey: true });
+    const reference = data.transaction_id ?? data.order?.transaction_id ?? null;
+    return {
+      status: String(data.status ?? data.order?.status ?? "unknown").toUpperCase(),
+      transactionId: reference === null ? null : String(reference),
+      items: Array.isArray(data.delivery_items) ? data.delivery_items.map(String) : [],
+      found: true,
+    };
+  } catch (error) {
+    if (error instanceof ProviderError && error.status === 404) {
+      return { status: "NOT_FOUND", transactionId: null, items: [], found: false };
+    }
+    throw error;
+  }
 }
 
 export type ProviderTopUpOrder = {
@@ -277,5 +322,6 @@ export async function placeTopUpOrder(
     body,
     requiresKey: true,
     idempotencyKey,
+    attempts: 1,
   });
 }
