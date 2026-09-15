@@ -201,7 +201,6 @@ async function loadPanel(): Promise<AdminPanelData> {
     held_funds: wallets.reduce((total, row) => total + Number(row.held_balance ?? 0), 0),
     wallets_total: wallets.reduce((total, row) => total + Number(row.balance ?? 0), 0),
     alerts,
-    activity,
   };
 }
 
