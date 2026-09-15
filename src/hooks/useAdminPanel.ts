@@ -222,6 +222,10 @@ export function useAdminPanel() {
   return useQuery({ queryKey: ["admin-panel"], queryFn: loadPanel });
 }
 
+/**
+ * Tablas de datos operativos: un cambio aquí sí obliga a recalcular los
+ * indicadores del panel y de la pantalla que las está mirando.
+ */
 const REALTIME_TABLES = [
   "deposits",
   "withdrawals",
@@ -230,12 +234,15 @@ const REALTIME_TABLES = [
   "event_subscriptions",
   "orders",
   "wallets",
-  "wallet_transactions",
   "platform_settings",
-  "audit_log",
   "game_account_sales",
-  "game_account_events",
 ] as const;
+
+/**
+ * La auditoría solo alimenta "Actividad reciente": su propio canal evita que
+ * un apunte nuevo dispare el recálculo completo del panel.
+ */
+const ACTIVITY_TABLE = "audit_log";
 
 /** Refresca el panel en cuanto cambia algo relevante, sin recargar la página. */
 export function useAdminRealtime(keys: string[] = ["admin-panel"]) {
@@ -251,6 +258,13 @@ export function useAdminRealtime(keys: string[] = ["admin-panel"]) {
         }
       });
     }
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: ACTIVITY_TABLE },
+      () => {
+        void queryClient.invalidateQueries({ queryKey: [ACTIVITY_QUERY_KEY] });
+      },
+    );
     channel.subscribe();
     return () => {
       void supabase.removeChannel(channel);
