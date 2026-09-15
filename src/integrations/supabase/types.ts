@@ -241,8 +241,154 @@ export type Database = {
           },
         ]
       }
+      event_prize_deliveries: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          error_message: string
+          event_id: string
+          id: string
+          idempotency_key: string
+          reward_amount: number | null
+          reward_note: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          wallet_transaction_id: string | null
+          winner_user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          error_message?: string
+          event_id: string
+          id?: string
+          idempotency_key: string
+          reward_amount?: number | null
+          reward_note?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          wallet_transaction_id?: string | null
+          winner_user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          error_message?: string
+          event_id?: string
+          id?: string
+          idempotency_key?: string
+          reward_amount?: number | null
+          reward_note?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          wallet_transaction_id?: string | null
+          winner_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_prize_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_results_public"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "event_prize_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_prize_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_prize_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "event_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_sms_log: {
+        Row: {
+          created_at: string
+          error_message: string
+          event_id: string
+          id: string
+          idempotency_key: string
+          kind: string
+          phone: string
+          provider_message_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string
+          event_id: string
+          id?: string
+          idempotency_key: string
+          kind?: string
+          phone?: string
+          provider_message_id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string
+          event_id?: string
+          id?: string
+          idempotency_key?: string
+          kind?: string
+          phone?: string
+          provider_message_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_sms_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_results_public"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "event_sms_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_sms_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_subscriptions: {
         Row: {
+          cancelled_at: string | null
+          character_name: string
+          charge_amount: number
+          charge_error: string
+          charged_at: string | null
           created_at: string
           entered_at: string | null
           event_id: string
@@ -250,10 +396,17 @@ export type Database = {
           game_account_id: string
           id: string
           payment_status: string
+          refunded_at: string | null
           status: string
           user_id: string
+          wallet_transaction_id: string | null
         }
         Insert: {
+          cancelled_at?: string | null
+          character_name?: string
+          charge_amount?: number
+          charge_error?: string
+          charged_at?: string | null
           created_at?: string
           entered_at?: string | null
           event_id: string
@@ -261,10 +414,17 @@ export type Database = {
           game_account_id: string
           id?: string
           payment_status?: string
+          refunded_at?: string | null
           status?: string
           user_id: string
+          wallet_transaction_id?: string | null
         }
         Update: {
+          cancelled_at?: string | null
+          character_name?: string
+          charge_amount?: number
+          charge_error?: string
+          charged_at?: string | null
           created_at?: string
           entered_at?: string | null
           event_id?: string
@@ -272,10 +432,19 @@ export type Database = {
           game_account_id?: string
           id?: string
           payment_status?: string
+          refunded_at?: string | null
           status?: string
           user_id?: string
+          wallet_transaction_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "event_subscriptions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_results_public"
+            referencedColumns: ["event_id"]
+          },
           {
             foreignKeyName: "event_subscriptions_event_id_fkey"
             columns: ["event_id"]
@@ -294,89 +463,161 @@ export type Database = {
       }
       events: {
         Row: {
+          activated_at: string | null
+          admin_alert15_at: string | null
           banner_url: string | null
+          cancel_reason: string
+          cancelled_at: string | null
           created_at: string
           currency: string
           description: string
+          entry_closed_at: string | null
+          entry_closes_at: string | null
+          entry_opens_at: string | null
           entry_price: number
+          entry_revenue: number
+          entry_warning5_at: string | null
           entry_window_minutes: number
           event_date: string | null
           event_time: string
           event_type: string
           finished_at: string | null
+          finished_by: string | null
           game_id: string | null
+          goal_reached_at: string | null
           id: string
           max_participants: number
           min_participants: number
           name: string
           prize: string
           prize_delivered_at: string | null
+          prize_delivery_error: string
+          prize_delivery_status: string
           region: string
+          reminder30_at: string | null
           result_note: string
           result_published_at: string | null
+          reward_amount: number | null
+          reward_note: string
           room_activated_at: string | null
           room_id: string | null
+          room_locked_at: string | null
           room_password: string | null
+          room_updated_at: string | null
+          room_updated_by: string | null
+          started_at: string | null
+          started_by: string | null
+          starts_at: string | null
           status: Database["public"]["Enums"]["event_status"]
           updated_at: string
+          winner_character_name: string
+          winner_game_account_id: string
           winner_subscription_id: string | null
           winner_user_id: string | null
         }
         Insert: {
+          activated_at?: string | null
+          admin_alert15_at?: string | null
           banner_url?: string | null
+          cancel_reason?: string
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
           description?: string
+          entry_closed_at?: string | null
+          entry_closes_at?: string | null
+          entry_opens_at?: string | null
           entry_price?: number
+          entry_revenue?: number
+          entry_warning5_at?: string | null
           entry_window_minutes?: number
           event_date?: string | null
           event_time?: string
           event_type?: string
           finished_at?: string | null
+          finished_by?: string | null
           game_id?: string | null
+          goal_reached_at?: string | null
           id?: string
           max_participants?: number
           min_participants?: number
           name: string
           prize?: string
           prize_delivered_at?: string | null
+          prize_delivery_error?: string
+          prize_delivery_status?: string
           region?: string
+          reminder30_at?: string | null
           result_note?: string
           result_published_at?: string | null
+          reward_amount?: number | null
+          reward_note?: string
           room_activated_at?: string | null
           room_id?: string | null
+          room_locked_at?: string | null
           room_password?: string | null
+          room_updated_at?: string | null
+          room_updated_by?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
+          winner_character_name?: string
+          winner_game_account_id?: string
           winner_subscription_id?: string | null
           winner_user_id?: string | null
         }
         Update: {
+          activated_at?: string | null
+          admin_alert15_at?: string | null
           banner_url?: string | null
+          cancel_reason?: string
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
           description?: string
+          entry_closed_at?: string | null
+          entry_closes_at?: string | null
+          entry_opens_at?: string | null
           entry_price?: number
+          entry_revenue?: number
+          entry_warning5_at?: string | null
           entry_window_minutes?: number
           event_date?: string | null
           event_time?: string
           event_type?: string
           finished_at?: string | null
+          finished_by?: string | null
           game_id?: string | null
+          goal_reached_at?: string | null
           id?: string
           max_participants?: number
           min_participants?: number
           name?: string
           prize?: string
           prize_delivered_at?: string | null
+          prize_delivery_error?: string
+          prize_delivery_status?: string
           region?: string
+          reminder30_at?: string | null
           result_note?: string
           result_published_at?: string | null
+          reward_amount?: number | null
+          reward_note?: string
           room_activated_at?: string | null
           room_id?: string | null
+          room_locked_at?: string | null
           room_password?: string | null
+          room_updated_at?: string | null
+          room_updated_by?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
+          winner_character_name?: string
+          winner_game_account_id?: string
           winner_subscription_id?: string | null
           winner_user_id?: string | null
         }
@@ -1950,12 +2191,45 @@ export type Database = {
       }
     }
     Views: {
+      event_results_public: {
+        Row: {
+          event_id: string | null
+          event_name: string | null
+          event_type: string | null
+          finished_at: string | null
+          game_id: string | null
+          game_image: string | null
+          game_name: string | null
+          prize: string | null
+          result_published_at: string | null
+          reward_note: string | null
+          starts_at: string | null
+          winner_avatar: string | null
+          winner_character_name: string | null
+          winner_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events_public: {
         Row: {
+          activated_at: string | null
           banner_url: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
           created_at: string | null
           currency: string | null
           description: string | null
+          entry_closed_at: string | null
+          entry_closes_at: string | null
+          entry_opens_at: string | null
           entry_price: number | null
           entry_window_minutes: number | null
           event_date: string | null
@@ -1963,20 +2237,32 @@ export type Database = {
           event_type: string | null
           finished_at: string | null
           game_id: string | null
+          goal_reached_at: string | null
           id: string | null
           max_participants: number | null
           min_participants: number | null
           name: string | null
           prize: string | null
           region: string | null
+          result_published_at: string | null
+          reward_note: string | null
           room_activated_at: string | null
+          started_at: string | null
+          starts_at: string | null
           status: Database["public"]["Enums"]["event_status"] | null
+          winner_character_name: string | null
         }
         Insert: {
+          activated_at?: string | null
           banner_url?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          entry_closed_at?: string | null
+          entry_closes_at?: string | null
+          entry_opens_at?: string | null
           entry_price?: number | null
           entry_window_minutes?: number | null
           event_date?: string | null
@@ -1984,20 +2270,32 @@ export type Database = {
           event_type?: string | null
           finished_at?: string | null
           game_id?: string | null
+          goal_reached_at?: string | null
           id?: string | null
           max_participants?: number | null
           min_participants?: number | null
           name?: string | null
           prize?: string | null
           region?: string | null
+          result_published_at?: string | null
+          reward_note?: string | null
           room_activated_at?: string | null
+          started_at?: string | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
+          winner_character_name?: string | null
         }
         Update: {
+          activated_at?: string | null
           banner_url?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          entry_closed_at?: string | null
+          entry_closes_at?: string | null
+          entry_opens_at?: string | null
           entry_price?: number | null
           entry_window_minutes?: number | null
           event_date?: string | null
@@ -2005,14 +2303,20 @@ export type Database = {
           event_type?: string | null
           finished_at?: string | null
           game_id?: string | null
+          goal_reached_at?: string | null
           id?: string | null
           max_participants?: number | null
           min_participants?: number | null
           name?: string | null
           prize?: string | null
           region?: string | null
+          result_published_at?: string | null
+          reward_note?: string | null
           room_activated_at?: string | null
+          started_at?: string | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
+          winner_character_name?: string | null
         }
         Relationships: [
           {
@@ -2212,6 +2516,7 @@ export type Database = {
         | "finalizado"
         | "cancelado"
         | "meta_no_alcanzada"
+        | "evento_iniciado"
       listing_status:
         | "pendiente"
         | "aprobada"
@@ -2371,6 +2676,7 @@ export const Constants = {
         "finalizado",
         "cancelado",
         "meta_no_alcanzada",
+        "evento_iniciado",
       ],
       listing_status: [
         "pendiente",
