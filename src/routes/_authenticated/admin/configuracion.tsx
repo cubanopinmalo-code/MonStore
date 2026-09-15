@@ -288,6 +288,9 @@ function PaymentMethodCard({ method }: { method: PaymentMethodInfo }) {
   
   const [conversion, setConversion] = useState(String(method.withdrawal_conversion_pct));
   const [saving, setSaving] = useState(false);
+  // El estado de las transferencias en CUP se deriva de los destinos activos:
+  // una sola fuente de verdad para el administrador y el cliente.
+  const derived = method.payment_method === "tarjeta_cup";
 
   function updateField(index: number, key: keyof TransferField, value: string) {
     setFields((current) =>
