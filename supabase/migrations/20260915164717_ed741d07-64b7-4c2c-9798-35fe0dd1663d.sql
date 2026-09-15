@@ -1,0 +1,23 @@
+REVOKE ALL ON FUNCTION public.listing_fee_for_days(integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_set_listing_secrets(uuid, text, text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_set_listing_totp(uuid, text, boolean) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.admin_update_listing(uuid, text, text, numeric, text, text, uuid, text[]) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.buy_game_account(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.read_listing_secrets(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.republish_game_account(uuid, text, numeric, integer, text[], text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.withdraw_listing(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.release_account_sale(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.process_due_account_sales() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.expire_due_listings() FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.listing_fee_for_days(integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_set_listing_secrets(uuid, text, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_set_listing_totp(uuid, text, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_update_listing(uuid, text, text, numeric, text, text, uuid, text[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.buy_game_account(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.read_listing_secrets(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.republish_game_account(uuid, text, numeric, integer, text[], text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.withdraw_listing(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.release_account_sale(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.process_due_account_sales() TO service_role;
+GRANT EXECUTE ON FUNCTION public.expire_due_listings() TO service_role;
