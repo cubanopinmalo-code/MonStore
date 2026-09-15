@@ -588,6 +588,7 @@ const DESTINATION_ERRORS: Record<string, string> = {
   formato_invalido: "Ese destino no tiene un formato válido.",
   tarjeta_invalida: "El número de tarjeta debe tener entre 16 y 19 dígitos.",
   monedero_invalido: "El número del monedero debe tener entre 8 y 16 dígitos.",
+  movil_invalido: "El móvil a confirmar debe ser un móvil cubano válido (8 dígitos, empieza por 5).",
 };
 
 /** El administrador cambia los datos de un destino de pago (con auditoría). */
