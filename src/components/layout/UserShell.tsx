@@ -74,6 +74,13 @@ export function UserShell({ children }: { children: ReactNode }) {
                 ) : null}
               </Link>
             </Button>
+            {isAdmin ? (
+              <Button asChild variant="ghost" size="icon">
+                <Link to="/admin" aria-label="Panel administrativo">
+                  <ShieldCheck className="size-5" aria-hidden="true" />
+                </Link>
+              </Button>
+            ) : null}
             <SignOutDialog>
               <Button variant="ghost" size="icon" aria-label="Cerrar sesión">
                 <LogOut className="size-5" aria-hidden="true" />
