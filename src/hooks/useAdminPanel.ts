@@ -228,6 +228,8 @@ const REALTIME_TABLES = [
   "wallet_transactions",
   "platform_settings",
   "audit_log",
+  "game_account_sales",
+  "game_account_events",
 ] as const;
 
 /** Refresca el panel en cuanto cambia algo relevante, sin recargar la página. */
