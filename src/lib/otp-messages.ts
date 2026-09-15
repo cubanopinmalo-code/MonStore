@@ -34,6 +34,9 @@ export const OTP_MESSAGES: Record<string, string> = {
   cuenta_bloqueada:
     "Tu cuenta está bloqueada. Escribe a atención al cliente para revisar tu caso.",
 
+  registro_cerrado:
+    "El registro de cuentas nuevas no está disponible ahora mismo. Si ya tienes cuenta, puedes entrar con tu número.",
+
   // Sesión
   alta_fallida: "No pudimos completar el acceso. Inténtalo nuevamente.",
   sesion_no_emitida: "No pudimos completar el acceso. Inténtalo nuevamente.",

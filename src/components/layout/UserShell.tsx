@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Gamepad2, Home, LogOut, ShieldCheck, Store, User, Wallet } from "lucide-react";
+import { Bell, Gamepad2, Home, LogOut, ShieldCheck, Store, User, Wallet, Wrench } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { SignOutDialog } from "@/components/common/SignOutDialog";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin, useNotifications, useWallet } from "@/hooks/useAccount";
+import { usePlatformFlags } from "@/hooks/usePlatformFlags";
 import { formatCUP } from "@/lib/format";
 
 
@@ -26,8 +27,15 @@ export function UserShell({ children }: { children: ReactNode }) {
   const { data: wallet } = useWallet();
   const { data: notifications } = useNotifications();
   const { data: isAdmin } = useIsAdmin();
+  const { data: flags } = usePlatformFlags();
   const balance = Number(wallet?.balance ?? 0);
   const unread = (notifications ?? []).filter((item) => !item.read).length;
+  // El administrador conserva su acceso completo incluso en mantenimiento.
+  const inMaintenance = Boolean(flags?.maintenance) && !isAdmin;
+  const nav = MAIN_NAV.filter(
+    (item) => item.to !== "/app/comercio" || flags?.marketplaceEnabled !== false,
+  );
+
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -35,7 +43,7 @@ export function UserShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4">
           <Logo to="/app" />
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
-            {MAIN_NAV.map((item) => (
+            {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -91,14 +99,30 @@ export function UserShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-28 lg:pb-10">{children}</main>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-28 lg:pb-10">
+        {inMaintenance ? (
+          <section className="surface-card mx-auto max-w-lg space-y-3 p-6 text-center">
+            <Wrench className="mx-auto size-8 text-primary" aria-hidden="true" />
+            <h1 className="font-display text-xl font-bold">Estamos en mantenimiento</h1>
+            <p className="text-sm text-muted-foreground">
+              MONSTORE está en mantenimiento durante unos minutos. No se pueden hacer recargas,
+              compras, envíos de saldo ni retiros ahora mismo. Tu saldo y tus pedidos están a salvo.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Vuelve a intentarlo en un momento: la aplicación se reactiva sola cuando terminamos.
+            </p>
+          </section>
+        ) : (
+          children
+        )}
+      </main>
 
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
         aria-label="Navegación principal"
       >
-        <div className="grid grid-cols-5">
-          {MAIN_NAV.map((item) => (
+        <div className={nav.length === 5 ? "grid grid-cols-5" : "grid grid-cols-4"}>
+          {nav.map((item) => (
             <Link
               key={item.to}
               to={item.to}

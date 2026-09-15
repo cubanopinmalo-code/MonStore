@@ -23,6 +23,7 @@ import {
   useActiveGames,
   useListingFee,
 } from "@/hooks/useMarketplace";
+import { usePlatformFlags } from "@/hooks/usePlatformFlags";
 import { getAccessMethods } from "@/lib/accountAccess";
 import { formatCUP } from "@/lib/format";
 
@@ -52,6 +53,7 @@ function PublishListingPage() {
   const { data: wallet } = useWallet();
   const { data: games } = useActiveGames();
   const { data: feePerDay } = useListingFee();
+  const { data: flags } = usePlatformFlags();
 
   const availableGames = (games ?? []).filter((game) => LISTABLE_GAMES.includes(game.name));
   const [gameId, setGameId] = useState("");
@@ -136,6 +138,21 @@ function PublishListingPage() {
       description: `Al ser aprobada, tu cuenta será publicada por ${days * 24} horas para que todos los que usan la app la vean. ¡Buena suerte con la venta!`,
     });
     void navigate({ to: "/app/comercio/mis-publicaciones" });
+  }
+
+  if (flags?.marketplaceEnabled === false) {
+    return (
+      <UserShell>
+        <section className="surface-card mx-auto max-w-lg space-y-3 p-6 text-center">
+          <LockKeyhole className="mx-auto size-8 text-primary" aria-hidden="true" />
+          <h1 className="font-display text-xl font-bold">Publicaciones cerradas</h1>
+          <p className="text-sm text-muted-foreground">
+            El comercio de cuentas está desactivado temporalmente, así que no se pueden publicar
+            cuentas nuevas. Tus publicaciones anteriores no cambian.
+          </p>
+        </section>
+      </UserShell>
+    );
   }
 
   return (

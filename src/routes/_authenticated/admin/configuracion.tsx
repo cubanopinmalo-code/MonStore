@@ -13,7 +13,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OperationalSettingsCard } from "@/components/admin/settings/OperationalSettingsCard";
 import { UserBlockCard } from "@/components/admin/settings/UserBlockCard";
 import { CampaignCard } from "@/components/admin/settings/CampaignCard";
-import { getSaldoRate, getUsdRate, setSaldoRate, setUsdRate } from "@/lib/catalog.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  getSaldoRate,
+  getUsdRate,
+  recalculateOfferPrices,
+  setSaldoRate,
+  setUsdRate,
+} from "@/lib/catalog.functions";
 import { getListingFees, setListingFees } from "@/lib/marketplace.functions";
 import { formatCUP } from "@/lib/format";
 import {
@@ -122,10 +139,8 @@ function UsdRateCard() {
         onClick={async () => {
           setSaving(true);
           try {
-            const result = await save({
-              data: { rate: Number(value), margin: Number(margin) },
-            });
-            toast.success(`Precios actualizados: ${result.updated} ofertas recalculadas.`);
+            await save({ data: { rate: Number(value), margin: Number(margin) } });
+            toast.success("Valores guardados. Los precios publicados no cambian todavía.");
             await router.invalidate();
           } catch (error) {
             toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
@@ -134,9 +149,68 @@ function UsdRateCard() {
           }
         }}
       >
-        {saving ? "Guardando…" : "Guardar y recalcular precios"}
+        {saving ? "Guardando…" : "Guardar valores"}
       </Button>
+      <RecalculatePricesAction />
     </section>
+  );
+}
+
+function RecalculatePricesAction() {
+  const router = useRouter();
+  const recalc = useServerFn(recalculateOfferPrices);
+  const [running, setRunning] = useState(false);
+
+  return (
+    <div className="mt-4 space-y-2 rounded-lg border border-border/70 p-3">
+      <p className="text-sm font-semibold">Recalcular precios de recargas</p>
+      <p className="text-xs text-muted-foreground">
+        Los precios ya publicados no cambian cuando guardas los valores. Usa esta acción cuando
+        quieras aplicarlos a las ofertas.
+      </p>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button type="button" variant="outline" size="sm" disabled={running}>
+            {running ? "Recalculando…" : "Recalcular precios"}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Recalcular los precios de las recargas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se actualizarán los precios de las ofertas según el valor del dólar y la ganancia
+              guardados ahora. Los precios actuales serán sustituidos por los nuevos cálculos. Esta
+              acción queda registrada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setRunning(true);
+                try {
+                  const result = await recalc({});
+                  if (result.repetido) {
+                    toast.info("Ya se recalcularon los precios hace un momento.");
+                  } else {
+                    toast.success(`Precios recalculados: ${result.updated} ofertas actualizadas.`);
+                  }
+                  await router.invalidate();
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error ? error.message : "No se pudo recalcular.",
+                  );
+                } finally {
+                  setRunning(false);
+                }
+              }}
+            >
+              Sí, recalcular
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
 
@@ -540,8 +614,106 @@ function AdminSettingsPage() {
 const CHANNEL_TITLES: Record<string, string> = {
   transfermovil: "Transfermóvil",
   enzona: "EnZona",
+  metropolitana: "Metropolitana",
   iphone: "Utilizo iPhone",
 };
+
+/** Imagen que enseña al cliente dónde tocar para enviar al Monedero Mi Transfer. */
+function GuideImageField({ destination }: { destination: PaymentDestination }) {
+  const router = useRouter();
+  const saveImage = useServerFn(setDestinationGuideImage);
+  const [preview, setPreview] = useState<string | null>(destination.guide_image_url);
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="space-y-2 rounded-lg border border-dashed border-border/70 p-3">
+      <p className="text-sm font-semibold">Imagen que enseña dónde enviar el dinero</p>
+      <p className="text-xs text-muted-foreground">
+        Sube una captura de la aplicación señalando el paso. El cliente la verá junto al número.
+      </p>
+      {preview ? (
+        <img
+          src={preview}
+          alt="Guía para enviar al Monedero Mi Transfer"
+          className="max-h-64 w-full rounded-md border border-border/60 object-contain"
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground">Todavía no hay imagen.</p>
+      )}
+      <Input
+        type="file"
+        accept="image/*"
+        onChange={(event) => {
+          const picked = event.target.files?.[0] ?? null;
+          if (picked && !picked.type.startsWith("image/")) {
+            toast.error("Elige un archivo de imagen.");
+            return;
+          }
+          if (picked && picked.size > 5 * 1024 * 1024) {
+            toast.error("La imagen no puede pasar de 5 MB.");
+            return;
+          }
+          setFile(picked);
+          setPreview(picked ? URL.createObjectURL(picked) : destination.guide_image_url);
+        }}
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          disabled={!file || busy}
+          onClick={async () => {
+            if (!file) return;
+            setBusy(true);
+            try {
+              const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
+              const path = `${destination.id}/${Date.now()}.${ext}`;
+              const { error } = await supabase.storage
+                .from("payment-guides")
+                .upload(path, file, { contentType: file.type || "image/jpeg", upsert: true });
+              if (error) throw new Error("No se pudo subir la imagen.");
+              await saveImage({ data: { id: destination.id, path } });
+              toast.success("Imagen guardada. El cliente ya la verá.");
+              setFile(null);
+              await router.invalidate();
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "No se pudo guardar la imagen.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {busy ? "Guardando…" : "Guardar imagen"}
+        </Button>
+        {destination.guide_image_path ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await saveImage({ data: { id: destination.id, path: "" } });
+                setPreview(null);
+                setFile(null);
+                toast.success("Imagen quitada.");
+                await router.invalidate();
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "No se pudo quitar.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Quitar imagen
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 /** Destinos de pago: tarjeta BANDEC/BPA, Monedero Mi Transfer, EnZona e iPhone. */
 function PaymentDestinationsCard() {

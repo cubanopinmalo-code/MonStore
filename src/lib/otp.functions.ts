@@ -342,6 +342,24 @@ export const verifyOtp = createServerFn({ method: "POST" })
     const email = phoneToEmailCanonical(phone);
     const national = nationalPhone(phone);
 
+    // Interruptor «Registro abierto»: se comprueba en servidor. Los usuarios que
+    // ya tienen cuenta siguen entrando con normalidad; solo se frena el alta nueva.
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("phone", national)
+      .maybeSingle();
+    if (!existingProfile) {
+      const { data: platform } = await supabaseAdmin
+        .from("platform_settings")
+        .select("registration_open")
+        .maybeSingle();
+      if (platform && platform.registration_open === false) {
+        await logAuthEvent({ action: "login_fallido", phoneE164: phone, reason: "registro_cerrado" });
+        return { ok: false as const, reason: "registro_cerrado" };
+      }
+    }
+
     // 1) Identidad Auth: una sola cuenta por teléfono. El UUID existente NUNCA se toca.
     let created = false;
     const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
