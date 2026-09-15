@@ -15,6 +15,8 @@ export interface OtpLimits {
   maxPerIpPerHour: number;
   /** Tope diario de SMS de todo el proyecto. null = sin tope (pendiente de decisión). */
   dailySmsCap: number | null;
+  /** Duración del bloqueo al agotar las solicitudes permitidas (8 h). */
+  blockSeconds: number;
 }
 
 export const DEFAULT_OTP_LIMITS: OtpLimits = {
@@ -22,9 +24,10 @@ export const DEFAULT_OTP_LIMITS: OtpLimits = {
   ttlSeconds: 300,
   maxAttempts: 5,
   resendCooldownSeconds: 60,
-  maxPerPhonePerDay: 5,
+  maxPerPhonePerDay: 3,
   maxPerIpPerHour: 10,
   dailySmsCap: null,
+  blockSeconds: 28800,
 };
 
 export async function getOtpLimits(): Promise<OtpLimits> {
