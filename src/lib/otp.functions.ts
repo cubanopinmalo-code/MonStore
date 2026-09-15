@@ -223,8 +223,39 @@ export const requestOtp = createServerFn({ method: "POST" })
     }
 
     // Respuesta idéntica exista o no la cuenta: no permite enumerar usuarios.
-    return { ok: true as const, mode: sms.mode, expiresInSeconds: limits.ttlSeconds };
+    return {
+      ok: true as const,
+      mode: sms.mode,
+      expiresInSeconds: limits.ttlSeconds,
+      blockedUntil,
+    };
   });
+
+/**
+ * Estado de la cuota de SOLICITUDES para un teléfono. Solo devuelve hasta
+ * cuándo está bloqueado (marca de tiempo del servidor), para que la pantalla
+ * de acceso pueda mostrar el temporizador aunque se recargue o se cambie de
+ * dispositivo. La decisión real sigue siendo server-side en `requestOtp`.
+ */
+export const otpRequestStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: { phone: string }) => ({ phone: String(input.phone ?? "") }))
+  .handler(async ({ data }) => {
+    if (!isValidCubanMobile(data.phone)) {
+      return { blockedUntil: null as string | null, serverNow: new Date().toISOString() };
+    }
+    const phone = e164Phone(data.phone);
+    const { getOtpLimits } = await import("./otp-config.server");
+    const { checkPhoneQuota, isAdminPhone } = await import("./otp-rate.server");
+    const limits = await getOtpLimits();
+    const isAdmin = await isAdminPhone(phone);
+    const quota = await checkPhoneQuota(phone, limits.maxPerPhonePerDay, isAdmin);
+    return {
+      blockedUntil: quota.allowed ? null : (quota.blockedUntil ?? null),
+      serverNow: new Date().toISOString(),
+    };
+  });
+
+
 
 
 export const verifyOtp = createServerFn({ method: "POST" })
