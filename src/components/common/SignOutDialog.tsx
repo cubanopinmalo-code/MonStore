@@ -31,9 +31,11 @@ export function SignOutDialog({ children }: Props) {
     setBusy(true);
     setOpen(false);
     try {
+      // Se cancela y vacía la caché antes de cerrar para que nada quede visible.
       await clearCache();
       await signOut();
-      void navigate({ to: "/", replace: true });
+      // Se reemplaza el historial: el botón «atrás» no puede volver a la zona privada.
+      void navigate({ to: "/login", replace: true });
     } finally {
       setBusy(false);
     }
