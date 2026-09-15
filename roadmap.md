@@ -107,3 +107,4 @@
 - [ ] Eventos: SMS via relay al pasar a INICIADO, idempotente y registrado; bloqueo de inscripciones/accesos.
 - [ ] Eventos: ganador validado con nombre/foto/personaje, recompensa, resultado publico, ranking semanal e historial.
 - [ ] Eventos: auditoria de sala sin valores (solo que se modifico ID/contrasena); SMS de inicio solo a inscritos confirmados.
+- [ ] Eventos: activacion solo automatica en la hora exacta; admin solo activo->iniciado->finalizado y cancelar.
