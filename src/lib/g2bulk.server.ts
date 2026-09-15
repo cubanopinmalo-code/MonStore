@@ -25,8 +25,24 @@ type CallOptions = {
   body?: unknown;
   requiresKey?: boolean;
   idempotencyKey?: string;
+  /** Reintentos ante 429 / 5xx / caída de red. Nunca ilimitados. */
+  attempts?: number;
 };
 
+const TIMEOUT_MS = 20_000;
+const DEFAULT_ATTEMPTS = 3;
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Llamada única al proveedor.
+ *
+ * - La clave se lee de los secretos del servidor y nunca se registra ni se
+ *   devuelve al navegador.
+ * - Reintentos con espera creciente solo para 429, 5xx y fallos de red.
+ * - Un error de autenticación (401/403) o de datos (4xx) corta de inmediato:
+ *   nunca se entra en un bucle de llamadas.
+ */
 async function call<T>(path: string, options: CallOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -43,40 +59,72 @@ async function call<T>(path: string, options: CallOptions = {}): Promise<T> {
   }
   if (options.idempotencyKey) headers["X-Idempotency-Key"] = options.idempotencyKey;
 
-  let response: Response;
-  try {
-    const init: RequestInit = { method: options.method ?? "GET", headers };
-    if (options.body !== undefined) init.body = JSON.stringify(options.body);
-    response = await fetch(`${PROVIDER_BASE}${path}`, init);
-  } catch {
-    throw new ProviderError(
-      "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
-      0,
-    );
-  }
+  const total = Math.max(1, Math.min(options.attempts ?? DEFAULT_ATTEMPTS, 4));
+  let lastError: ProviderError = new ProviderError(
+    "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
+    0,
+  );
 
-  const text = await response.text();
-  let payload: Record<string, unknown> | null = null;
-  if (text) {
+  for (let attempt = 1; attempt <= total; attempt += 1) {
+    let response: Response;
     try {
-      payload = JSON.parse(text) as Record<string, unknown>;
+      const init: RequestInit = {
+        method: options.method ?? "GET",
+        headers,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      };
+      if (options.body !== undefined) init.body = JSON.stringify(options.body);
+      response = await fetch(`${PROVIDER_BASE}${path}`, init);
     } catch {
-      payload = null;
+      lastError = new ProviderError(
+        "No se pudo contactar con el proveedor. Inténtalo de nuevo en unos minutos.",
+        0,
+      );
+      if (attempt < total) {
+        await wait(500 * attempt);
+        continue;
+      }
+      throw lastError;
     }
-  }
 
-  if (!response.ok || payload?.["success"] === false) {
+    const text = await response.text();
+    let payload: Record<string, unknown> | null = null;
+    if (text) {
+      try {
+        payload = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        payload = null;
+      }
+    }
+
+    if (response.ok && payload?.["success"] !== false) return (payload ?? {}) as T;
+
     const detail =
       (typeof payload?.["message"] === "string" && payload["message"]) ||
       (typeof payload?.["error"] === "string" && payload["error"]) ||
       null;
-    throw new ProviderError(
+
+    if (response.status === 401 || response.status === 403) {
+      throw new ProviderError(
+        "El proveedor rechazó la clave guardada en el backend.",
+        response.status,
+      );
+    }
+
+    lastError = new ProviderError(
       detail ?? `El proveedor respondió con un error (${response.status}).`,
       response.status,
     );
+
+    const transient = response.status === 429 || response.status >= 500;
+    if (transient && attempt < total) {
+      await wait(700 * attempt * attempt);
+      continue;
+    }
+    throw lastError;
   }
 
-  return (payload ?? {}) as T;
+  throw lastError;
 }
 
 export type ProviderCategory = {
