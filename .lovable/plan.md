@@ -75,7 +75,8 @@ El registro está conectado con Fondos: la misma venta aparece en las retencione
 
 **Administrador**
 - Solicitudes de cuentas: lista con Pendientes, Publicadas, Vendidas, Expiradas y Listas para republicar, en tiempo real. No existe ninguna categoría "devuelta".
-- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar y retirar. La entrega al comprador solo se consulta, no se ejecuta a mano; existe un "reintentar entrega" idempotente para fallos técnicos que nunca entrega dos veces.
+- Ficha de revisión: edición completa de datos públicos y privados, contraseña final, panel de doble factor con QR, clave, código actual y cuenta atrás, y acciones de aprobar, rechazar y "Retirar publicación". La entrega al comprador solo se consulta, no se ejecuta a mano; existe un "reintentar entrega" idempotente para fallos técnicos que nunca entrega dos veces.
+- Retirar publicación solo se aplica a un anuncio activo y no vendido: deja de mostrarse en el comercio, cambia de estado, conserva el historial y registra administrador, fecha, hora y motivo. Nunca devuelve una cuenta vendida, ni revierte una compra, ni quita la propiedad al comprador, ni devuelve fondos de una venta.
 
 **Comprador**
 - Comercio y detalle: solo información pública.
