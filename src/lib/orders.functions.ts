@@ -224,6 +224,178 @@ export const reconcileProviderOrder = createServerFn({ method: "POST" })
   });
 
 /* ------------------------------------------------------------------ *
+ * Compra real controlada (solo administración)
+ * ------------------------------------------------------------------ */
+
+export type ControlledPreview = {
+  productId: string;
+  productName: string;
+  gameCode: string | null;
+  providerOfferName: string;
+  costUsd: number;
+  costCup: number;
+  priceCup: number;
+  profitCup: number;
+  providerBalance: number;
+  playerName: string | null;
+  playerValid: boolean;
+  problem: string | null;
+  ready: boolean;
+};
+
+/** Vista previa de una compra real única: no cobra ni compra nada. */
+export const previewControlledPurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    product_id: string;
+    player_id: string;
+    server_id?: string;
+    charname?: string;
+  }) => {
+    if (!data?.product_id) throw new Error("Falta la oferta.");
+    const playerId = String(data?.player_id ?? "").trim();
+    if (!playerId) throw new Error("Escribe el ID del jugador.");
+    return {
+      product_id: String(data.product_id),
+      player_id: playerId.slice(0, 120),
+      server_id: String(data?.server_id ?? "").trim().slice(0, 60),
+      charname: String(data?.charname ?? "").trim().slice(0, 60),
+    };
+  })
+  .handler(async ({ data, context }): Promise<ControlledPreview> => {
+    await requireAdmin(context);
+    const { quoteOrder } = await import("./g2bulk-orders.server");
+    const quote = await quoteOrder(data.product_id);
+
+    let playerName: string | null = null;
+    let playerValid = !quote.gameCode;
+    let problem = quote.problem;
+    if (quote.gameCode) {
+      const { checkPlayerId } = await import("./g2bulk.server");
+      try {
+        const body: { game: string; user_id: string; server_id?: string; charname?: string } = {
+          game: quote.gameCode,
+          user_id: data.player_id,
+        };
+        if (data.server_id) body.server_id = data.server_id;
+        if (data.charname) body.charname = data.charname;
+        const check = await checkPlayerId(body);
+        playerValid = ["valid", "true", "1", "ok"].includes(check.valid.toLowerCase());
+        playerName = check.name;
+        if (!playerValid) problem = problem ?? "No encontramos una cuenta con esos datos.";
+      } catch {
+        playerValid = false;
+        problem = problem ?? "No pudimos comprobar la cuenta del jugador.";
+      }
+    }
+
+    return {
+      productId: quote.productId,
+      productName: quote.productName,
+      gameCode: quote.gameCode,
+      providerOfferName: quote.providerOfferName,
+      costUsd: quote.costUsd,
+      costCup: quote.costCup,
+      priceCup: quote.priceCup,
+      profitCup: quote.profitCup,
+      providerBalance: quote.providerBalance,
+      playerName,
+      playerValid,
+      problem,
+      ready: !problem && playerValid,
+    };
+  });
+
+/**
+ * Ejecuta UNA compra real confirmada por el administrador, con su propio saldo,
+ * aunque las compras generales estén desactivadas.
+ */
+export const runControlledPurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    product_id: string;
+    player_id: string;
+    server_id?: string;
+    charname?: string;
+    idempotency_key: string;
+    confirm: boolean;
+  }) => {
+    if (!data?.product_id) throw new Error("Falta la oferta.");
+    if (data?.confirm !== true) throw new Error("Debes confirmar la compra real.");
+    const key = String(data?.idempotency_key ?? "").trim();
+    if (!UUID_PATTERN.test(key)) throw new Error("No se pudo preparar la compra.");
+    const playerId = String(data?.player_id ?? "").trim();
+    if (!playerId) throw new Error("Escribe el ID del jugador.");
+    return {
+      product_id: String(data.product_id),
+      player_id: playerId.slice(0, 120),
+      server_id: String(data?.server_id ?? "").trim().slice(0, 60),
+      charname: String(data?.charname ?? "").trim().slice(0, 60),
+      idempotency_key: key,
+    };
+  })
+  .handler(async ({ data, context }): Promise<PlaceOrderResult> => {
+    await requireAdmin(context);
+    const { supabase, userId } = context;
+    const { fulfillOrder, quoteOrder } = await import("./g2bulk-orders.server");
+
+    const quote = await quoteOrder(data.product_id);
+    if (quote.problem) throw new Error(quote.problem);
+
+    const values: Record<string, string> = {};
+    if (data.server_id) {
+      values["serverid"] = data.server_id;
+      values["server_id"] = data.server_id;
+    }
+    if (data.charname) values["charname"] = data.charname;
+
+    if (quote.gameCode) {
+      const { checkPlayerId } = await import("./g2bulk.server");
+      const body: { game: string; user_id: string; server_id?: string; charname?: string } = {
+        game: quote.gameCode,
+        user_id: data.player_id,
+      };
+      if (data.server_id) body.server_id = data.server_id;
+      if (data.charname) body.charname = data.charname;
+      const check = await checkPlayerId(body);
+      if (!["valid", "true", "1", "ok"].includes(check.valid.toLowerCase())) {
+        throw new Error("No encontramos una cuenta con esos datos. No se compró nada.");
+      }
+      if (check.name) values["player_name"] = check.name;
+    }
+
+    const placed = await supabase.rpc("place_wallet_order", {
+      p_user: userId,
+      p_product: data.product_id,
+      p_player_id: data.player_id,
+      p_player_data: values,
+      p_idempotency_key: data.idempotency_key,
+    });
+    if (placed.error) throw new Error(placed.error.message);
+    const result = (placed.data ?? {}) as { order_id?: string; balance?: number };
+    if (!result.order_id) throw new Error("No se pudo registrar la compra.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("id, code, status, total_amount")
+      .eq("id", result.order_id)
+      .maybeSingle();
+    if (!order) throw new Error("No se pudo registrar la compra.");
+
+    const outcome = await fulfillOrder(order.id, { force: true });
+    return {
+      order_id: order.id,
+      code: order.code,
+      status: outcome.status,
+      total: Number(order.total_amount),
+      balance: result.balance ?? null,
+      message: outcome.message,
+    };
+  });
+
+
+/* ------------------------------------------------------------------ *
  * Pedidos del cliente
  * ------------------------------------------------------------------ */
 
