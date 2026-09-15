@@ -465,8 +465,12 @@ export interface PaymentDestination {
   kind: string;
   label: string;
   description: string;
+  holder_name: string;
   destination_value: string;
   instructions: string;
+  guide_image_path: string;
+  /** Enlace temporal de la imagen educativa, listo para mostrar. */
+  guide_image_url: string | null;
   requires_transaction_id: boolean;
   requires_proof: boolean;
   requires_sender_phone: boolean;
@@ -476,7 +480,9 @@ export interface PaymentDestination {
 }
 
 const DESTINATION_COLUMNS =
-  "id, channel, bank, kind, label, description, destination_value, instructions, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
+  "id, channel, bank, kind, label, description, holder_name, destination_value, instructions, guide_image_path, requires_transaction_id, requires_proof, requires_sender_phone, active, position, updated_at";
+
+export const GUIDE_BUCKET = "payment-guides";
 
 function mapDestination(row: Record<string, unknown>): PaymentDestination {
   return {
@@ -486,8 +492,11 @@ function mapDestination(row: Record<string, unknown>): PaymentDestination {
     kind: String(row["kind"] ?? "tarjeta"),
     label: String(row["label"] ?? ""),
     description: String(row["description"] ?? ""),
+    holder_name: String(row["holder_name"] ?? ""),
     destination_value: String(row["destination_value"] ?? ""),
     instructions: String(row["instructions"] ?? ""),
+    guide_image_path: String(row["guide_image_path"] ?? ""),
+    guide_image_url: null,
     requires_transaction_id: Boolean(row["requires_transaction_id"]),
     requires_proof: Boolean(row["requires_proof"]),
     requires_sender_phone: Boolean(row["requires_sender_phone"]),
@@ -495,6 +504,31 @@ function mapDestination(row: Record<string, unknown>): PaymentDestination {
     position: Number(row["position"] ?? 50),
     updated_at: String(row["updated_at"] ?? ""),
   };
+}
+
+/** Añade el enlace temporal de cada imagen educativa guardada. */
+async function withGuideUrls(
+  supabase: {
+    storage: {
+      from: (bucket: string) => {
+        createSignedUrl: (
+          path: string,
+          expires: number,
+        ) => Promise<{ data: { signedUrl: string } | null }>;
+      };
+    };
+  },
+  rows: PaymentDestination[],
+): Promise<PaymentDestination[]> {
+  return Promise.all(
+    rows.map(async (row) => {
+      if (!row.guide_image_path) return row;
+      const { data } = await supabase.storage
+        .from(GUIDE_BUCKET)
+        .createSignedUrl(row.guide_image_path, 60 * 60);
+      return { ...row, guide_image_url: data?.signedUrl ?? null };
+    }),
+  );
 }
 
 /** Destinos activos que el cliente puede elegir. */
@@ -507,7 +541,10 @@ export const listPaymentDestinations = createServerFn({ method: "GET" })
       .eq("active", true)
       .order("position", { ascending: true });
     if (error) throw new Error("No se pudieron cargar los destinos de pago.");
-    return (data ?? []).map((row) => mapDestination(row as Record<string, unknown>));
+    return withGuideUrls(
+      context.supabase as unknown as Parameters<typeof withGuideUrls>[0],
+      (data ?? []).map((row) => mapDestination(row as Record<string, unknown>)),
+    );
   });
 
 /** Todos los destinos, incluidos los desactivados (panel administrativo). */
@@ -520,19 +557,36 @@ export const listAllPaymentDestinations = createServerFn({ method: "GET" })
       .select(DESTINATION_COLUMNS)
       .order("position", { ascending: true });
     if (error) throw new Error("No se pudieron cargar los destinos de pago.");
-    return (data ?? []).map((row) => mapDestination(row as Record<string, unknown>));
+    return withGuideUrls(
+      context.supabase as unknown as Parameters<typeof withGuideUrls>[0],
+      (data ?? []).map((row) => mapDestination(row as Record<string, unknown>)),
+    );
   });
 
 export interface PaymentDestinationDraft {
   id: string;
   label: string;
   description: string;
+  bank: string;
+  holder_name: string;
   destination_value: string;
   instructions: string;
+  requires_transaction_id: boolean;
+  requires_proof: boolean;
   active: boolean;
 }
 
-/** El administrador cambia el número/datos de un destino de pago. */
+const DESTINATION_ERRORS: Record<string, string> = {
+  no_admin: "Solo el administrador puede cambiar los datos de pago.",
+  no_existe: "Ese destino de pago ya no existe.",
+  sin_nombre: "Escribe un nombre para este destino.",
+  sin_destino: "Escribe el número o los datos del destino antes de activarlo.",
+  formato_invalido: "Ese destino no tiene un formato válido.",
+  tarjeta_invalida: "El número de tarjeta debe tener entre 16 y 19 dígitos.",
+  monedero_invalido: "El número del monedero debe tener entre 8 y 16 dígitos.",
+};
+
+/** El administrador cambia los datos de un destino de pago (con auditoría). */
 export const savePaymentDestination = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: PaymentDestinationDraft) => {
@@ -542,28 +596,65 @@ export const savePaymentDestination = createServerFn({ method: "POST" })
       id,
       label: String(data?.label ?? "").trim().slice(0, 60),
       description: String(data?.description ?? "").trim().slice(0, 200),
+      bank: String(data?.bank ?? "").trim().slice(0, 60),
+      holder_name: String(data?.holder_name ?? "").trim().slice(0, 80),
       destination_value: String(data?.destination_value ?? "").trim().slice(0, 120),
-      instructions: String(data?.instructions ?? "").trim().slice(0, 600),
+      instructions: String(data?.instructions ?? "").trim().slice(0, 800),
+      requires_transaction_id: Boolean(data?.requires_transaction_id),
+      requires_proof: Boolean(data?.requires_proof),
       active: Boolean(data?.active),
     };
   })
   .handler(async ({ data, context }) => {
-    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
-    if (data.active && data.destination_value.length === 0) {
-      throw new Error("Escribe el número o los datos del destino antes de activarlo.");
-    }
-    const { error } = await context.supabase
-      .from("payment_destinations")
-      .update({
-        label: data.label,
-        description: data.description,
-        destination_value: data.destination_value,
-        instructions: data.instructions,
-        active: data.active,
-      })
-      .eq("id", data.id);
+    const { data: result, error } = await context.supabase.rpc(
+      "admin_save_payment_destination",
+      {
+        p_destination: data.id,
+        p_label: data.label,
+        p_description: data.description,
+        p_bank: data.bank,
+        p_holder: data.holder_name,
+        p_value: data.destination_value,
+        p_instructions: data.instructions,
+        p_requires_transaction_id: data.requires_transaction_id,
+        p_requires_proof: data.requires_proof,
+        p_active: data.active,
+      },
+    );
     if (error) throw new Error("No se pudo guardar el destino de pago.");
+    const payload = (result ?? {}) as { ok?: boolean; reason?: string };
+    if (!payload.ok) {
+      throw new Error(
+        DESTINATION_ERRORS[payload.reason ?? ""] ?? "No se pudo guardar el destino de pago.",
+      );
+    }
     return { saved: true };
+  });
+
+/**
+ * El administrador guarda (o quita) la imagen educativa de un destino.
+ * La imagen ya está subida al almacenamiento; aquí solo se guarda la referencia.
+ */
+export const setDestinationGuideImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string; path: string }) => {
+    const id = String(data?.id ?? "");
+    if (id.length === 0) throw new Error("No se indicó el destino de pago.");
+    return { id, path: String(data?.path ?? "").trim().slice(0, 300) };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase.rpc(
+      "admin_set_destination_guide_image",
+      { p_destination: data.id, p_path: data.path },
+    );
+    if (error) throw new Error("No se pudo guardar la imagen.");
+    const payload = (result ?? {}) as { ok?: boolean; reason?: string };
+    if (!payload.ok) {
+      throw new Error(
+        DESTINATION_ERRORS[payload.reason ?? ""] ?? "No se pudo guardar la imagen.",
+      );
+    }
+    return { saved: true, path: data.path };
   });
 
 /** Número de WhatsApp de atención al cliente configurado por el administrador. */

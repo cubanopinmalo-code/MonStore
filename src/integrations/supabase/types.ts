@@ -1337,6 +1337,8 @@ export type Database = {
           created_at: string
           description: string
           destination_value: string
+          guide_image_path: string
+          holder_name: string
           id: string
           instructions: string
           kind: string
@@ -1354,6 +1356,8 @@ export type Database = {
           created_at?: string
           description?: string
           destination_value?: string
+          guide_image_path?: string
+          holder_name?: string
           id?: string
           instructions?: string
           kind?: string
@@ -1371,6 +1375,8 @@ export type Database = {
           created_at?: string
           description?: string
           destination_value?: string
+          guide_image_path?: string
+          holder_name?: string
           id?: string
           instructions?: string
           kind?: string
@@ -2357,6 +2363,21 @@ export type Database = {
       }
       admin_create_event: { Args: { p_payload: Json }; Returns: Json }
       admin_find_user_by_phone: { Args: { p_phone: string }; Returns: Json }
+      admin_save_payment_destination: {
+        Args: {
+          p_active: boolean
+          p_bank: string
+          p_description: string
+          p_destination: string
+          p_holder: string
+          p_instructions: string
+          p_label: string
+          p_requires_proof: boolean
+          p_requires_transaction_id: boolean
+          p_value: string
+        }
+        Returns: Json
+      }
       admin_save_payment_line: {
         Args: {
           p_active: boolean
@@ -2374,6 +2395,10 @@ export type Database = {
           p_message: string
           p_title: string
         }
+        Returns: Json
+      }
+      admin_set_destination_guide_image: {
+        Args: { p_destination: string; p_path: string }
         Returns: Json
       }
       admin_set_event_room: {
@@ -2532,6 +2557,7 @@ export type Database = {
       }
       read_account_credentials: { Args: { p_account: string }; Returns: Json }
       read_listing_secrets: { Args: { p_account: string }; Returns: Json }
+      recalculate_product_prices: { Args: never; Returns: Json }
       refund_event_charges: { Args: { p_event: string }; Returns: Json }
       refund_wallet_order: {
         Args: { p_order: string; p_reason: string }

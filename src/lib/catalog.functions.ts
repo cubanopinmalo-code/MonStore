@@ -146,31 +146,40 @@ export const setUsdRate = createServerFn({ method: "POST" })
     if (margin > 100000) throw new Error("Esa ganancia es demasiado alta.");
     return { rate: Math.round(rate * 100) / 100, margin: Math.round(margin * 100) / 100 };
   })
-  .handler(async ({ data, context }): Promise<{ rate: number; margin: number; updated: number }> => {
+  /**
+   * Guarda el valor del dólar y la ganancia. NO recalcula los precios ya
+   * publicados: eso lo decide el administrador con la acción «Recalcular
+   * precios de recargas».
+   */
+  .handler(async ({ data, context }): Promise<{ rate: number; margin: number }> => {
     await requireAdmin(context);
     const { error } = await context.supabase
       .from("platform_settings")
       .upsert({ id: true, usd_to_cup: data.rate, usd_margin_cup: data.margin });
     if (error) throw new Error("No se pudo guardar el valor del dólar.");
-
-    // El costo del proveedor solo se lee en servidor, tras validar el rol de administrador.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error: readError } = await supabaseAdmin
-      .from("products")
-      .select("id,g2bulk_cost")
-      .gt("g2bulk_cost", 0);
-    if (readError) throw new Error("No se pudieron recalcular los precios.");
-
-    let updated = 0;
-    for (const row of rows ?? []) {
-      const { error: updateError } = await supabaseAdmin
-        .from("products")
-        .update({ sale_price: priceFromCost(Number(row.g2bulk_cost), data) })
-        .eq("id", row.id);
-      if (!updateError) updated += 1;
-    }
-    return { rate: data.rate, margin: data.margin, updated };
+    return { rate: data.rate, margin: data.margin };
   });
+
+/**
+ * Acción manual del administrador: aplica el valor del dólar y la ganancia
+ * vigentes a las ofertas de recarga. La base de datos comprueba el rol, evita
+ * repeticiones accidentales y deja constancia en la auditoría.
+ */
+export const recalculateOfferPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({ context }): Promise<{ ok: boolean; updated: number; repetido: boolean }> => {
+      await requireAdmin(context);
+      const { data, error } = await context.supabase.rpc("recalculate_product_prices");
+      if (error) throw new Error(error.message);
+      const result = (data ?? {}) as { ok?: boolean; updated?: number; reason?: string };
+      return {
+        ok: Boolean(result.ok),
+        updated: Number(result.updated ?? 0),
+        repetido: result.reason === "reciente",
+      };
+    },
+  );
 
 function chunked<T>(items: T[], size = CHUNK): T[][] {
   const out: T[][] = [];

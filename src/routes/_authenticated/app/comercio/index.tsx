@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/states";
 import { ShareListingButton } from "@/components/common/ShareListingButton";
 import { formatCUP } from "@/lib/format";
 import { usePublicListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
+import { usePlatformFlags } from "@/hooks/usePlatformFlags";
 
 function getInitials(name: string) {
   return name
@@ -111,6 +112,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 function UserMarketplacePage() {
   const { data, isLoading } = usePublicListings();
+  const { data: flags } = usePlatformFlags();
   const [sort, setSort] = useState<SortKey>("recientes");
   const [region, setRegion] = useState<string>("todas");
 
@@ -138,6 +140,22 @@ function UserMarketplacePage() {
   }, [data, region, sort]);
 
   const total = listings.length;
+
+  if (flags?.marketplaceEnabled === false) {
+    return (
+      <UserShell>
+        <section className="surface-card mx-auto max-w-lg space-y-3 p-6 text-center">
+          <Store className="mx-auto size-8 text-primary" aria-hidden="true" />
+          <h1 className="font-display text-xl font-bold">Comercio no disponible</h1>
+          <p className="text-sm text-muted-foreground">
+            El comercio de cuentas está desactivado temporalmente. No se pueden publicar ni comprar
+            cuentas ahora mismo. Tus publicaciones y compras anteriores siguen intactas en «Mis
+            publicaciones» y «Mis compras».
+          </p>
+        </section>
+      </UserShell>
+    );
+  }
 
   return (
     <UserShell>

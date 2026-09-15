@@ -72,6 +72,10 @@ const CHANNEL_LABELS: Record<string, { title: string; hint: string }> = {
     title: "EnZona",
     hint: "Paga desde EnZona y escribe el ID de la transacción que te muestra la app.",
   },
+  metropolitana: {
+    title: "Metropolitana",
+    hint: "Envía a la tarjeta del Banco Metropolitano o al Monedero Mi Transfer.",
+  },
   iphone: {
     title: "Utilizo iPhone",
     hint: "En iPhone la verificación es manual: hace falta la captura del pago.",
@@ -296,7 +300,7 @@ function DepositPage() {
     ? "metodo"
     : usesDestinations && !channel
       ? "canal"
-      : usesDestinations && channel === "transfermovil" && !destination
+      : usesDestinations && banks.length > 1 && !destination
         ? "banco"
         : confirming
           ? "confirmar"
@@ -330,7 +334,7 @@ function DepositPage() {
   function chooseChannel(value: string) {
     setChannel(value);
     const single = destinations.filter((item) => item.channel === value);
-    setDestinationId(value === "transfermovil" ? null : (single[0]?.id ?? null));
+    setDestinationId(single.length === 1 ? (single[0]?.id ?? null) : null);
     setProof(null);
     setProofPreview(null);
     setTransactionId("");
@@ -661,7 +665,7 @@ function DepositPage() {
         <Header
           onBack={() => {
             if (usesDestinations) {
-              if (channel === "transfermovil") setDestinationId(null);
+              if (banks.length > 1) setDestinationId(null);
               else setChannel(null);
             } else {
               setSelected(null);
@@ -805,6 +809,30 @@ function DepositPage() {
                   transferir.
                 </p>
               )}
+              {destination.bank || destination.holder_name ? (
+                <div className="space-y-1 rounded-lg border border-border/60 p-3 text-sm">
+                  {destination.bank ? (
+                    <p>
+                      <span className="text-muted-foreground">Banco: </span>
+                      {destination.bank}
+                    </p>
+                  ) : null}
+                  {destination.holder_name ? (
+                    <p>
+                      <span className="text-muted-foreground">A nombre de: </span>
+                      {destination.holder_name}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {destination.guide_image_url ? (
+                <img
+                  src={destination.guide_image_url}
+                  alt={`Dónde tocar para enviar el dinero a ${destination.label}`}
+                  className="w-full rounded-lg border border-border/60 object-contain"
+                  loading="lazy"
+                />
+              ) : null}
               {destination.instructions ? (
                 <p className="text-sm text-muted-foreground">{destination.instructions}</p>
               ) : null}

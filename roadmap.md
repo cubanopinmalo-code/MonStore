@@ -118,3 +118,4 @@
 - [x] Remitente obligatorio en saldo movil (cliente y servidor)
 - [ ] REQUIERE DECISION: donde deben actuar mantenimiento, registro abierto y comercio de cuentas
 - [ ] PENDIENTE: introducir metodos de pago y destinos reales desde Configuracion (datos del usuario)
+- [ ] Metodo de pago ampliado: Transfermovil (banco, tarjeta, titular), EnZona (destino, ID, captura), Metropolitana (destino, titular, Monedero Mi Transfer + imagen educativa en Storage), saldo movil intacto; consumo dinamico en cliente, validaciones y auditoria
