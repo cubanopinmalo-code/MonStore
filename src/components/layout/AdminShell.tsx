@@ -56,7 +56,10 @@ const ADMIN_NAV = [
   },
   {
     group: "Solicitudes de cuentas",
-    items: [{ to: "/admin/comercio", label: "Revisión de cuentas", icon: Store, exact: false }],
+    items: [
+      { to: "/admin/comercio", label: "Revisión de cuentas", icon: Store, exact: false },
+      { to: "/admin/cuentas-vendidas", label: "Cuentas vendidas", icon: Store, exact: false },
+    ],
   },
   {
     group: "Eventos",
