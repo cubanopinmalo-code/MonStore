@@ -95,5 +95,6 @@
 - [x] Dashboard con indicadores reales, centro de alertas accionables y actividad reciente
 - [x] Actualización en tiempo real (fondos, retiros, cuentas, eventos, pedidos, saldos, auditoría)
 - [x] Finanzas: ganancias por período, USD vendidos, cobros por método, líneas 1/2/3 separadas
-- [x] Fondos: cola de trabajo, retenciones y estado de las tres líneas
-- [ ] Siguiente: acciones avanzadas en Fondos, Solicitudes de cuentas (fotos/WhatsApp), Eventos (sala, ganador, premio) y Configuración de valores dinámicos
+- [x] Fondos: centro de operaciones completo (detalle, aprobar/rechazar con motivo, retiro completado, retenciones, líneas 1/2/3, historial con filtros, auditoría, realtime)
+- [ ] Siguiente: Solicitudes de cuentas (fotos/WhatsApp), Eventos (sala, ganador, premio) y Configuración de valores dinámicos
+
