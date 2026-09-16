@@ -1392,6 +1392,80 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_gateway_events: {
+        Row: {
+          channel: string
+          created_at: string
+          deposit_id: string | null
+          device_id: string
+          event_id: string
+          event_type: string
+          id: string
+          message: string
+          mode: string
+          nonce: string
+          outcome: string
+          parsed: Json
+          processed_at: string | null
+          reason: string
+          received_at: string
+          sender: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          deposit_id?: string | null
+          device_id: string
+          event_id: string
+          event_type?: string
+          id?: string
+          message?: string
+          mode?: string
+          nonce: string
+          outcome?: string
+          parsed?: Json
+          processed_at?: string | null
+          reason?: string
+          received_at?: string
+          sender?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          deposit_id?: string | null
+          device_id?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          message?: string
+          mode?: string
+          nonce?: string
+          outcome?: string
+          parsed?: Json
+          processed_at?: string | null
+          reason?: string
+          received_at?: string
+          sender?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_gateway_events_deposit_id_fkey"
+            columns: ["deposit_id"]
+            isOneToOne: false
+            referencedRelation: "deposits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_line_events: {
         Row: {
           action: string
@@ -1592,6 +1666,7 @@ export type Database = {
           marketplace_enabled: boolean
           min_deposit_cup: number
           min_withdrawal_cup: number
+          payment_gateway_mode: string
           referral_reward_cup: number
           registration_open: boolean
           saldo_conversion_rate: number
@@ -1613,6 +1688,7 @@ export type Database = {
           marketplace_enabled?: boolean
           min_deposit_cup?: number
           min_withdrawal_cup?: number
+          payment_gateway_mode?: string
           referral_reward_cup?: number
           registration_open?: boolean
           saldo_conversion_rate?: number
@@ -1634,6 +1710,7 @@ export type Database = {
           marketplace_enabled?: boolean
           min_deposit_cup?: number
           min_withdrawal_cup?: number
+          payment_gateway_mode?: string
           referral_reward_cup?: number
           registration_open?: boolean
           saldo_conversion_rate?: number
@@ -2514,6 +2591,7 @@ export type Database = {
         }
         Returns: Json
       }
+      gateway_process_event: { Args: { p_payload: Json }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
