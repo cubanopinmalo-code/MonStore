@@ -261,7 +261,20 @@ export const reviewDeposit = createServerFn({ method: "POST" })
       p_admin: context.userId,
     });
     if (error) throw new Error(error.message);
-    return { reviewed: true };
+
+    // El aviso SMS solo se intenta cuando los fondos quedaron acreditados y el
+    // cliente lo activó. Un fallo del proveedor no invalida la acreditación.
+    let sms: { sent: boolean; reason: string } = { sent: false, reason: "no_aplicable" };
+    if (data.approve) {
+      const { notifyFundsCredited } = await import("@/lib/sms-notifications.server");
+      sms = await notifyFundsCredited(
+        context.supabase as unknown as {
+          rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+        },
+        data.depositId,
+      );
+    }
+    return { reviewed: true, sms };
   });
 
 
@@ -357,6 +370,45 @@ export const savePaymentLine = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { saved: true };
+  });
+
+/** El administrador registra una línea nueva (número siguiente automático). */
+export const createPaymentLine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { label?: string; phone_number: string; active?: boolean; notes?: string }) => ({
+    label: String(data?.label ?? "").trim().slice(0, 40),
+    phone_number: String(data?.phone_number ?? "").replace(/\D/g, "").slice(0, 15),
+    active: data?.active === undefined ? true : Boolean(data.active),
+    notes: String(data?.notes ?? "").trim().slice(0, 200),
+  }))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    const { data: result, error } = await context.supabase.rpc("admin_create_payment_line", {
+      p_label: data.label,
+      p_phone: data.phone_number,
+      p_active: data.active,
+      p_notes: data.notes,
+    });
+    if (error) throw new Error(error.message);
+    return (result ?? {}) as { line_id?: string; line_number?: number };
+  });
+
+/** El administrador activa o desactiva una línea sin borrar su historial. */
+export const setPaymentLineActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string; active: boolean }) => {
+    const id = String(data?.id ?? "");
+    if (id.length === 0) throw new Error("No se indicó la línea.");
+    return { id, active: Boolean(data?.active) };
+  })
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase as unknown as PaymentSettingsClient, context.userId);
+    const { error } = await context.supabase.rpc("admin_set_payment_line_active", {
+      p_line: data.id,
+      p_active: data.active,
+    });
+    if (error) throw new Error(error.message);
+    return { active: data.active };
   });
 
 /** Política: permitir o no reutilizar una línea con solicitud pendiente. */

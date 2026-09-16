@@ -72,10 +72,13 @@ export interface WithdrawalRequestRow extends FundsPerson {
 }
 
 export interface FundsLine {
+  id: string;
   line_number: number;
   label: string;
   phone_number: string;
   active: boolean;
+  /** Tiene una solicitud vinculada sin resolver, por lo que no se reasigna. */
+  busy: boolean;
   max_pending_amount: number | null;
   pending_count: number;
   pending_amount: number;
@@ -207,9 +210,12 @@ export const getFundsOverview = createServerFn({ method: "GET" })
       rejection_reason: row.rejection_reason ?? null,
     }));
 
-    const saldoLines = (lines.data ?? []).filter((row) => row.payment_method === "saldo_movil");
-    const lineList: FundsLine[] = [1, 2, 3].map((lineNumber) => {
-      const config = saldoLines.find((row) => Number(row.line_number) === lineNumber);
+    // Las líneas son configuración dinámica: se muestran todas las registradas.
+    const saldoLines = (lines.data ?? [])
+      .filter((row) => row.payment_method === "saldo_movil")
+      .sort((a, b) => Number(a.line_number) - Number(b.line_number));
+    const lineList: FundsLine[] = saldoLines.map((config) => {
+      const lineNumber = Number(config.line_number);
       const pending = depositList.filter(
         (row) => row.payment_method === "saldo_movil" && row.line_number === lineNumber,
       );
@@ -218,10 +224,13 @@ export const getFundsOverview = createServerFn({ method: "GET" })
       const processedAmount = processed.reduce((total, row) => total + Number(row.amount ?? 0), 0);
       const max = config?.max_pending_amount == null ? null : Number(config.max_pending_amount);
       return {
+        id: String(config.id),
         line_number: lineNumber,
         label: String(config?.label ?? `Línea ${lineNumber}`),
         phone_number: String(config?.phone_number ?? ""),
         active: Boolean(config?.active),
+        // Ocupada: hay una solicitud vinculada aún sin resolver.
+        busy: pending.length > 0,
         max_pending_amount: max,
         pending_count: pending.length,
         pending_amount: pendingAmount,
