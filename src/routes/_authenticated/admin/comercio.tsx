@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PrivateAccountPanel } from "@/components/marketplace/PrivateAccountPanel";
+import { GameConfigPanel } from "@/components/admin/marketplace/GameConfigPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminListings, useSignedImages, remainingLabel } from "@/hooks/useMarketplace";
 import { useAdminRealtime } from "@/hooks/useAdminPanel";
@@ -41,6 +42,7 @@ const TABS = [
   { id: "vendida", label: "Vendidas" },
   { id: "expirada", label: "Expiradas" },
   { id: "republicar", label: "Listas para republicar" },
+  { id: "configuracion", label: "Configuración de juegos" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -301,12 +303,15 @@ function AdminMarketplacePage() {
             aria-pressed={tab === item.id}
             onClick={() => setTab(item.id)}
           >
-            {item.label} ({(grouped.get(item.id) ?? []).length})
+            {item.label}
+            {item.id === "configuracion" ? "" : ` (${(grouped.get(item.id) ?? []).length})`}
           </Button>
         ))}
       </div>
 
-      {!isLoading && listings.length === 0 ? (
+      {tab === "configuracion" ? (
+        <GameConfigPanel />
+      ) : !isLoading && listings.length === 0 ? (
         <EmptyState
           title="Nada por aquí"
           description="Cuando haya cuentas en este estado, aparecerán en esta lista."
