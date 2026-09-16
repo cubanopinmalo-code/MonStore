@@ -818,6 +818,7 @@ export type Database = {
       game_accounts: {
         Row: {
           buyer_id: string | null
+          config_id: string | null
           created_at: string
           credentials_delivered_at: string | null
           currency: string
@@ -852,6 +853,7 @@ export type Database = {
         }
         Insert: {
           buyer_id?: string | null
+          config_id?: string | null
           created_at?: string
           credentials_delivered_at?: string | null
           currency?: string
@@ -886,6 +888,7 @@ export type Database = {
         }
         Update: {
           buyer_id?: string | null
+          config_id?: string | null
           created_at?: string
           credentials_delivered_at?: string | null
           currency?: string
@@ -919,6 +922,13 @@ export type Database = {
           withdrawn_reason?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "game_accounts_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_game_configs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_accounts_game_id_fkey"
             columns: ["game_id"]
@@ -976,6 +986,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      marketplace_game_configs: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          fields: Json
+          game_id: string | null
+          id: string
+          name: string
+          platforms: string[]
+          position: number
+          regions: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          game_id?: string | null
+          id?: string
+          name: string
+          platforms?: string[]
+          position?: number
+          regions?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          game_id?: string | null
+          id?: string
+          name?: string
+          platforms?: string[]
+          position?: number
+          regions?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_game_configs_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_campaigns: {
         Row: {
@@ -1670,6 +1730,7 @@ export type Database = {
           referral_reward_cup: number
           registration_open: boolean
           saldo_conversion_rate: number
+          sms_notification_cost_cup: number
           support_whatsapp: string
           updated_at: string
           updated_by: string | null
@@ -1692,6 +1753,7 @@ export type Database = {
           referral_reward_cup?: number
           registration_open?: boolean
           saldo_conversion_rate?: number
+          sms_notification_cost_cup?: number
           support_whatsapp?: string
           updated_at?: string
           updated_by?: string | null
@@ -1714,6 +1776,7 @@ export type Database = {
           referral_reward_cup?: number
           registration_open?: boolean
           saldo_conversion_rate?: number
+          sms_notification_cost_cup?: number
           support_whatsapp?: string
           updated_at?: string
           updated_by?: string | null
@@ -1993,6 +2056,7 @@ export type Database = {
           province: string
           referral_code: string
           referred_by: string | null
+          sms_notifications: boolean
           status: string
           updated_at: string
         }
@@ -2006,6 +2070,7 @@ export type Database = {
           province?: string
           referral_code?: string
           referred_by?: string | null
+          sms_notifications?: boolean
           status?: string
           updated_at?: string
         }
@@ -2019,6 +2084,7 @@ export type Database = {
           province?: string
           referral_code?: string
           referred_by?: string | null
+          sms_notifications?: boolean
           status?: string
           updated_at?: string
         }
@@ -2061,6 +2127,68 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      sms_notification_log: {
+        Row: {
+          charged: boolean
+          cost: number
+          created_at: string
+          deposit_id: string | null
+          error_message: string
+          id: string
+          idempotency_key: string
+          kind: string
+          phone: string
+          provider_message_id: string
+          provider_mode: string
+          status: string
+          updated_at: string
+          user_id: string
+          wallet_transaction_id: string | null
+        }
+        Insert: {
+          charged?: boolean
+          cost?: number
+          created_at?: string
+          deposit_id?: string | null
+          error_message?: string
+          id?: string
+          idempotency_key: string
+          kind?: string
+          phone?: string
+          provider_message_id?: string
+          provider_mode?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          wallet_transaction_id?: string | null
+        }
+        Update: {
+          charged?: boolean
+          cost?: number
+          created_at?: string
+          deposit_id?: string | null
+          error_message?: string
+          id?: string
+          idempotency_key?: string
+          kind?: string
+          phone?: string
+          provider_message_id?: string
+          provider_mode?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          wallet_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_notification_log_deposit_id_fkey"
+            columns: ["deposit_id"]
+            isOneToOne: false
+            referencedRelation: "deposits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_currency_prefs: {
         Row: {
@@ -2445,7 +2573,30 @@ export type Database = {
         Returns: number
       }
       admin_create_event: { Args: { p_payload: Json }; Returns: Json }
+      admin_create_payment_line: {
+        Args: {
+          p_active?: boolean
+          p_label: string
+          p_method?: Database["public"]["Enums"]["payment_method"]
+          p_notes?: string
+          p_phone: string
+        }
+        Returns: Json
+      }
       admin_find_user_by_phone: { Args: { p_phone: string }; Returns: Json }
+      admin_save_marketplace_game: {
+        Args: {
+          p_active?: boolean
+          p_config: string
+          p_fields: Json
+          p_game: string
+          p_name: string
+          p_platforms: string[]
+          p_position?: number
+          p_regions: string[]
+        }
+        Returns: Json
+      }
       admin_save_payment_destination:
         | {
             Args: {
@@ -2516,6 +2667,14 @@ export type Database = {
       }
       admin_set_listing_totp: {
         Args: { p_active: boolean; p_listing: string; p_secret: string }
+        Returns: Json
+      }
+      admin_set_marketplace_game_active: {
+        Args: { p_active: boolean; p_config: string }
+        Returns: Json
+      }
+      admin_set_payment_line_active: {
+        Args: { p_active: boolean; p_line: string }
         Returns: Json
       }
       admin_set_user_block: {
@@ -2610,6 +2769,16 @@ export type Database = {
         }
         Returns: Json
       }
+      mark_funds_sms: {
+        Args: {
+          p_error?: string
+          p_log: string
+          p_provider_id?: string
+          p_provider_mode?: string
+          p_status: string
+        }
+        Returns: Json
+      }
       normalize_cuban_mobile: { Args: { p_phone: string }; Returns: string }
       notify_event_admins: {
         Args: { p_key: string; p_message: string; p_title: string }
@@ -2635,6 +2804,7 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_funds_sms: { Args: { p_deposit: string }; Returns: Json }
       process_due_account_sales: { Args: never; Returns: Json }
       process_event_schedule: { Args: never; Returns: Json }
       provision_user_account: {
@@ -2653,6 +2823,18 @@ export type Database = {
           p_price: number
           p_region: string
           p_title: string
+        }
+        Returns: Json
+      }
+      publish_game_account_v2: {
+        Args: {
+          p_config: string
+          p_days: number
+          p_images: string[]
+          p_platform: string
+          p_price: number
+          p_region: string
+          p_values: Json
         }
         Returns: Json
       }

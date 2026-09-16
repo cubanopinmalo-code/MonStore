@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile, useReferrals } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USD_MARGIN, DEFAULT_USD_RATE, getUsdRate } from "@/lib/catalog.functions";
 import { claimReferralReward, getSupportWhatsapp } from "@/lib/payments.functions";
+import { getPlatformSettings } from "@/lib/settings.functions";
 
 const REFERRAL_GOAL = 10;
 const SUPPORT_PHONE = "5351115040";
@@ -50,23 +52,48 @@ export const Route = createFileRoute("/_authenticated/app/perfil")({
     ],
   }),
   loader: async () => {
-    const [pricing, support] = await Promise.all([
+    const [pricing, support, settings] = await Promise.all([
       getUsdRate().catch(() => ({ rate: DEFAULT_USD_RATE, margin: DEFAULT_USD_MARGIN })),
       getSupportWhatsapp().catch(() => ({ phone: SUPPORT_PHONE })),
+      getPlatformSettings().catch(() => null),
     ]);
-    return { ...pricing, support: support.phone || SUPPORT_PHONE };
+    return {
+      ...pricing,
+      support: support.phone || SUPPORT_PHONE,
+      smsCost: Number(settings?.sms_notification_cost_cup ?? 0),
+    };
   },
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { rate: usdRate, support: supportPhone } = Route.useLoaderData();
+  const { rate: usdRate, support: supportPhone, smsCost } = Route.useLoaderData();
   const rewardCup = Math.round(usdRate);
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useProfile();
   const { data: referrals } = useReferrals();
   
   const [claiming, setClaiming] = useState(false);
+  const [savingSms, setSavingSms] = useState(false);
+  const smsEnabled = Boolean(profile?.sms_notifications);
+
+  /** El aviso SMS es opcional: sin activarlo no se envía ni se cobra nada. */
+  async function toggleSms(checked: boolean) {
+    if (!profile) return;
+    setSavingSms(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ sms_notifications: checked })
+      .eq("id", profile.id);
+    setSavingSms(false);
+    if (error) {
+      toast.error("No pudimos guardar tu preferencia de aviso");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    toast.success(checked ? "Aviso por SMS activado" : "Aviso por SMS desactivado");
+  }
+
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -293,6 +320,26 @@ function ProfilePage() {
                 Editar perfil
               </Link>
             </Button>
+          </section>
+        )}
+
+        {isLoading || !profile ? null : (
+          <section className="surface-card space-y-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold">Aviso por SMS</h2>
+              <p className="text-xs text-muted-foreground">
+                Recibe un mensaje de texto cuando tus fondos se agreguen correctamente. Cuesta{" "}
+                {smsCost} CUP por aviso y solo se cobra si el mensaje se envía.
+              </p>
+            </div>
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Avisarme cuando se agreguen mis fondos</span>
+              <Switch
+                checked={smsEnabled}
+                disabled={savingSms}
+                onCheckedChange={(checked) => void toggleSms(checked)}
+              />
+            </label>
           </section>
         )}
 

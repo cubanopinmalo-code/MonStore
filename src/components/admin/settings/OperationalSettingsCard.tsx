@@ -37,6 +37,7 @@ export function OperationalSettingsCard() {
           min_deposit_cup: Number(value("min_deposit_cup") ?? 0),
           min_withdrawal_cup: Number(value("min_withdrawal_cup") ?? 0),
           referral_reward_cup: Number(value("referral_reward_cup") ?? 0),
+          sms_notification_cost_cup: Number(value("sms_notification_cost_cup") ?? 0),
           maintenance_mode: Boolean(value("maintenance_mode")),
           registration_open: Boolean(value("registration_open")),
           marketplace_enabled: Boolean(value("marketplace_enabled")),
@@ -97,6 +98,14 @@ export function OperationalSettingsCard() {
         <div className="space-y-1.5">
           <Label htmlFor="min-ret">Retiro mínimo (CUP)</Label>
           <Input id="min-ret" inputMode="decimal" {...number("min_withdrawal_cup")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="costo-sms">Costo del aviso SMS (CUP)</Label>
+          <Input id="costo-sms" inputMode="decimal" {...number("sms_notification_cost_cup")} />
+          <p className="text-xs text-muted-foreground">
+            Se cobra solo cuando el cliente activó el aviso y sus fondos se acreditaron. Si el envío
+            falla, el importe se devuelve.
+          </p>
         </div>
       </div>
 
