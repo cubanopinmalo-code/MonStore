@@ -122,6 +122,8 @@
 
 ## Gateway de pagos (iPhone + Atajos)
 - [x] Endpoint, HMAC, antirreplay, registro de eventos, parser, validación, modo simulación, panel admin.
-- [ ] Pruebas A–P en transacción reversible (BEGIN/ROLLBACK), sin datos permanentes, modo simulación y limpieza total.
-- [ ] Pruebas HTTP reales del endpoint (firma válida/inválida, timestamp, nonce, event_id).
-- [ ] Contrato HTTP final para el Atajo (pendiente de construir el Atajo).
+- [x] Pruebas A–P en transacción reversible, sin datos permanentes, modo simulación y limpieza total.
+- [x] Pruebas HTTP reales del endpoint (firma válida/inválida, timestamp, nonce, event_id).
+- [x] Clave definitiva guardada como secreto del backend; clave temporal invalidada.
+- [x] Contrato HTTP final entregado.
+- [ ] Construir y probar el Atajo en el iPhone; luego activar el gateway (hoy: Desactivado).
