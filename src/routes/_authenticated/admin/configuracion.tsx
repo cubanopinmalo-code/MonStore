@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OperationalSettingsCard } from "@/components/admin/settings/OperationalSettingsCard";
 import { UserBlockCard } from "@/components/admin/settings/UserBlockCard";
 import { CampaignCard } from "@/components/admin/settings/CampaignCard";
+import { PaymentGatewayCard } from "@/components/admin/settings/PaymentGatewayCard";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -602,7 +604,9 @@ function AdminSettingsPage() {
           ))}
           <PaymentDestinationsCard />
           <PaymentLinesCard />
+          <PaymentGatewayCard />
         </TabsContent>
+
 
         <TabsContent value="comercio" className="mt-4 grid gap-4 lg:grid-cols-2">
           <ListingFeesCard />
