@@ -119,3 +119,9 @@
 - [ ] REQUIERE DECISION: donde deben actuar mantenimiento, registro abierto y comercio de cuentas
 - [ ] PENDIENTE: introducir metodos de pago y destinos reales desde Configuracion (datos del usuario)
 - [ ] Metodo de pago ampliado: Transfermovil (banco, tarjeta, titular), EnZona (destino, ID, captura), Metropolitana (destino, titular, Monedero Mi Transfer + imagen educativa en Storage), saldo movil intacto; consumo dinamico en cliente, validaciones y auditoria
+
+## Gateway de pagos (iPhone + Atajos)
+- [x] Endpoint, HMAC, antirreplay, registro de eventos, parser, validación, modo simulación, panel admin.
+- [ ] Pruebas A–P en transacción reversible (BEGIN/ROLLBACK), sin datos permanentes, modo simulación y limpieza total.
+- [ ] Pruebas HTTP reales del endpoint (firma válida/inválida, timestamp, nonce, event_id).
+- [ ] Contrato HTTP final para el Atajo (pendiente de construir el Atajo).
