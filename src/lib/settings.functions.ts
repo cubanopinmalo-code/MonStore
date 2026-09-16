@@ -23,6 +23,8 @@ export interface PlatformSettings {
   min_deposit_cup: number;
   min_withdrawal_cup: number;
   referral_reward_cup: number;
+  /** Costo en CUP del aviso SMS de fondos acreditados. */
+  sms_notification_cost_cup: number;
   maintenance_mode: boolean;
   registration_open: boolean;
   marketplace_enabled: boolean;
@@ -52,6 +54,7 @@ function shape(row: Record<string, unknown> | null): PlatformSettings {
     min_deposit_cup: Number(row?.["min_deposit_cup"] ?? 0),
     min_withdrawal_cup: Number(row?.["min_withdrawal_cup"] ?? 0),
     referral_reward_cup: Number(row?.["referral_reward_cup"] ?? 0),
+    sms_notification_cost_cup: Number(row?.["sms_notification_cost_cup"] ?? 0),
     maintenance_mode: Boolean(row?.["maintenance_mode"]),
     registration_open: row?.["registration_open"] === undefined ? true : Boolean(row["registration_open"]),
     marketplace_enabled:
@@ -69,7 +72,7 @@ function shape(row: Record<string, unknown> | null): PlatformSettings {
 }
 
 const COLUMNS =
-  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, maintenance_mode, registration_open, marketplace_enabled, g2bulk_purchases_enabled, allow_line_reuse, payment_gateway_mode, support_whatsapp, updated_at";
+  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, sms_notification_cost_cup, maintenance_mode, registration_open, marketplace_enabled, g2bulk_purchases_enabled, allow_line_reuse, payment_gateway_mode, support_whatsapp, updated_at";
 
 /** Lectura de los parámetros vigentes (sin secretos). */
 export const getPlatformSettings = createServerFn({ method: "GET" }).handler(
@@ -90,6 +93,7 @@ export interface PlatformSettingsPatch {
   min_deposit_cup?: number;
   min_withdrawal_cup?: number;
   referral_reward_cup?: number;
+  sms_notification_cost_cup?: number;
   maintenance_mode?: boolean;
   registration_open?: boolean;
   marketplace_enabled?: boolean;
@@ -108,6 +112,7 @@ const NUMERIC_KEYS = [
   "min_deposit_cup",
   "min_withdrawal_cup",
   "referral_reward_cup",
+  "sms_notification_cost_cup",
 ] as const;
 
 const BOOLEAN_KEYS = [
