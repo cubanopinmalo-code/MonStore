@@ -296,6 +296,26 @@ function ProfilePage() {
           </section>
         )}
 
+        {isLoading || !profile ? null : (
+          <section className="surface-card space-y-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold">Aviso por SMS</h2>
+              <p className="text-xs text-muted-foreground">
+                Recibe un mensaje de texto cuando tus fondos se agreguen correctamente. Cuesta{" "}
+                {smsCost} CUP por aviso y solo se cobra si el mensaje se envía.
+              </p>
+            </div>
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Avisarme cuando se agreguen mis fondos</span>
+              <Switch
+                checked={smsEnabled}
+                disabled={savingSms}
+                onCheckedChange={(checked) => void toggleSms(checked)}
+              />
+            </label>
+          </section>
+        )}
+
         <section className="surface-card space-y-3 p-5">
           <div>
             <h2 className="text-base font-semibold">Ayuda al cliente</h2>
