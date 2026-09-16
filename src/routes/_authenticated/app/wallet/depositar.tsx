@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +29,7 @@ import { getVerificationClock, verificationNotice } from "@/lib/paymentHours";
 import { PaymentHoursNotice } from "@/components/common/PaymentHoursNotice";
 import { PaymentQr } from "@/components/payments/PaymentQr";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useAccount";
 import {
   listPaymentDestinations,
   listPaymentMethods,
@@ -284,10 +285,15 @@ function DepositPage() {
   const [sending, setSending] = useState(false);
   const [fromNumber, setFromNumber] = useState("");
   const [senderError, setSenderError] = useState(false);
-  const [transactionId, setTransactionId] = useState("");
-  const [txnError, setTxnError] = useState(false);
+  const [senderTouched, setSenderTouched] = useState(false);
   const senderRef = useRef<HTMLInputElement>(null);
-  const txnRef = useRef<HTMLInputElement>(null);
+  const { data: profile } = useProfile();
+
+  // El teléfono registrado se precarga; el cliente puede cambiarlo o borrarlo.
+  useEffect(() => {
+    const registered = String(profile?.phone ?? "").replace(/\D/g, "");
+    if (!senderTouched && registered) setFromNumber(registered);
+  }, [profile?.phone, senderTouched]);
 
   const parsed = Number(amount) || 0;
   const isSaldo = current?.payment_method === "saldo_movil";
@@ -300,9 +306,9 @@ function DepositPage() {
     (field) => field.value.trim().length > 0,
   );
 
-  const needsTxn = Boolean(destination?.requires_transaction_id);
   const needsProof = Boolean(destination?.requires_proof);
-  const needsSender = isSaldo || Boolean(destination?.requires_sender_phone);
+  // Solo el saldo móvil necesita el remitente; en transferencias es opcional.
+  const needsSender = isSaldo;
 
   // Línea de recepción que el sistema asignará a esta solicitud (saldo móvil).
   const lineQuery = useQuery({
@@ -408,13 +414,6 @@ function DepositPage() {
       toast.error("Escribe desde qué número realizaste la transferencia");
       return false;
     }
-    if (needsTxn && transactionId.trim().length < 4) {
-      setTxnError(true);
-      txnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      txnRef.current?.focus({ preventScroll: true });
-      toast.error("Escribe el ID de transacción de EnZona");
-      return false;
-    }
     if (needsProof && !proof) {
       toast.error("Sube la captura de pantalla del pago", {
         description: "En iPhone la verificación es manual y la captura es obligatoria.",
@@ -454,12 +453,11 @@ function DepositPage() {
         data: {
           amount: parsed,
           method: current.payment_method,
-          reference: [transactionId.trim() || fromNumber.replace(/\D/g, ""), showQr ? `QR ${qrRef}` : ""]
+          reference: [fromNumber.replace(/\D/g, ""), showQr ? `QR ${qrRef}` : ""]
             .filter(Boolean)
             .join(" | "),
           hasProof: Boolean(proofPath),
           destinationId: destination?.id ?? null,
-          transactionId: transactionId.trim() || null,
           senderPhone: fromNumber.replace(/\D/g, "") || null,
           proofPath,
         },
@@ -487,7 +485,7 @@ function DepositPage() {
   /** Sin captura: el primer intento la pide, el segundo avisa de las 24 horas. */
   function confirmSend() {
     if (!validate()) return;
-    if (proof || needsTxn) {
+    if (proof) {
       void submit();
       return;
     }
@@ -673,8 +671,8 @@ function DepositPage() {
             {hasLine ? (
               <Row label="Línea asignada" value={`Línea ${line?.line_number} · ${line?.phone_number}`} />
             ) : null}
-            {transactionId.trim() ? (
-              <Row label="ID de transacción" value={transactionId.trim()} />
+            {fromNumber ? (
+              <Row label="Teléfono de la transferencia" value={fromNumber} />
             ) : null}
             {fromNumber ? <Row label="Número de origen" value={fromNumber} /> : null}
             {proof ? <Row label="Comprobante" value={proof.name} /> : null}
@@ -936,13 +934,13 @@ function DepositPage() {
             </p>
           ) : null}
 
-          {needsSender ? (
+          {needsSender || destination ? (
             <div className="space-y-1.5">
               <Label
                 htmlFor="numero-origen"
                 className={cn("flex flex-wrap items-center gap-1.5", senderError && "text-destructive")}
               >
-                <span>¿Desde qué número realizaste la transferencia?</span>
+                <span>Número de teléfono desde donde realizó la transferencia</span>
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -950,7 +948,7 @@ function DepositPage() {
                     senderError ? "border-destructive text-destructive" : "border-border text-muted-foreground",
                   )}
                 >
-                  Obligatorio
+                  {needsSender ? "Obligatorio" : "Opcional"}
                 </span>
               </Label>
               <Input
@@ -967,51 +965,14 @@ function DepositPage() {
                 )}
                 value={fromNumber}
                 onChange={(event) => {
+                  setSenderTouched(true);
                   setFromNumber(event.target.value.replace(/[^\d]/g, "").slice(0, 11));
                   setSenderError(false);
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Con ese número ubicamos rápido tu transferencia.
-              </p>
-            </div>
-          ) : null}
-
-          {needsTxn ? (
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="id-transaccion"
-                className={cn("flex flex-wrap items-center gap-1.5", txnError && "text-destructive")}
-              >
-                <span>ID de transacción de EnZona</span>
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                    txnError ? "border-destructive text-destructive" : "border-border text-muted-foreground",
-                  )}
-                >
-                  Obligatorio
-                </span>
-              </Label>
-              <Input
-                ref={txnRef}
-                id="id-transaccion"
-                placeholder="Ej. kwh23yijww99"
-                aria-invalid={txnError}
-                className={cn(
-                  "transition-colors",
-                  txnError &&
-                    "border-destructive ring-2 ring-destructive/30 focus-visible:ring-destructive/50",
-                )}
-                value={transactionId}
-                onChange={(event) => {
-                  setTransactionId(event.target.value.trim().slice(0, 80));
-                  setTxnError(false);
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                Con ese identificador conciliamos tu pago con la operación recibida.
+                Al colocar el número de teléfono desde donde realizó la transferencia, podremos
+                identificar su pago de forma instantánea y agregar sus fondos más rápido.
               </p>
             </div>
           ) : null}
