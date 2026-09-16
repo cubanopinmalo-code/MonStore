@@ -48,7 +48,14 @@ import {
   type FundsHistoryFilters,
   type WithdrawalRequestRow,
 } from "@/lib/funds.functions";
-import { getDepositProofUrl, reviewDeposit } from "@/lib/payments.functions";
+import {
+  createPaymentLine,
+  getDepositProofUrl,
+  reviewDeposit,
+  setPaymentLineActive,
+} from "@/lib/payments.functions";
+import { Switch } from "@/components/ui/switch";
+import type { FundsLine } from "@/lib/funds.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/fondos")({
   head: () => ({
@@ -137,7 +144,7 @@ function AdminFundsPage() {
   return (
     <AdminShell
       title="Fondos"
-      description="Solicitudes por revisar, retiros, dinero retenido y control de las tres líneas."
+      description="Solicitudes por revisar, retiros, dinero retenido y control de las líneas de saldo móvil."
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -197,6 +204,9 @@ function AdminFundsPage() {
             lines={data?.lines ?? []}
             pendingTotal={totals?.lines_pending_amount ?? 0}
             processedTotal={totals?.lines_processed_amount ?? 0}
+            onChanged={async () => {
+              await queryClient.invalidateQueries({ queryKey: ["admin-funds"] });
+            }}
           />
         </TabsContent>
 
@@ -396,41 +406,104 @@ function WithdrawalsTable({
   );
 }
 
+/** Estado visible de una línea: desactivada, ocupada o disponible. */
+function lineState(line: FundsLine): { label: string; tone: string } {
+  if (!line.active) return { label: "Desactivada", tone: "text-muted-foreground" };
+  if (line.busy) return { label: "Ocupada / en espera", tone: "text-amber-600" };
+  return { label: "Activa / disponible", tone: "text-emerald-600" };
+}
+
 function LinesPanel({
   lines,
   pendingTotal,
   processedTotal,
+  onChanged,
 }: {
-  lines: {
-    line_number: number;
-    label: string;
-    phone_number: string;
-    active: boolean;
-    max_pending_amount: number | null;
-    pending_count: number;
-    pending_amount: number;
-    processed_count: number;
-    processed_amount: number;
-    future_amount: number;
-    capacity_left: number | null;
-    progress: number;
-  }[];
+  lines: FundsLine[];
   pendingTotal: number;
   processedTotal: number;
+  onChanged: () => Promise<void>;
 }) {
+  const createFn = useServerFn(createPaymentLine);
+  const activeFn = useServerFn(setPaymentLineActive);
+  const [label, setLabel] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const create = useMutation({
+    mutationFn: () => createFn({ data: { label, phone_number: phone, active: true } }),
+    onSuccess: async () => {
+      setLabel("");
+      setPhone("");
+      await onChanged();
+      toast.success("Línea registrada y activada");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const toggle = useMutation({
+    mutationFn: (input: { id: string; active: boolean }) => activeFn({ data: input }),
+    onSuccess: async () => {
+      await onChanged();
+      toast.success("Estado de la línea actualizado");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <div className="space-y-4">
+      <section className="surface-card space-y-3 p-5">
+        <div>
+          <h3 className="text-base font-semibold">Agregar una línea de saldo móvil</h3>
+          <p className="text-xs text-muted-foreground">
+            Puedes trabajar con tantas líneas como necesites. Una línea con una solicitud sin
+            resolver nunca se le entrega a otro cliente.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <Input
+            placeholder="Nombre, ej. Línea principal"
+            value={label}
+            onChange={(event) => setLabel(event.target.value.slice(0, 40))}
+          />
+          <Input
+            inputMode="tel"
+            placeholder="Móvil cubano, ej. 51234567"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 11))}
+          />
+          <Button onClick={() => create.mutate()} disabled={create.isPending || phone.length < 8}>
+            {create.isPending ? "Guardando…" : "Agregar línea"}
+          </Button>
+        </div>
+      </section>
+
       <div className="grid gap-3 md:grid-cols-3">
+        {lines.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Todavía no hay líneas registradas. Agrega la primera para recibir saldo móvil.
+          </p>
+        ) : null}
         {lines.map((line) => (
-          <article key={line.line_number} className="surface-card space-y-3 p-5">
+          <article key={line.id} className="surface-card space-y-3 p-5">
             <header className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-base font-semibold">Línea {line.line_number}</h3>
+                <h3 className="text-base font-semibold">
+                  Línea {line.line_number}
+                  {line.label ? ` · ${line.label}` : ""}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   {line.phone_number || "Sin configurar"}
                 </p>
+                <p className={cn("text-xs font-medium", lineState(line).tone)}>
+                  {lineState(line).label}
+                </p>
               </div>
-              <span className="text-xs">{line.active ? "Activa" : "Inactiva"}</span>
+              <Switch
+                checked={line.active}
+                disabled={toggle.isPending}
+                aria-label={`Activar o desactivar la línea ${line.line_number}`}
+                onCheckedChange={(checked) => toggle.mutate({ id: line.id, active: checked })}
+              />
             </header>
             <dl className="space-y-1 text-sm">
               <div className="flex justify-between">
