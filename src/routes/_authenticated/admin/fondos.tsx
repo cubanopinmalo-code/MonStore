@@ -55,6 +55,7 @@ import {
   setPaymentLineActive,
 } from "@/lib/payments.functions";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import type { FundsLine } from "@/lib/funds.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/fondos")({
