@@ -29,6 +29,8 @@ export interface PlatformSettings {
   /** Compras reales al proveedor de recargas. Apagado = nada se compra fuera. */
   g2bulk_purchases_enabled: boolean;
   allow_line_reuse: boolean;
+  /** Gateway de pagos automático: off | simulation | live. */
+  payment_gateway_mode: "off" | "simulation" | "live";
   support_whatsapp: string;
   updated_at: string | null;
 }
@@ -56,13 +58,18 @@ function shape(row: Record<string, unknown> | null): PlatformSettings {
       row?.["marketplace_enabled"] === undefined ? true : Boolean(row["marketplace_enabled"]),
     g2bulk_purchases_enabled: Boolean(row?.["g2bulk_purchases_enabled"]),
     allow_line_reuse: Boolean(row?.["allow_line_reuse"]),
+    payment_gateway_mode: (["off", "simulation", "live"] as const).includes(
+      row?.["payment_gateway_mode"] as "off",
+    )
+      ? (row?.["payment_gateway_mode"] as "off" | "simulation" | "live")
+      : "off",
     support_whatsapp: String(row?.["support_whatsapp"] ?? ""),
     updated_at: (row?.["updated_at"] as string | undefined) ?? null,
   };
 }
 
 const COLUMNS =
-  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, maintenance_mode, registration_open, marketplace_enabled, g2bulk_purchases_enabled, allow_line_reuse, support_whatsapp, updated_at";
+  "usd_to_cup, usd_margin_cup, saldo_conversion_rate, withdrawal_fee_pct, listing_fee_per_day, listing_fee_days, min_deposit_cup, min_withdrawal_cup, referral_reward_cup, maintenance_mode, registration_open, marketplace_enabled, g2bulk_purchases_enabled, allow_line_reuse, payment_gateway_mode, support_whatsapp, updated_at";
 
 /** Lectura de los parámetros vigentes (sin secretos). */
 export const getPlatformSettings = createServerFn({ method: "GET" }).handler(
@@ -88,6 +95,7 @@ export interface PlatformSettingsPatch {
   marketplace_enabled?: boolean;
   g2bulk_purchases_enabled?: boolean;
   allow_line_reuse?: boolean;
+  payment_gateway_mode?: "off" | "simulation" | "live";
   support_whatsapp?: string;
 }
 
@@ -137,6 +145,13 @@ export const savePlatformSettings = createServerFn({ method: "POST" })
         if (Number.isFinite(value) && value >= 0) byDays[String(day)] = Math.round(value * 100) / 100;
       }
       payload["listing_fee_days"] = byDays;
+    }
+    if (data?.payment_gateway_mode !== undefined) {
+      const mode = String(data.payment_gateway_mode);
+      if (!["off", "simulation", "live"].includes(mode)) {
+        throw new Error("El modo del gateway de pagos no es válido.");
+      }
+      payload["payment_gateway_mode"] = mode;
     }
     if (data?.support_whatsapp !== undefined) {
       payload["support_whatsapp"] = String(data.support_whatsapp).replace(/\D/g, "").slice(0, 15);

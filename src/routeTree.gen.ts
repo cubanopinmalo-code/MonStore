@@ -58,6 +58,7 @@ import { Route as AuthenticatedAppTarjetasIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppWalletIndexRouteImport } from './routes/_authenticated/app/wallet/index'
 import { Route as AuthenticatedAppWalletDepositarRouteImport } from './routes/_authenticated/app/wallet/depositar'
 import { Route as AuthenticatedAppWalletRetirarRouteImport } from './routes/_authenticated/app/wallet/retirar'
+import { Route as ApiPublicPaymentGatewayShortcutRouteImport } from './routes/api/public/payment-gateway/shortcut'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -338,6 +339,12 @@ const AuthenticatedAppWalletRetirarRoute =
     path: '/app/wallet/retirar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentGatewayShortcutRoute =
+  ApiPublicPaymentGatewayShortcutRouteImport.update({
+    id: '/api/public/payment-gateway/shortcut',
+    path: '/api/public/payment-gateway/shortcut',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -382,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
   '/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
   '/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/api/public/payment-gateway/shortcut': typeof ApiPublicPaymentGatewayShortcutRoute
   '/app/comercio/': typeof AuthenticatedAppComercioIndexRoute
   '/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
   '/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
@@ -431,6 +439,7 @@ export interface FileRoutesByTo {
   '/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
   '/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
   '/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/api/public/payment-gateway/shortcut': typeof ApiPublicPaymentGatewayShortcutRoute
   '/app/comercio': typeof AuthenticatedAppComercioIndexRoute
   '/app/eventos': typeof AuthenticatedAppEventosIndexRoute
   '/app/pedidos': typeof AuthenticatedAppPedidosIndexRoute
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/_authenticated/app/recargas/$slug': typeof AuthenticatedAppRecargasSlugRoute
   '/_authenticated/app/wallet/depositar': typeof AuthenticatedAppWalletDepositarRoute
   '/_authenticated/app/wallet/retirar': typeof AuthenticatedAppWalletRetirarRoute
+  '/api/public/payment-gateway/shortcut': typeof ApiPublicPaymentGatewayShortcutRoute
   '/_authenticated/app/comercio/': typeof AuthenticatedAppComercioIndexRoute
   '/_authenticated/app/eventos/': typeof AuthenticatedAppEventosIndexRoute
   '/_authenticated/app/pedidos/': typeof AuthenticatedAppPedidosIndexRoute
@@ -535,6 +545,7 @@ export interface FileRouteTypes {
     | '/app/recargas/$slug'
     | '/app/wallet/depositar'
     | '/app/wallet/retirar'
+    | '/api/public/payment-gateway/shortcut'
     | '/app/comercio/'
     | '/app/eventos/'
     | '/app/pedidos/'
@@ -584,6 +595,7 @@ export interface FileRouteTypes {
     | '/app/recargas/$slug'
     | '/app/wallet/depositar'
     | '/app/wallet/retirar'
+    | '/api/public/payment-gateway/shortcut'
     | '/app/comercio'
     | '/app/eventos'
     | '/app/pedidos'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/recargas/$slug'
     | '/_authenticated/app/wallet/depositar'
     | '/_authenticated/app/wallet/retirar'
+    | '/api/public/payment-gateway/shortcut'
     | '/_authenticated/app/comercio/'
     | '/_authenticated/app/eventos/'
     | '/_authenticated/app/pedidos/'
@@ -654,6 +667,7 @@ export interface RootRouteChildren {
   JuegosIndexRoute: typeof JuegosIndexRoute
   ApiPublicG2bulkReconcileRoute: typeof ApiPublicG2bulkReconcileRoute
   ApiPublicG2bulkWebhookRoute: typeof ApiPublicG2bulkWebhookRoute
+  ApiPublicPaymentGatewayShortcutRoute: typeof ApiPublicPaymentGatewayShortcutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1001,6 +1015,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppWalletRetirarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payment-gateway/shortcut': {
+      id: '/api/public/payment-gateway/shortcut'
+      path: '/api/public/payment-gateway/shortcut'
+      fullPath: '/api/public/payment-gateway/shortcut'
+      preLoaderRoute: typeof ApiPublicPaymentGatewayShortcutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1117,6 +1138,7 @@ const rootRouteChildren: RootRouteChildren = {
   JuegosIndexRoute: JuegosIndexRoute,
   ApiPublicG2bulkReconcileRoute: ApiPublicG2bulkReconcileRoute,
   ApiPublicG2bulkWebhookRoute: ApiPublicG2bulkWebhookRoute,
+  ApiPublicPaymentGatewayShortcutRoute: ApiPublicPaymentGatewayShortcutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
