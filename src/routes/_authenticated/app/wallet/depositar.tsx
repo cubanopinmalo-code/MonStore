@@ -348,8 +348,6 @@ function DepositPage() {
     setProofPreview(null);
     setAttempts(0);
     setSenderError(false);
-    setTxnError(false);
-    setTransactionId("");
     setConfirming(false);
   }
 
@@ -372,7 +370,6 @@ function DepositPage() {
     setDestinationId(single.length === 1 ? (single[0]?.id ?? null) : null);
     setProof(null);
     setProofPreview(null);
-    setTransactionId("");
     scrollTop();
   }
 
